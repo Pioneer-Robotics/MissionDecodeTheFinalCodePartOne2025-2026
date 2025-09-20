@@ -43,6 +43,13 @@ interface Path {
     fun getLengthSoFar(t: Double): Double
 
     /**
+     * Gets the parameter t value from the given arc length
+     * @param length The arc length
+     * @return The parameter value in the range [0, 1]
+     */
+    fun getTFromLength(length: Double): Double
+
+    /**
      * Gets the heading at the given parameter t
      * @param t The parameter value in the range [0, 1]
      * @return The heading at the given parameter
@@ -71,20 +78,18 @@ interface Path {
     fun getNormal(t: Double): Pose
 
     /**
+     * Gets the second derivative at the given parameter t
+     * @param t The parameter value in the range [0, 1]
+     * @return The second derivative vector at the given parameter
+     */
+    fun getSecondDerivative(t: Double): Pose
+
+    /**
      * Gets the curvature at the given parameter t
      * @param t The parameter value in the range [0, 1]
      * @return The curvature at the given parameter
      */
     fun getCurvature(t: Double): Double
-
-    /**
-     * Gets the time of intersection between the path and a circle with radius lookaheadDistance and center at position.
-     * If there are multiple intersections, the largest t value is returned, if there are no intersections, -1 is returned.
-     * @param position The center of the circle
-     * @param lookaheadDistance The radius of the circle
-     * @return The time parameter t at which the circle intersects the path
-     */
-    fun getLookaheadPointT(position: Pose, lookaheadDistance: Double): Double?
 
     /**
      * Gets the closest point t value to the given position on the path
@@ -100,18 +105,6 @@ interface Path {
      */
     fun getClosestPoint(position: Pose): Pose {
         return getPoint(getClosestPointT(position))
-    }
-
-    /**
-     * Gets the point of intersection between the path and a circle with radius lookaheadDistance and center at position
-     * If there are multiple intersections, the largest t value is used to get the point. If there are no intersections, the start point is returned.
-     * @param position The center of the circle
-     * @param lookaheadDistance The radius of the circle
-     * @return The point at which the circle intersects the path
-     */
-    fun getLookaheadPoint(position: Pose, lookaheadDistance: Double): Pose? {
-        val t = getLookaheadPointT(position, lookaheadDistance)
-        return if (t != null) getPoint(t) else null
     }
 
     /**

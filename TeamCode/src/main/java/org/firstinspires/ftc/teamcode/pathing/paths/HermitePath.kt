@@ -27,9 +27,9 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
     private val basis11 = Polynomial(arrayOf(0.0, 0.0, -1.0, 1.0))
 
     private val xHermite = PolynomialUtils.addPolynomials(arrayOf(basis00.vScale(startPose.x), basis01.vScale(startVelocity.x),
-                                                          basis10.vScale(endPose.x), basis11.vScale(endVelocity.x)))
+        basis10.vScale(endPose.x), basis11.vScale(endVelocity.x)))
     private val yHermite = PolynomialUtils.addPolynomials(arrayOf(basis00.vScale(startPose.y), basis01.vScale(startVelocity.y),
-                                                          basis10.vScale(endPose.y), basis11.vScale(endVelocity.y)))
+        basis10.vScale(endPose.y), basis11.vScale(endVelocity.y)))
 
     // Compound path for simplified calculations
     private val resolution: Int = 100 // Resolution for the compound path
@@ -43,6 +43,11 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
     override fun getLengthSoFar(t: Double): Double {
         // Use the compound path to estimate the length so far
         return compoundPath.getLengthSoFar(t)
+    }
+
+    override fun getTFromLength(length: Double): Double {
+        // Use the compound path to estimate t from length
+        return compoundPath.getTFromLength(length)
     }
 
     override fun getHeading(t: Double): Double {
@@ -61,16 +66,20 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
     }
 
     override fun getTangent(t: Double): Pose {
-        val xDer = xHermite.derivative()
-        val yDer = yHermite.derivative()
-        val dxdt = xDer.derEval(t)
-        val dydt = yDer.derEval(t)
-        return Pose(dxdt, dydt)
+        val xDer = xHermite.nDerEval(t, 1) // First derivative
+        val yDer = yHermite.nDerEval(t, 1)
+        return Pose(xDer, yDer)
     }
 
     override fun getNormal(t: Double): Pose {
         val tangent = getTangent(t)
         return Pose(-tangent.y, tangent.x)
+    }
+
+    override fun getSecondDerivative(t: Double): Pose {
+        val xDer2 = xHermite.nDerEval(t, 2) // Second derivative
+        val yDer2 = yHermite.nDerEval(t, 2)
+        return Pose(xDer2, yDer2)
     }
 
     override fun getCurvature(t: Double): Double {
@@ -84,10 +93,6 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
         denominator = denominator.pow(1.5)
 
         return (numerator / denominator)
-    }
-
-    override fun getLookaheadPointT(position: Pose, lookaheadDistance: Double): Double? {
-        return compoundPath.getLookaheadPointT(position, lookaheadDistance)
     }
 
     override fun getClosestPointT(position: Pose): Double {
@@ -105,10 +110,10 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
         return builder.build()
     }
 
-
     class Builder {
         private val points = mutableListOf<Pose>()
         private val velocities = mutableListOf<Pose?>()
+        private var t = 0.0 // Cardinal spline tension parameter (higher values = sharper turns)
 
         fun addPoint(point: Pose, velocity: Pose? = null): Builder {
             points.add(point)
@@ -116,14 +121,12 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
             return this
         }
 
-        // Throw in points, not velocities
-        private fun getAvVelocity(p0: Pose, p1: Pose, p2: Pose): Pose {
-            val dx1 = p1.x - p0.x
-            val dy1 = p1.y - p0.y
-            val dx2 = p2.x - p1.x
-            val dy2 = p2.y - p1.y
-
-            return Pose((dx1 + dx2)/2, (dy1 + dy2)/2)
+        fun setTension(tension: Double): Builder {
+            if (tension < 0.0 || tension > 1.0) {
+                throw IllegalArgumentException("Tension must be in the range [0, 1]")
+            }
+            this.t = tension
+            return this
         }
 
         fun build(): Path {
@@ -131,7 +134,8 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
                 throw IllegalArgumentException("At least two points are required to create a HermitePath")
             }
             else if (points.size == 2) {
-                return HermitePath(points[0], points[1], velocities[0]?: Pose(), velocities[1]?: Pose())
+                val defaultVel = (points[1] - points[0]) * (1.0 - t) // Default start velocity
+                return HermitePath(points[0], points[1], velocities[0]?: defaultVel, velocities[1]?: defaultVel)
             }
             else {
                 val paths = mutableListOf<HermitePath>()
@@ -141,8 +145,16 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
                     val endPoint = points[i+1]
                     val nextPoint = if (i < points.size - 2) points[i+2] else null
 
-                    val defaultStartVel = if (i > 0) getAvVelocity(prevPoint!!, startPoint, endPoint) else Pose()
-                    val defaultEndVel = if (i < points.size - 2) getAvVelocity(startPoint, endPoint, nextPoint!!) else Pose()
+                    // Use cardinal spline velocities by default
+                    val defaultStartVel = when {
+                        i > 0 -> (endPoint - prevPoint!!) * (1.0 - t) / 2.0
+                        else  -> (endPoint - startPoint) * (1.0 - t) // Path endpoint
+                    }
+
+                    val defaultEndVel = when {
+                        i < points.size - 2 -> (nextPoint!! - startPoint) * (1.0 - t) / 2.0
+                        else                -> (endPoint - startPoint) * (1.0 - t) // Path endpoint
+                    }
 
                     paths.add(HermitePath(startPoint, endPoint, velocities[i] ?: defaultStartVel, velocities[i+1] ?: defaultEndVel))
                 }

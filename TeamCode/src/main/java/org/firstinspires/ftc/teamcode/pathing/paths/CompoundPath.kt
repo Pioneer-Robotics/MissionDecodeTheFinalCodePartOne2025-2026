@@ -51,38 +51,16 @@ class CompoundPath(val paths: List<Path>) : Path {
         return paths[pathIndex].getNormal(localT)
     }
 
+    override fun getSecondDerivative(t: Double): Pose {
+        val pathIndex = (t * paths.size).toInt().coerceIn(0, paths.size - 1)
+        val localT = t * paths.size - pathIndex
+        return paths[pathIndex].getSecondDerivative(localT)
+    }
+
     override fun getCurvature(t: Double): Double {
         val pathIndex = (t * paths.size).toInt().coerceIn(0, paths.size - 1)
         val localT = t * paths.size - pathIndex
         return paths[pathIndex].getCurvature(localT)
-    }
-
-    override fun getLookaheadPointT(position: Pose, lookaheadDistance: Double): Double? {
-        // Return the first intersection ahead of the current position
-        val closestT = getClosestPointT(position)
-        val candidates = mutableListOf<Double>()
-
-        for ((i, path) in paths.withIndex()) {
-            val t = path.getLookaheadPointT(position, lookaheadDistance)
-            if (t != null && t != 1.0) {
-                // Adjust t to be relative to the compound path
-                val adjustedT = (t + i) / paths.size
-                if (adjustedT > closestT) {
-                    candidates.add(adjustedT)
-                }
-            }
-        }
-
-        // Check if endPose is within the lookahead circle
-        val endDistance = position.distanceTo(endPose)
-        if (endDistance <= lookaheadDistance) {
-            val endT = 1.0
-            if (endT > closestT) {
-                candidates += endT
-            }
-        }
-
-        return candidates.minOrNull()
     }
 
     override fun getClosestPointT(position: Pose): Double {
@@ -116,6 +94,22 @@ class CompoundPath(val paths: List<Path>) : Path {
         length += paths[pathIndex].getLengthSoFar(localT)
 
         return length
+    }
+
+    override fun getTFromLength(length: Double): Double {
+        var accumulatedLength = 0.0
+
+        for (i in paths.indices) {
+            val pathLength = paths[i].getLength()
+            if (accumulatedLength + pathLength >= length) {
+                val remainingLength = length - accumulatedLength
+                val localT = paths[i].getTFromLength(remainingLength)
+                return (i + localT) / paths.size
+            }
+            accumulatedLength += pathLength
+        }
+
+        return 1.0 // If length exceeds total, return end of the compound path
     }
 
     class Builder {

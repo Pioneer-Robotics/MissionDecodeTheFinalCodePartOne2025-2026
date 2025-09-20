@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.pathing.paths
 
-import org.firstinspires.ftc.teamcode.helpers.Angle
+import org.firstinspires.ftc.teamcode.helpers.MathUtils
 import org.firstinspires.ftc.teamcode.localization.Pose
 import org.firstinspires.ftc.teamcode.pathing.paths.Path.HeadingInterpolationMode
-import kotlin.math.sqrt
-
 
 /**
  * LinearPath class representing a straight line path in 2D space
@@ -27,10 +25,14 @@ class LinearPath (override var startPose: Pose = Pose(), override var endPose: P
         return getLength() * t
     }
 
+    override fun getTFromLength(length: Double): Double {
+        return length / getLength()
+    }
+
     override fun getHeading(t: Double): Double {
         when (headingInterpolationMode) {
             HeadingInterpolationMode.LINEAR -> {
-                val delta = Angle.normalizeRadians(endPose.heading - startPose.heading)
+                val delta = MathUtils.normalizeRadians(endPose.heading - startPose.heading)
                 return startPose.heading + delta * t
             }
         }
@@ -59,43 +61,12 @@ class LinearPath (override var startPose: Pose = Pose(), override var endPose: P
         return Pose(-tangent.y, tangent.x)
     }
 
-    override fun getCurvature(t: Double): Double {
-        return 0.0 // Linear paths have zero curvature
+    override fun getSecondDerivative(t: Double): Pose {
+        return Pose(0.0, 0.0) // Linear paths have zero second derivative
     }
 
-    override fun getLookaheadPointT(position: Pose, lookaheadDistance: Double): Double? {
-        val dx = endPose.x - startPose.x
-        val dy = endPose.y - startPose.y
-        val fx = startPose.x - position.x
-        val fy = startPose.y - position.y
-
-        val a = dx * dx + dy * dy
-        val b = 2 * (fx * dx + fy * dy)
-        val c = fx * fx + fy * fy - lookaheadDistance * lookaheadDistance
-
-        val discriminant = b * b - 4 * a * c
-        val closestT = getClosestPointT(position)
-        val candidates = mutableListOf<Double>()
-
-        if (discriminant >= 0) {
-            val sqrtDiscriminant = sqrt(discriminant)
-            val t1 = (-b + sqrtDiscriminant) / (2 * a)
-            val t2 = (-b - sqrtDiscriminant) / (2 * a)
-
-            // Add valid intersection points
-            candidates += listOf(t1, t2).filter { it in 0.0..1.0 && it > closestT }
-        }
-
-        // Check if endPose is within the lookahead circle
-        val endDistance = position.distanceTo(endPose)
-        if (endDistance <= lookaheadDistance) {
-            val endT = 1.0
-            if (endT > closestT) {
-                candidates += endT
-            }
-        }
-
-        return candidates.minOrNull()
+    override fun getCurvature(t: Double): Double {
+        return 0.0 // Linear paths have zero curvature
     }
 
     override fun getClosestPointT(position: Pose): Double {

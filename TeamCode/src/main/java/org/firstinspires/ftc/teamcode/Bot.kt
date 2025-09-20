@@ -5,7 +5,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.teamcode.hardware.MecanumBase
+import org.firstinspires.ftc.teamcode.hardware.drivebase.MecanumBase
 import org.firstinspires.ftc.teamcode.hardware.VoltageHandler
 import org.firstinspires.ftc.teamcode.helpers.DashboardPlotter
 import org.firstinspires.ftc.teamcode.helpers.FileLogger
@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.localization.Pose
 import org.firstinspires.ftc.teamcode.localization.localizers.Pinpoint
 import org.firstinspires.ftc.teamcode.pathing.follower.Follower
 
-class Bot () {
+class Bot {
     companion object {
         private val timer: ElapsedTime = ElapsedTime()
         private var prevTime: Double = timer.milliseconds()
@@ -46,16 +46,17 @@ class Bot () {
             voltageHandler = VoltageHandler(hardwareMap)
         }
 
+        /** Updates the bot's systems. Call this before every loop.  */
         fun update() {
+            // Update delta time
+            dt = timer.milliseconds() - prevTime
+            prevTime = timer.milliseconds()
+
             // Update localizer
             localizer.update(dt / 1000.0) // Convert milliseconds to seconds
 
             // Update follower
-            follower.update()
-
-            // Update delta time
-            dt = timer.milliseconds() - prevTime
-            prevTime = timer.milliseconds()
+            if (follower.path != null) follower.update()
         }
 
         fun sendTelemetryPacket() {

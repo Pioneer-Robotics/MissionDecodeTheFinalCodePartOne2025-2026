@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.localization
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
@@ -54,6 +53,41 @@ class Pose(var x: Double = 0.0, var y: Double = 0.0, var heading: Double = 0.0) 
         this.y = newY
     }
 
+    fun normalize() : Pose {
+        val length = this.getLength()
+        return if (length > 0) {
+            Pose(this.x / length, this.y / length, this.heading)
+        } else {
+            Pose(0.0, 0.0, this.heading) // Return a zero vector with the same heading
+        }
+    }
+
+    // Overloaded operators for vector operations
+    operator fun plus(other: Pose): Pose {
+        return Pose(this.x + other.x, this.y + other.y, this.heading + other.heading)
+    }
+
+    operator fun minus(other: Pose): Pose {
+        return Pose(this.x - other.x, this.y - other.y, this.heading - other.heading)
+    }
+
+    operator fun times(scalar: Double): Pose {
+        return Pose(this.x * scalar, this.y * scalar, this.heading * scalar)
+    }
+
+    operator fun times(otherPose: Pose): Pose {
+        // Element-wise multiplication
+        return Pose(this.x * otherPose.x, this.y * otherPose.y, this.heading * otherPose.heading)
+    }
+
+    operator fun div(scalar: Double): Pose {
+        if (scalar != 0.0) {
+            return Pose(this.x / scalar, this.y / scalar, this.heading / scalar)
+        } else {
+            throw IllegalArgumentException("Cannot divide by zero")
+        }
+    }
+
     // Other utility methods
     fun getLength(): Double {
         return sqrt(x * x + y * y)
@@ -65,7 +99,7 @@ class Pose(var x: Double = 0.0, var y: Double = 0.0, var heading: Double = 0.0) 
 
     fun roughlyEquals(other: Pose, positionTolerance: Double = 0.001, headingTolerance: Double = 0.001): Boolean {
         return this.distanceTo(other) < positionTolerance &&
-               kotlin.math.abs(this.heading - other.heading) < headingTolerance
+                kotlin.math.abs(this.heading - other.heading) < headingTolerance
     }
 
     override fun toString(): String {
@@ -84,10 +118,6 @@ class Pose(var x: Double = 0.0, var y: Double = 0.0, var heading: Double = 0.0) 
 
     fun copy(): Pose {
         return Pose(x, y, heading)
-    }
-
-    fun getPose2D() : Pose2D {
-        return Pose2D(DistanceUnit.CM, x, y, AngleUnit.RADIANS, heading)
     }
 
     override fun hashCode(): Int {
