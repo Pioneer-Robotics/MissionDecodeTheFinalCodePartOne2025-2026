@@ -51,10 +51,6 @@ class TeleopDriver1 (var gamepad: Gamepad) {
     }
 
     fun flywheelSpeed() {
-//        var velocity: Double = gamepad.left_trigger.toDouble()
-//        if (abs(velocity) < 0.01) { velocity = 0.0 }
-//        GoBildaStarterBot.flywheel.setSpeed(velocity)
-//
         if (gamepad.circle) {
             GoBildaStarterBot.flywheel.setSpeed(0.67)
         } else {
@@ -64,10 +60,10 @@ class TeleopDriver1 (var gamepad: Gamepad) {
 
     fun openLaunch() {
         if (gamepad.triangle) {
-            GoBildaStarterBot.launchServos.open()
+            GoBildaStarterBot.launchServos.triggerLaunch()
         }
         else if (gamepad.cross) {
-            GoBildaStarterBot.launchServos.close()
+            GoBildaStarterBot.launchServos.triggerRetract()
         }
     }
 }
