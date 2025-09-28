@@ -1,9 +1,10 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
-import org.firstinspires.ftc.teamcode.Bot
+import org.firstinspires.ftc.teamcode.GoBildaStarterBot
 import org.firstinspires.ftc.teamcode.helpers.Toggle
 import org.firstinspires.ftc.teamcode.localization.Pose
+import kotlin.math.abs
 
 class TeleopDriver1 (var gamepad: Gamepad) {
     var driveSpeed = 0.5
@@ -19,13 +20,13 @@ class TeleopDriver1 (var gamepad: Gamepad) {
         drive()
         updateDriveSpeed()
         updateFieldCentric()
+        flywheelSpeed()
+        openLaunch()
     }
 
     fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        if (fieldCentricToggle.state) direction.rotate(Bot.localizer.pose.heading) // Rotate to local coordinates
-
-        Bot.mecanumBase.setDrivePower(
+        GoBildaStarterBot.mecanumBase.setDrivePower(
             direction.x,
             direction.y,
             gamepad.right_stick_x.toDouble(),
@@ -47,5 +48,26 @@ class TeleopDriver1 (var gamepad: Gamepad) {
 
     fun updateFieldCentric() {
         fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
+    }
+
+    fun flywheelSpeed() {
+//        var velocity: Double = gamepad.left_trigger.toDouble()
+//        if (abs(velocity) < 0.01) { velocity = 0.0 }
+//        GoBildaStarterBot.flywheel.setSpeed(velocity)
+//
+        if (gamepad.circle) {
+            GoBildaStarterBot.flywheel.setSpeed(0.67)
+        } else {
+            GoBildaStarterBot.flywheel.setSpeed(0.0)
+        }
+    }
+
+    fun openLaunch() {
+        if (gamepad.triangle) {
+            GoBildaStarterBot.launchServos.open()
+        }
+        else if (gamepad.cross) {
+            GoBildaStarterBot.launchServos.close()
+        }
     }
 }
