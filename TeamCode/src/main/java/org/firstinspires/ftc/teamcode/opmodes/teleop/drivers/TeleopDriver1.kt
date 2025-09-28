@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import org.firstinspires.ftc.teamcode.GoBildaStarterBot
 import org.firstinspires.ftc.teamcode.helpers.Toggle
 import org.firstinspires.ftc.teamcode.localization.Pose
-import kotlin.math.abs
 
 class TeleopDriver1 (var gamepad: Gamepad) {
     var driveSpeed = 0.5

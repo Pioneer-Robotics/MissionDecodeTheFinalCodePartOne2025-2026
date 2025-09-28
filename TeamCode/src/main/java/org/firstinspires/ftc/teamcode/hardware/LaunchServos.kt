@@ -41,6 +41,6 @@ class LaunchServos (hardwareMap: HardwareMap) {
 
     private fun setPower(power: Double) {
         servo1.power = power
-        servo2.power = 1-power
+        servo2.power = 1-2*power
     }
 }
