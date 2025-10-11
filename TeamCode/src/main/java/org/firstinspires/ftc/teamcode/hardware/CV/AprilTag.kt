@@ -7,11 +7,10 @@ import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 
 class AprilTag (hardwareMap: HardwareMap) {
-    private lateinit var aprilTag: AprilTagProcessor
-    private lateinit var visionPortal: VisionPortal
+    var aprilTag: AprilTagProcessor = AprilTagProcessor.Builder().build()
+    private var visionPortal: VisionPortal
 
     init {
-        aprilTag = AprilTagProcessor.Builder().build()
         val builder: VisionPortal.Builder = VisionPortal.Builder()
 
         builder.setCamera(hardwareMap.get(WebcamName::class.java, HardwareNames.WEBCAM))

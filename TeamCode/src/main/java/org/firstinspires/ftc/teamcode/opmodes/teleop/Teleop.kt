@@ -13,6 +13,7 @@ class Teleop : OpMode() {
 
     private val dashboard = FtcDashboard.getInstance()
 
+
     override fun init() {
         GoBildaStarterBot.initialize(hardwareMap, telemetry)
         driver1 = TeleopDriver1(gamepad1)
@@ -28,6 +29,7 @@ class Teleop : OpMode() {
         driver2.update()
 
         // Update telemetry
+        updateApril()
         updateTelemetry()
     }
 
@@ -36,6 +38,17 @@ class Teleop : OpMode() {
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Voltage", GoBildaStarterBot.voltageHandler.getVoltage())
         telemetry.update()
+    }
+
+    private fun updateApril() {
+        val detections = GoBildaStarterBot.aprilTagProcessor.aprilTag.detections
+        for (detection in detections) {
+            // FIXME: If the processor loses the AprilTag during this loop, a null pointer error is thrown
+            telemetry.addData("Detection", detection.id)
+            telemetry.addLine("--Rel (x, y, z): (%.2f, %.2f, %.2f)".format(detection.ftcPose.x,detection.ftcPose.y,detection.ftcPose.z))
+            telemetry.addLine("--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(detection.ftcPose.yaw,detection.ftcPose.pitch,detection.ftcPose.roll))
+            telemetry.addLine("--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(detection.ftcPose.range,detection.ftcPose.bearing,detection.ftcPose.elevation))
+        }
     }
 
     override fun stop() {
