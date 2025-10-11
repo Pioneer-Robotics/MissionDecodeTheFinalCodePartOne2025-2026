@@ -20,7 +20,7 @@ class TeleopDriver1 (var gamepad: Gamepad) {
         updateDriveSpeed()
         updateFieldCentric()
         flywheelSpeed()
-        openLaunch()
+        updateLaunchServos()
     }
 
     fun drive() {
@@ -57,12 +57,13 @@ class TeleopDriver1 (var gamepad: Gamepad) {
         }
     }
 
-    fun openLaunch() {
-        if (gamepad.triangle) {
+    fun updateLaunchServos() {
+        if (gamepad.dpad_up) {
             GoBildaStarterBot.launchServos.triggerLaunch()
         }
-        else if (gamepad.cross) {
+        else if (gamepad.dpad_down) {
             GoBildaStarterBot.launchServos.triggerRetract()
         }
+        GoBildaStarterBot.launchServos.update()
     }
 }

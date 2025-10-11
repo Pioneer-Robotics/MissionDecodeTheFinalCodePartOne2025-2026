@@ -25,7 +25,7 @@ class LaunchServos (hardwareMap: HardwareMap) {
     }
 
     fun update() {
-        if (timer.milliseconds() < 500) {
+        if (timer.milliseconds() < 250) {
             if (launch) {
                 setPower(1.0)
             } else if (retract) {
@@ -36,11 +36,12 @@ class LaunchServos (hardwareMap: HardwareMap) {
         } else {
             launch = false
             retract = false
+            setPower(0.0)
         }
     }
 
     private fun setPower(power: Double) {
-        servo1.power = power
-        servo2.power = 1-2*power
+        servo1.power = -power
+        servo2.power = power
     }
 }

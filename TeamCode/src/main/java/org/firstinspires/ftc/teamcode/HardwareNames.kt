@@ -21,4 +21,7 @@ object HardwareNames{
     // Servos
     const val LAUNCH_SERVO_L = "launchServoL"
     const val LAUNCH_SERVO_R = "launchServoR"
+
+    // Other
+    const val WEBCAM = "Webcam 1"
 }
