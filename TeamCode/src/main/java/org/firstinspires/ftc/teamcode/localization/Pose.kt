@@ -25,15 +25,6 @@ data class Pose(
         return Pose(newX, newY, heading)
     }
 
-    fun normalize(): Pose {
-        val len = length
-        return if (len > 0) {
-            Pose(x / len, y / len, heading)
-        } else {
-            Pose(0.0, 0.0, heading) // Return a zero vector with the same heading
-        }
-    }
-
     // Overloaded operators for vector operations
     operator fun plus(other: Pose): Pose = Pose(x + other.x, y + other.y, heading + other.heading)
 
@@ -47,8 +38,6 @@ data class Pose(
     }
 
     // Other utility methods
-    val length: Double get() = sqrt(x * x + y * y)
-
     fun distanceTo(other: Pose): Double = hypot(other.x - x, other.y - y)
 
     fun angleTo(other: Pose): Double = atan2(other.y - y, other.x - x)
