@@ -1,11 +1,39 @@
 package pioneer.helpers
 
-
 // Note: coeffs are least to most significant
 class Polynomial(coeffs: Array<Double>) {
     val coefficients = coeffs
 
+    companion object {
+        /**
+         * Adds multiple polynomials together.
+         * @param polynomials Array of polynomials to add
+         * @return New polynomial representing the sum
+         */
+        fun add(vararg polynomials: Polynomial): Polynomial {
+            if (polynomials.isEmpty()) return Polynomial(arrayOf(0.0))
+            
+            val maxLength = polynomials.maxOf { it.coefficients.size }
+            val result = DoubleArray(maxLength) { 0.0 }
+            
+            polynomials.forEach { poly ->
+                poly.coefficients.forEachIndexed { index, coeff ->
+                    result[index] += coeff
+                }
+            }
+            
+            return Polynomial(result.toTypedArray())
+        }
+    }
+
     // --- Basic operations ---
+
+    /**
+     * Adds this polynomial with another polynomial.
+     */
+    operator fun plus(other: Polynomial): Polynomial {
+        return add(this, other)
+    }
 
     // Evaluates as a nested polynomial
     fun eval(x: Double, coeffs: Array<Double> = coefficients) : Double {
