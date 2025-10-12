@@ -6,58 +6,59 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
-
-import pioneer.Constants.Pinpoint as PinpointConstants
+import pioneer.Constants.HardwareNames
 import pioneer.localization.Localizer
 import pioneer.localization.Pose
+import pioneer.Constants.Pinpoint as PinpointConstants
 
-class Pinpoint (hardwareMap: HardwareMap, startPose: Pose = Pose()) : Localizer {
-    // Current pose, velocity, and acceleration
+/**
+ * GoBILDA Pinpoint localizer with coordinate conversion.
+ * Pinpoint: X+ forward, Y+ left → Robot: X+ right, Y+ forward
+ */
+class Pinpoint(
+    hardwareMap: HardwareMap,
+    startPose: Pose = Pose(),
+) : Localizer {
     override var pose: Pose = startPose
-    override var velocity: Pose = Pose()
-    /** Acceleration is not directly available from Pinpoint. */
-    override var acceleration: Pose = Pose()
+    override var prevPose: Pose = startPose.copy()
 
-    // Pinpoint driver
     private val pinpoint = hardwareMap.get(GoBildaPinpointDriver::class.java, HardwareNames.PINPOINT)
-
-    private var prevVelocity = Pose()
 
     init {
         pinpoint.setOffsets(PinpointConstants.X_POD_OFFSET, PinpointConstants.Y_POD_OFFSET, DistanceUnit.MM)
         pinpoint.setEncoderResolution(PinpointConstants.ENCODER_RESOLUTION)
         pinpoint.setEncoderDirections(PinpointConstants.X_ENCODER_DIRECTION, PinpointConstants.Y_ENCODER_DIRECTION)
         pinpoint.recalibrateIMU()
-        pinpoint.setPosition(Pose2D(DistanceUnit.CM, startPose.y, -startPose.x, AngleUnit.RADIANS, -startPose.heading))
+        // Coordinate conversion: robot_y → pinpoint_x, -robot_x → pinpoint_y, -robot_θ → pinpoint_θ
+        pinpoint.setPosition(Pose2D(DistanceUnit.CM, startPose.y, -startPose.x, AngleUnit.RADIANS, -startPose.theta))
         pinpoint.update()
     }
 
-    override fun update(deltaTime: Double) {
+    override fun update(dt: Double) {
         pinpoint.update()
-        // Update pose and velocity based on the pinpoint data
-        // Pinpoint uses X+ as forward, Y+ as left
-        // We need to convert this to our coordinate system where X+ is right, Y+ is forward
-        // Heading is changed from range [0, 2π) to [-π, π)
-        pose = Pose(
-            -pinpoint.getPosY(DistanceUnit.CM),
-            pinpoint.getPosX(DistanceUnit.CM),
-            -pinpoint.getHeading(AngleUnit.RADIANS)
-        )
-        velocity = Pose(
-            -pinpoint.getVelY(DistanceUnit.CM),
-            pinpoint.getVelX(DistanceUnit.CM),
-            -pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
-        )
-        acceleration = Pose(
-            (velocity.x - prevVelocity.x) / deltaTime,
-            (velocity.y - prevVelocity.y) / deltaTime,
-            (velocity.heading - prevVelocity.heading) / deltaTime
-        )
-        prevVelocity = velocity
+
+        // Coordinate conversion: robot_x = -pinpoint_y, robot_y = pinpoint_x
+        val x = -pinpoint.getPosY(DistanceUnit.CM)
+        val y = pinpoint.getPosX(DistanceUnit.CM)
+        val vx = -pinpoint.getVelY(DistanceUnit.CM)
+        val vy = pinpoint.getVelX(DistanceUnit.CM)
+
+        // Numerical differentiation for acceleration
+        val ax = (vx - prevPose.vx) / dt
+        val ay = (vy - prevPose.vy) / dt
+
+        // Angular motion with coordinate conversion
+        val theta = -pinpoint.getHeading(AngleUnit.RADIANS)
+        val omega = (theta - prevPose.theta) / dt
+        val alpha = (omega - prevPose.alpha) / dt
+
+        pose = Pose(x, y, vx, vy, ax, ay, theta, omega, alpha)
+        prevPose = pose
     }
 
     override fun reset(pose: Pose) {
         this.pose = pose
-        pinpoint.setPosition(Pose2D(DistanceUnit.CM, pose.x, pose.y, AngleUnit.RADIANS, pose.heading))
+        // Coordinate conversion back to Pinpoint system
+        pinpoint.setPosition(Pose2D(DistanceUnit.CM, pose.y, -pose.x, AngleUnit.RADIANS, -pose.theta))
     }
 }
