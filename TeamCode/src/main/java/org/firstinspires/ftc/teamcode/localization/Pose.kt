@@ -120,7 +120,7 @@ data class Pose(
         x = -x, y = -y,
         vx = -vx, vy = -vy,
         ax = -ax, ay = -ay,
-        theta = wrap(-theta),
+        theta = -theta,
         omega = -omega,
         alpha = -alpha
     )
