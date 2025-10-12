@@ -6,10 +6,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
-import pioneer.HardwareNames
+
+import pioneer.Constants.Pinpoint as PinpointConstants
 import pioneer.localization.Localizer
 import pioneer.localization.Pose
-import pioneer.localization.constants.PinpointConstants
 
 class Pinpoint (hardwareMap: HardwareMap, startPose: Pose = Pose()) : Localizer {
     // Current pose, velocity, and acceleration

@@ -7,7 +7,8 @@ import pioneer.HardwareNames
 import pioneer.helpers.MathUtils
 import pioneer.localization.Localizer
 import pioneer.localization.Pose
-import pioneer.localization.constants.ThreeWheelOdometryConstants
+import pioneer.Constants.Odometry as OdometryConstants
+import pioneer.Constants.HardwareNames as HardwareNames
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -25,7 +26,7 @@ class ThreeWheelOdometry (hardwareMap: HardwareMap, startPose: Pose = Pose()) : 
     // Hardware
     private val odoLeft : DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_LEFT)
     private val odoRight : DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_RIGHT)
-    private val odoCenter : DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_BACK)
+    private val odoCenter : DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_CENTER)
 
     init {
         // Reset encoders
@@ -41,14 +42,14 @@ class ThreeWheelOdometry (hardwareMap: HardwareMap, startPose: Pose = Pose()) : 
         val curCenterTicks = -odoCenter.currentPosition
 
         // Calculate deltas
-        val dLeftCM = (curLeftTicks - prevLeftTicks) * ThreeWheelOdometryConstants.TICKS_TO_CM
-        val dRightCM = (curRightTicks - prevRightTicks) * ThreeWheelOdometryConstants.TICKS_TO_CM
-        val dCenterCM = (curCenterTicks - prevCenterTicks) * ThreeWheelOdometryConstants.TICKS_TO_CM
-        val dTheta = (dLeftCM - dRightCM) / ThreeWheelOdometryConstants.TRACK_WIDTH
+        val dLeftCM = (curLeftTicks - prevLeftTicks) * OdometryConstants.TICKS_TO_CM
+        val dRightCM = (curRightTicks - prevRightTicks) * OdometryConstants.TICKS_TO_CM
+        val dCenterCM = (curCenterTicks - prevCenterTicks) * OdometryConstants.TICKS_TO_CM
+        val dTheta = (dLeftCM - dRightCM) / OdometryConstants.TRACK_WIDTH
 
         // Displacement in the robot's local frame
         val verticalDisplacement = (dLeftCM + dRightCM) / 2
-        val horizontalDisplacement = dCenterCM - (ThreeWheelOdometryConstants.FORWARD_OFFSET * dTheta)
+        val horizontalDisplacement = dCenterCM - (OdometryConstants.FORWARD_OFFSET * dTheta)
 
         // Update pose, velocity, and acceleration
         var a : Double; var b : Double
