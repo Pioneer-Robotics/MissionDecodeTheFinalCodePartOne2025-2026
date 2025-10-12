@@ -3,93 +3,79 @@ package pioneer.hardware.drivebase
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.HardwareNames
+import pioneer.Constants.HardwareNames
 import pioneer.localization.Pose
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.sign
+import pioneer.Constants.Drive as DriveConstants
 
-class MecanumBase (hardwareMap: HardwareMap) {
-    // Drive motors
-    val leftFront = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_FRONT)
-    val leftBack = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_BACK)
-    val rightFront = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_RIGHT_FRONT)
-    val rightBack = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_RIGHT_BACK)
-    val motors = arrayOf(leftFront, leftBack, rightFront, rightBack)
+class MecanumBase(
+    hardwareMap: HardwareMap,
+) {
+    private val leftFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_FRONT)
+    private val leftBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_BACK)
+    private val rightFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_RIGHT_FRONT)
+    private val rightBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_RIGHT_BACK)
+
+    private val motors = arrayOf(leftFront, leftBack, rightFront, rightBack)
 
     init {
-        // Initialize motors
-        for (motor in motors) {
+        motors.forEachIndexed { index, motor ->
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
             motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+            motor.direction = DriveConstants.MOTOR_DIRECTIONS[index]
         }
-        leftFront.direction = MecanumConstants.MOTOR_DIRECTIONS[0]
-        leftBack.direction = MecanumConstants.MOTOR_DIRECTIONS[1]
-        rightFront.direction = MecanumConstants.MOTOR_DIRECTIONS[2]
-        rightBack.direction = MecanumConstants.MOTOR_DIRECTIONS[3]
     }
 
-    /**
-     * Sets the zero power behavior of all drive motors.
-     */
     fun setZeroPowerBehavior(behavior: DcMotor.ZeroPowerBehavior) {
-        for (motor in motors) {
-            motor.zeroPowerBehavior = behavior
-        }
+        motors.forEach { it.zeroPowerBehavior = behavior }
     }
 
     /**
-     * Sets the power of all drive motors to move in a specific direction.
-     * Robot centric (local coordinates) movement is used.
-     * @param x The x component of the movement vector (right is positive).
-     * @param y The y component of the movement vector (forward is positive).
-     * @param rotation The rotation component (counter-clockwise is positive).
-     * @param power Scaling factor for the drive power, default is [MecanumConstants.DEFAULT_DRIVE_POWER].
-     * @param adjustForStrafe Whether to adjust the x component for strafing inefficiency.
+     * Drive using robot-centric coordinates: x=strafe, y=forward, rotation=turn
      */
-    fun setDrivePower(x: Double, y: Double, rotation: Double, power: Double = MecanumConstants.DEFAULT_DRIVE_POWER, adjustForStrafe: Boolean = false) {
-        // Adjust x for strafing if necessary
-        val strafeFactor = MecanumConstants.MAX_FORWARD_VELOCITY / MecanumConstants.MAX_HORIZONTAL_VELOCITY
-        val adjX = if (adjustForStrafe) x * strafeFactor else x
+    fun setDrivePower(
+        x: Double,
+        y: Double,
+        rotation: Double,
+        power: Double = DriveConstants.DEFAULT_DRIVE_POWER,
+    ) {
+        val leftFrontPower = y + x + rotation
+        val leftBackPower = y - x + rotation
+        val rightFrontPower = y - x - rotation
+        val rightBackPower = y + x - rotation
 
-        val denominator = (abs(y) + abs(adjX) + abs(rotation)).coerceAtLeast(1.0)
-        leftFront.velocity = ((y + adjX + rotation) / denominator) * power * MecanumConstants.MAX_DRIVE_MOTOR_VELOCITY
-        leftBack.velocity = ((y - adjX + rotation) / denominator) * power * MecanumConstants.MAX_DRIVE_MOTOR_VELOCITY
-        rightFront.velocity = ((y - adjX - rotation) / denominator) * power * MecanumConstants.MAX_DRIVE_MOTOR_VELOCITY
-        rightBack.velocity = ((y + adjX - rotation) / denominator) * power * MecanumConstants.MAX_DRIVE_MOTOR_VELOCITY
+        val maxPower = maxOf(abs(leftFrontPower), abs(leftBackPower), abs(rightFrontPower), abs(rightBackPower), 1.0)
+        val scale = power / maxPower
+
+        leftFront.velocity = leftFrontPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
+        leftBack.velocity = leftBackPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
+        rightFront.velocity = rightFrontPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
+        rightBack.velocity = rightBackPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
     }
 
     /**
-     * Calculates and sets drive powers using kinematics based on a target velocity and acceleration.
-     * Used in conjunction with a motion profile or trajectory following.
-     * @param vel The target velocity vector.
-     * @param accel The target acceleration vector.
+     * Feedforward control for motion profiling
      */
-    fun setDriveVA(vel: Pose, accel: Pose) {
-        val ff = vel * MecanumConstants.KV + accel * MecanumConstants.KA
-        // Add static friction component if velocity is non-zero
-        if (abs(vel.y) > 1e-3) ff.y += MecanumConstants.KS.y * sign(vel.y)
-        if (abs(vel.x) > 1e-3) ff.x += MecanumConstants.KS.x * sign(vel.x)
-        if (abs(vel.heading) > 1e-3) ff.heading += MecanumConstants.KS.heading * sign(vel.heading)
+    fun setDriveVA(
+        velocity: Pose,
+        acceleration: Pose,
+    ) {
+        val ff = velocity * DriveConstants.kV + acceleration * DriveConstants.kA
 
-        val motorPowers = arrayOf(
-            ff.y + ff.x + ff.heading, // left front
-            ff.y - ff.x + ff.heading, // left back
-            ff.y - ff.x - ff.heading, // right front
-            ff.y + ff.x - ff.heading, // right back
-        )
+        // Add static friction
+        if (abs(velocity.x) > 1e-3) ff.x += DriveConstants.kS.x * sign(velocity.x)
+        if (abs(velocity.y) > 1e-3) ff.y += DriveConstants.kS.y * sign(velocity.y)
+        if (abs(velocity.theta) > 1e-3) ff.theta += DriveConstants.kS.theta * sign(velocity.theta)
 
-        // Set the motor powers
-        for (i in motors.indices) {
-            motors[i].power = motorPowers[i].coerceIn(-1.0, 1.0) // Ensure powers are within [-1.0, 1.0]
-        }
+        leftFront.power = (ff.y + ff.x + ff.theta).coerceIn(-1.0, 1.0)
+        leftBack.power = (ff.y - ff.x + ff.theta).coerceIn(-1.0, 1.0)
+        rightFront.power = (ff.y - ff.x - ff.theta).coerceIn(-1.0, 1.0)
+        rightBack.power = (ff.y + ff.x - ff.theta).coerceIn(-1.0, 1.0)
     }
 
-    /**
-     * Sets the power of all drive motors to 0.0
-     */
     fun stop() {
-        for (motor in motors) {
-            motor.power = 0.0
-        }
+        motors.forEach { it.power = 0.0 }
     }
 }
