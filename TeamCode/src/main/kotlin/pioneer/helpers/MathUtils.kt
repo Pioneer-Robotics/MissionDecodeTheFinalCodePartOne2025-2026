@@ -16,6 +16,13 @@ class MathUtils {
             return normalized
         }
 
+        /**
+         * Creates a linearly spaced array of values.
+         * @param start Starting value
+         * @param end Ending value (inclusive)
+         * @param num Number of points to generate
+         * @return List of evenly spaced values
+         */
         fun linspace(start: Double, end: Double, num: Int): List<Double> {
             if (num <= 0) return emptyList()
             if (num == 1) return listOf(start)
