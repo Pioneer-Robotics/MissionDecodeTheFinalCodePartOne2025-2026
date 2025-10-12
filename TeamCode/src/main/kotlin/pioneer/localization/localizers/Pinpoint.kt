@@ -25,7 +25,7 @@ class Pinpoint(
     private val pinpoint = hardwareMap.get(GoBildaPinpointDriver::class.java, HardwareNames.PINPOINT)
 
     init {
-        pinpoint.setOffsets(PinpointConstants.X_POD_OFFSET, PinpointConstants.Y_POD_OFFSET, DistanceUnit.MM)
+        pinpoint.setOffsets(PinpointConstants.X_POD_OFFSET_MM, PinpointConstants.Y_POD_OFFSET_MM, DistanceUnit.MM)
         pinpoint.setEncoderResolution(PinpointConstants.ENCODER_RESOLUTION)
         pinpoint.setEncoderDirections(PinpointConstants.X_ENCODER_DIRECTION, PinpointConstants.Y_ENCODER_DIRECTION)
         pinpoint.recalibrateIMU()
@@ -52,8 +52,8 @@ class Pinpoint(
         val omega = (theta - prevPose.theta) / dt
         val alpha = (omega - prevPose.alpha) / dt
 
-        pose = Pose(x, y, vx, vy, ax, ay, theta, omega, alpha)
         prevPose = pose
+        pose = Pose(x, y, vx, vy, ax, ay, theta, omega, alpha)
     }
 
     override fun reset(pose: Pose) {

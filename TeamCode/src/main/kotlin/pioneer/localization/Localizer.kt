@@ -2,13 +2,10 @@ package pioneer.localization
 
 interface Localizer {
     /** Current pose of the robot */
-    val pose: Pose
-
-    /** Current velocity of the robot */
-    val velocity: Pose
-
-    /** Current acceleration of the robot */
-    val acceleration: Pose
+    var pose: Pose
+    
+    /** Previous pose for numerical differentiation */
+    var prevPose: Pose
 
     /**
      * Updates the pose of the robot based on sensor data
