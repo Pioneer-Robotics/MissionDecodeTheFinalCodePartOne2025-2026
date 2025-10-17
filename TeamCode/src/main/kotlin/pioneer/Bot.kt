@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import pioneer.hardware.drivebase.MecanumBase
-import pioneer.hardware.VoltageHandler
+import pioneer.hardware.BatteryMonitor
 import pioneer.helpers.DashboardPlotter
 import pioneer.helpers.FileLogger
 import pioneer.localization.Localizer
@@ -35,7 +35,7 @@ class Bot {
 
         lateinit var localizer: Localizer
 
-        lateinit var voltageHandler: VoltageHandler
+        lateinit var batteryMonitor: BatteryMonitor
             private set
 
         fun initialize(hardwareMap: HardwareMap, telemetry: Telemetry, startPose: Pose = Pose()) {
@@ -43,7 +43,7 @@ class Bot {
             mecanumBase = MecanumBase(hardwareMap)
             localizer = Pinpoint(hardwareMap, startPose)
             follower = Follower()
-            voltageHandler = VoltageHandler(hardwareMap)
+            batteryMonitor = BatteryMonitor(hardwareMap)
         }
 
         /** Updates the bot's systems. Call this before every loop.  */

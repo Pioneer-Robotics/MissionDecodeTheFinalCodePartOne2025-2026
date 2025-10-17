@@ -2,6 +2,7 @@ package pioneer.pathing.follower
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
+import pioneer.Constants.Follower as FollowerConstants
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import pioneer.localization.Pose
@@ -14,8 +15,16 @@ import kotlin.math.*
 class Follower {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
-    private var xPID = PIDController(FollowerConstants.PID_X)
-    private var yPID = PIDController(FollowerConstants.PID_Y)
+    private var xPID = PIDController(
+        kp = FollowerConstants.X_KP,
+        ki = FollowerConstants.X_KI,
+        kd = FollowerConstants.X_KD
+    )
+    private var yPID = PIDController(
+        kp = FollowerConstants.Y_KP,
+        ki = FollowerConstants.Y_KI,
+        kd = FollowerConstants.Y_KD
+    )
 
     var path: Path? = null
         set(value) {
@@ -60,21 +69,21 @@ class Follower {
 
         // Get the target point, first derivative (tangent), and second derivative (acceleration) from the path
         val targetPoint = path!!.getPoint(pathT)
-        val targetPointFirstDerivative = path!!.getTangent(pathT).normalize()
+        val tangent = path!!.getTangent(pathT).normalize()
         val targetPointSecondDerivative = path!!.getSecondDerivative(pathT)
 
         // Calculate the position error and convert to robot-centric coordinates
-        val positionError = targetPoint - Bot.localizer.pose
-        positionError.rotate(-Bot.localizer.pose.heading)
+        var positionError = targetPoint - Bot.localizer.pose
+        positionError = positionError.rotate(-Bot.localizer.pose.theta)
 
         // Calculate 2D target velocity and acceleration based on path derivatives
-        val targetVelocity = targetPointFirstDerivative * targetState.v
-        val targetAcceleration = targetPointSecondDerivative * (targetState.v * targetState.v) +
-                targetPointFirstDerivative * targetState.a
+        var targetVelocity = tangent * targetState.v
+        var targetAcceleration = targetPointSecondDerivative * (targetState.v * targetState.v) +
+                tangent * targetState.a
 
         // Convert target velocity and acceleration to robot-centric coordinates
-        targetVelocity.rotate(-Bot.localizer.pose.heading)
-        targetAcceleration.rotate(-Bot.localizer.pose.heading)
+        targetVelocity = targetVelocity.rotate(-Bot.localizer.pose.theta)
+        targetAcceleration = targetAcceleration.rotate(-Bot.localizer.pose.theta)
 
         // TODO: Heading interpolation
 

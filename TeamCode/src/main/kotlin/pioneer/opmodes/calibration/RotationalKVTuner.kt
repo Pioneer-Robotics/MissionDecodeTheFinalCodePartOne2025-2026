@@ -14,11 +14,11 @@ class RotationalKVTuner : OpMode() {
     override fun loop() {
         Bot.update()
         Bot.mecanumBase.setDriveVA(
-            Pose(0.0, 0.0, 1.0),    // 1 rad/s rotation
-            Pose(0.0, 0.0, 0.0)     // No acceleration, we are only tuning velocity
+            Pose(theta = 1.0),    // 1 rad/s rotation (omega)
+            Pose()                // No acceleration
         )
-        telemetry.addData("Velocity (rad/s)", Bot.localizer.velocity.heading)
-        telemetry.addData("Rotation (rad)", Bot.localizer.pose.heading)
+        telemetry.addData("Velocity (rad/s)", Bot.localizer.pose.omega)
+        telemetry.addData("Rotation (rad)", Bot.localizer.pose.theta)
         telemetry.update()
     }
 }

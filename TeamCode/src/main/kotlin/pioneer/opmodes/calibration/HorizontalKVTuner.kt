@@ -17,7 +17,7 @@ class HorizontalKVTuner : OpMode() {
             Pose(50.0, 0.0, 0.0),   // 50 cm/s sideways
             Pose(0.0, 0.0, 0.0)     // No acceleration, we are only tuning velocity
         )
-        telemetry.addData("Velocity (cm/s)", Bot.localizer.velocity.x)
+        telemetry.addData("Velocity (cm/s)", Bot.localizer.pose.vx)
         telemetry.addData("Position (cm)", Bot.localizer.pose.x)
         telemetry.update()
     }

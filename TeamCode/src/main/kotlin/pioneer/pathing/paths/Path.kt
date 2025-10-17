@@ -115,7 +115,7 @@ interface Path {
     fun getHeadingGoal(t: Double): Double {
         when (headingInterpolationMode) {
             HeadingInterpolationMode.LINEAR -> {
-                return startPose.heading + (endPose.heading - startPose.heading) * t
+                return startPose.theta + (endPose.theta - startPose.theta) * t
             }
         }
     }

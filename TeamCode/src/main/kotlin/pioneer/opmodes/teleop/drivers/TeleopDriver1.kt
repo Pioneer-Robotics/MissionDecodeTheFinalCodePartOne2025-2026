@@ -22,8 +22,10 @@ class TeleopDriver1 (var gamepad: Gamepad) {
     }
 
     fun drive() {
-        val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        if (fieldCentricToggle.state) direction.rotate(Bot.localizer.pose.heading) // Rotate to local coordinates
+        var direction = Pose(x = gamepad.left_stick_x.toDouble(), y = -gamepad.left_stick_y.toDouble())
+        if (fieldCentricToggle.state) {
+            direction = direction.rotate(Bot.localizer.pose.theta) // Rotate to local coordinates
+        }
 
         Bot.mecanumBase.setDrivePower(
             direction.x,

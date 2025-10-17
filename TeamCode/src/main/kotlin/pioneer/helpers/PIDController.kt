@@ -3,9 +3,12 @@ package pioneer.helpers
 import kotlin.math.abs
 
 /**
- * A unified PID/PIDF controller with advanced features including derivative-on-measurement,
- * output saturation, setpoint weighting, and comprehensive error handling.
- * Thread-safe and suitable for real-time control applications.
+ * A PID/PIDF controller with integral clamping and output saturation.
+ * 
+ * @param kp Proportional gain
+ * @param ki Integral gain
+ * @param kd Derivative gain
+ * @param kf Feedforward gain
  */
 class PIDController(
     val kp: Double,
@@ -13,23 +16,19 @@ class PIDController(
     val kd: Double = 0.0,
     val kf: Double = 0.0
 ) {
-    // Alternative constructors for convenience
-    constructor(coeffs: DoubleArray) : this(
-        kp = coeffs.getOrElse(0) { 0.0 },
-        ki = coeffs.getOrElse(1) { 0.0 },
-        kd = coeffs.getOrElse(2) { 0.0 },
-        kf = coeffs.getOrElse(3) { 0.0 }
-    )
+    init {
+        require(kp >= 0.0) { "kp must be non-negative" }
+        require(ki >= 0.0) { "ki must be non-negative" }
+        require(kd >= 0.0) { "kd must be non-negative" }
+    }
 
-    constructor(coeffs: Array<Double>) : this(coeffs.toDoubleArray())
+    // Internal state
+    private var integral = 0.0
+    private var lastError = 0.0
+    private var lastTime = System.nanoTime()
+    private var isFirstUpdate = true
 
-    // Internal state - synchronized for thread safety
-    @Volatile private var integral = 0.0
-    @Volatile private var lastError = 0.0  // Track previous error for derivative
-    @Volatile private var lastTime = System.nanoTime()
-    @Volatile private var isFirstUpdate = true
-
-    // Configuration properties
+    // Configuration
     var integralClamp = 1.0
         set(value) { field = abs(value) }
     
@@ -38,19 +37,17 @@ class PIDController(
 
     /**
      * Updates the controller with an error value and time delta.
-     * @param error The error value (target - current)
+     * @param error The error (target - current)
      * @param dt Time delta in seconds
-     * @param measurement Current measurement (for derivative-on-measurement)
-     * @return Control output, clamped to [outputMin, outputMax]
+     * @return Control output clamped to [outputMin, outputMax]
      */
-    @Synchronized
     fun update(error: Double, dt: Double): Double {
         if (dt <= 0) return 0.0
         
-        // Integral term with simple integration and clamping
+        // Update integral with clamping
         integral = (integral + error * dt).coerceIn(-integralClamp, integralClamp)
         
-        // Derivative term
+        // Calculate derivative
         val derivative = if (isFirstUpdate) {
             lastError = error
             isFirstUpdate = false
@@ -61,9 +58,8 @@ class PIDController(
             deriv
         }
         
-        // Combine PID terms
+        // Calculate and clamp output
         val output = (kp * error) + (ki * integral) + (kd * derivative)
-        
         return output.coerceIn(outputMin, outputMax)
     }
 
@@ -72,8 +68,8 @@ class PIDController(
      * @param target The desired setpoint
      * @param current The current measured value
      * @param dt Time delta in seconds
-     * @param normalizeRadians Whether to normalize angular error to [-π, π]
-     * @return Control output including feedforward term
+     * @param normalizeRadians Normalize angular error to [-π, π]
+     * @return Control output including feedforward
      */
     fun update(target: Double, current: Double, dt: Double, normalizeRadians: Boolean = false): Double {
         val error = if (normalizeRadians) {
@@ -82,27 +78,22 @@ class PIDController(
             target - current
         }
         
-        val pidOutput = update(error, dt)
-        val feedforwardOutput = kf * target
-        
-        return pidOutput + feedforwardOutput
+        return update(error, dt) + (kf * target)
     }
 
     /**
      * Auto-timestamped update using system time.
-     * Convenient for cases where you don't track dt manually.
      */
     fun update(target: Double, current: Double, normalizeRadians: Boolean = false): Double {
         val currentTime = System.nanoTime()
-        val dt = (currentTime - lastTime) / 1e9 // Convert to seconds
+        val dt = (currentTime - lastTime) / 1e9
         lastTime = currentTime
         return update(target, current, dt, normalizeRadians)
     }
 
     /**
-     * Resets the controller state (integral and derivative terms).
+     * Resets the controller state.
      */
-    @Synchronized
     fun reset() {
         integral = 0.0
         lastError = 0.0
@@ -111,29 +102,20 @@ class PIDController(
     }
 
     /**
-     * Sets output limits for saturation protection.
+     * Sets output limits.
      */
     fun setOutputLimits(min: Double, max: Double) {
-        require(min <= max) { "Minimum output must be <= maximum output" }
+        require(min <= max) { "Minimum must be <= maximum" }
         outputMin = min
         outputMax = max
     }
 
-    /**
-     * Returns true if this controller has feedforward capability.
-     */
     val hasFeedforward: Boolean
         get() = kf != 0.0
 
-    /**
-     * Returns current integral accumulator value.
-     */
     val integralTerm: Double
         get() = integral
 
-    /**
-     * Returns a string representation of the controller.
-     */
     override fun toString(): String {
         return if (hasFeedforward) {
             "PIDF(kp=$kp, ki=$ki, kd=$kd, kf=$kf)"

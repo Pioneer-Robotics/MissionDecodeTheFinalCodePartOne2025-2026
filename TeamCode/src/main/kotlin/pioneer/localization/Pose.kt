@@ -28,7 +28,7 @@ data class Pose(
     // Angle wrap to (-π, π] using atan2(sin,cos) for numeric stability
     private fun wrap(a: Double): Double = atan2(sin(a), cos(a))
 
-    fun normalized(): Pose = copy(theta = wrap(theta))
+    fun normalize(): Pose = copy(theta = wrap(theta))
 
     // Constant accel and angular accel over dt
     fun integrate(dt: Double): Pose {
@@ -53,6 +53,7 @@ data class Pose(
     )
 
     // Metrics
+    fun getLength(): Double = hypot(x, y)
     infix fun distanceTo(other: Pose): Double = hypot(other.x - x, other.y - y)
     infix fun angleTo(other: Pose): Double = atan2(other.y - y, other.x - x)
 
@@ -64,7 +65,7 @@ data class Pose(
         distanceTo(other) < positionTolerance &&
             abs(wrap(theta - other.theta)) < angleTolerance
 
-    fun rotateAbout(angle: Double, origin: Pose = Pose(0, 0)): Pose {
+    fun rotate(angle: Double, origin: Pose = Pose()): Pose {
         val cosA = cos(angle)
         val sinA = sin(angle)
         val dx = x - origin.x

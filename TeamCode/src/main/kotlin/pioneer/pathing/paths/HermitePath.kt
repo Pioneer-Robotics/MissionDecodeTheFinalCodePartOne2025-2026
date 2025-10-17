@@ -1,7 +1,6 @@
 package pioneer.pathing.paths
 
 import pioneer.helpers.Polynomial
-import pioneer.helpers.PolynomialUtils
 import pioneer.localization.Pose
 import pioneer.pathing.paths.Path.HeadingInterpolationMode
 import kotlin.math.pow
@@ -26,10 +25,10 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
     private val basis10 = Polynomial(arrayOf(0.0, 0.0, 3.0, -2.0))
     private val basis11 = Polynomial(arrayOf(0.0, 0.0, -1.0, 1.0))
 
-    private val xHermite = PolynomialUtils.addPolynomials(arrayOf(basis00.vScale(startPose.x), basis01.vScale(startVelocity.x),
-        basis10.vScale(endPose.x), basis11.vScale(endVelocity.x)))
-    private val yHermite = PolynomialUtils.addPolynomials(arrayOf(basis00.vScale(startPose.y), basis01.vScale(startVelocity.y),
-        basis10.vScale(endPose.y), basis11.vScale(endVelocity.y)))
+    private val xHermite = Polynomial.add(basis00.vScale(startPose.x), basis01.vScale(startVelocity.x),
+        basis10.vScale(endPose.x), basis11.vScale(endVelocity.x))
+    private val yHermite = Polynomial.add(basis00.vScale(startPose.y), basis01.vScale(startVelocity.y),
+        basis10.vScale(endPose.y), basis11.vScale(endVelocity.y))
 
     // Compound path for simplified calculations
     private val resolution: Int = 100 // Resolution for the compound path
@@ -53,7 +52,7 @@ class HermitePath(override var startPose: Pose, override var endPose: Pose,
     override fun getHeading(t: Double): Double {
         when (headingInterpolationMode) {
             HeadingInterpolationMode.LINEAR -> {
-                return startPose.heading + (endPose.heading - startPose.heading) * t
+                return startPose.theta + (endPose.theta - startPose.theta) * t
             }
         }
     }

@@ -1,10 +1,12 @@
 package pioneer
 
+import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import pioneer.localization.Pose
 import kotlin.math.PI
 
+@Config
 object Constants {
 
     object HardwareNames{
@@ -73,5 +75,33 @@ object Constants {
 
         val ENCODER_RESOLUTION =
             GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
+    }
+
+    // -------- Follower (path following) --------
+    object Follower {
+        /** The threshold in cm to consider the target reached. */
+        const val POSITION_THRESHOLD = 0.5
+
+        /** The threshold in radians to consider the target heading reached. */
+        const val ROTATION_THRESHOLD = 0.01
+
+        /** The maximum drive velocity in cm per second. */
+        const val MAX_DRIVE_VELOCITY = 100.0
+
+        /** The maximum drive acceleration in cm per second squared. */
+        const val MAX_DRIVE_ACCELERATION = 50.0
+
+        /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
+        const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
+
+        // X-axis PID coefficients for the trajectory follower
+        @JvmField var X_KP = 0.0
+        @JvmField var X_KI = 0.0
+        @JvmField var X_KD = 0.0
+
+        // Y-axis PID coefficients for the trajectory follower
+        @JvmField var Y_KP = 0.0
+        @JvmField var Y_KI = 0.0
+        @JvmField var Y_KD = 0.0
     }
 }

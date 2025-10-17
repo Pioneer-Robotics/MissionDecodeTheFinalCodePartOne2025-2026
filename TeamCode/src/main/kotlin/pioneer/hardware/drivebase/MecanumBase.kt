@@ -62,17 +62,18 @@ class MecanumBase(
         velocity: Pose,
         acceleration: Pose,
     ) {
-        val ff = velocity * DriveConstants.kV + acceleration * DriveConstants.kA
+        // Calculate feedforward for each axis
+        val ffX = velocity.x * DriveConstants.kV.x + acceleration.x * DriveConstants.kA.x +
+                  if (abs(velocity.x) > 1e-3) DriveConstants.kS.x * sign(velocity.x) else 0.0
+        val ffY = velocity.y * DriveConstants.kV.y + acceleration.y * DriveConstants.kA.y +
+                  if (abs(velocity.y) > 1e-3) DriveConstants.kS.y * sign(velocity.y) else 0.0
+        val ffTheta = velocity.theta * DriveConstants.kV.theta + acceleration.theta * DriveConstants.kA.theta +
+                      if (abs(velocity.theta) > 1e-3) DriveConstants.kS.theta * sign(velocity.theta) else 0.0
 
-        // Add static friction
-        if (abs(velocity.x) > 1e-3) ff.x += DriveConstants.kS.x * sign(velocity.x)
-        if (abs(velocity.y) > 1e-3) ff.y += DriveConstants.kS.y * sign(velocity.y)
-        if (abs(velocity.theta) > 1e-3) ff.theta += DriveConstants.kS.theta * sign(velocity.theta)
-
-        leftFront.power = (ff.y + ff.x + ff.theta).coerceIn(-1.0, 1.0)
-        leftBack.power = (ff.y - ff.x + ff.theta).coerceIn(-1.0, 1.0)
-        rightFront.power = (ff.y - ff.x - ff.theta).coerceIn(-1.0, 1.0)
-        rightBack.power = (ff.y + ff.x - ff.theta).coerceIn(-1.0, 1.0)
+        leftFront.power = (ffY + ffX + ffTheta).coerceIn(-1.0, 1.0)
+        leftBack.power = (ffY - ffX + ffTheta).coerceIn(-1.0, 1.0)
+        rightFront.power = (ffY - ffX - ffTheta).coerceIn(-1.0, 1.0)
+        rightBack.power = (ffY + ffX - ffTheta).coerceIn(-1.0, 1.0)
     }
 
     fun stop() {

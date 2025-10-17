@@ -40,7 +40,7 @@ class MotionProfileTest {
             val targetState = follower.targetState!!
             val pathT = targetState.x / path.getLength()
             val targetPoint = path.getPoint(pathT)
-            val targetPointFirstDerivative = path.getTangent(pathT).normalize()
+                        val tangent = path.getTangent(pathT).normalize()
             val targetPointSecondDerivative = path.getSecondDerivative(pathT)
             val targetVelocity = targetPointFirstDerivative * targetState.v
             val targetAcceleration = targetPointSecondDerivative * (targetState.v * targetState.v) +

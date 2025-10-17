@@ -6,6 +6,7 @@ import pioneer.Bot
 import pioneer.helpers.DashboardPlotter
 import pioneer.pathing.paths.HermitePath
 import pioneer.localization.Pose
+import kotlin.math.hypot
 
 @Autonomous(name = "Pathing Test", group = "Testing")
 class PathingTest : OpMode() {
@@ -40,7 +41,7 @@ class PathingTest : OpMode() {
                 if (Bot.follower.done) state = State.DONE
                 // Telemetry updates
                 Bot.telemetryPacket.put("Target Velocity", Bot.follower.targetState!!.v)
-                Bot.telemetryPacket.put("Current Velocity", Bot.localizer.velocity.getLength())
+                Bot.telemetryPacket.put("Current Velocity", hypot(Bot.localizer.pose.vx, Bot.localizer.pose.vy))
                 // Field view
                 DashboardPlotter.plotGrid(Bot.telemetryPacket)
                 DashboardPlotter.plotBotPosition(Bot.telemetryPacket, Bot.localizer.pose)

@@ -17,7 +17,7 @@ class ForwardKVTuner : OpMode() {
             Pose(0.0, 50.0, 0.0),   // 50 cm/s forward
             Pose(0.0, 0.0, 0.0)     // No acceleration, we are only tuning velocity
         )
-        telemetry.addData("Velocity (cm/s)", Bot.localizer.velocity.y)
+        telemetry.addData("Velocity (cm/s)", Bot.localizer.pose.vy)
         telemetry.addData("Position (cm)", Bot.localizer.pose.y)
         telemetry.update()
     }

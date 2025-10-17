@@ -38,11 +38,11 @@ class TelemetryInterface(val phone : Telemetry, val dashboard : Telemetry) {
     }
 
     private fun addDashboardData(name: String, data: Any) {
-        // Convert Pose objects to separate X Y and Theta for graphing
+        // Convert Pose objects to separate X Y and Theta (heading) for graphing
         if (data is Pose) {
             dashboard.addData("$name X", "%.3f".format(data.x))
             dashboard.addData("$name Y", "%.3f".format(data.y))
-            dashboard.addData("$name Heading", "%.3f".format(data.heading))
+            dashboard.addData("$name Heading", "%.3f".format(data.theta))
         } else {
             dashboard.addData(name, data)
         }

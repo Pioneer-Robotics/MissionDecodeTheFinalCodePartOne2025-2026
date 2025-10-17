@@ -32,8 +32,8 @@ class LinearPath (override var startPose: Pose = Pose(), override var endPose: P
     override fun getHeading(t: Double): Double {
         when (headingInterpolationMode) {
             HeadingInterpolationMode.LINEAR -> {
-                val delta = MathUtils.normalizeRadians(endPose.heading - startPose.heading)
-                return startPose.heading + delta * t
+                val delta = MathUtils.normalizeRadians(endPose.theta - startPose.theta)
+                return startPose.theta + delta * t
             }
         }
     }
