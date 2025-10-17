@@ -9,9 +9,9 @@ interface Localizer {
 
     /**
      * Updates the pose of the robot based on sensor data
-     * @param deltaTime The time since the last update in seconds
+     * @param dt The time since the last update in seconds
      */
-    fun update(deltaTime: Double)
+    fun update(dt: Double)
 
     /**
      * Resets the localizer to a specific pose
