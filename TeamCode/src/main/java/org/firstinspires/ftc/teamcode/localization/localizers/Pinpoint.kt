@@ -41,12 +41,12 @@ class Pinpoint (hardwareMap: HardwareMap, startPose: Pose = Pose()) : Localizer 
         pose = Pose(
             -pinpoint.getPosY(DistanceUnit.CM),
             pinpoint.getPosX(DistanceUnit.CM),
-            pinpoint.getHeading(AngleUnit.RADIANS)
+            -pinpoint.getHeading(AngleUnit.RADIANS)
         )
         velocity = Pose(
             -pinpoint.getVelY(DistanceUnit.CM),
             pinpoint.getVelX(DistanceUnit.CM),
-            pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
+            -pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
         )
         acceleration = Pose(
             (velocity.x - prevVelocity.x) / deltaTime,

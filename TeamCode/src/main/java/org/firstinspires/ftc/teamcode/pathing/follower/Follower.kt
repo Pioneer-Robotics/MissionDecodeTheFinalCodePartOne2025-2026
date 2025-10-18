@@ -11,12 +11,11 @@ import org.firstinspires.ftc.teamcode.pathing.motionprofile.MotionState
 import org.firstinspires.ftc.teamcode.pathing.paths.Path
 import kotlin.math.*
 
-class Follower(private val bot: Bot) {
+class Follower {
+    var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID = PIDController(FollowerConstants.PID_X)
     private var yPID = PIDController(FollowerConstants.PID_Y)
-
-    var motionProfile: MotionProfile? = null
 
     var path: Path? = null
         set(value) {
@@ -65,8 +64,8 @@ class Follower(private val bot: Bot) {
         val targetPointSecondDerivative = path!!.getSecondDerivative(pathT)
 
         // Calculate the position error and convert to robot-centric coordinates
-        val positionError = targetPoint - bot.localizer.pose
-        positionError.rotate(-bot.localizer.pose.heading)
+        val positionError = targetPoint - Bot.localizer.pose
+        positionError.rotate(-Bot.localizer.pose.heading)
 
         // Calculate 2D target velocity and acceleration based on path derivatives
         val targetVelocity = targetPointFirstDerivative * targetState.v
@@ -74,19 +73,19 @@ class Follower(private val bot: Bot) {
                 targetPointFirstDerivative * targetState.a
 
         // Convert target velocity and acceleration to robot-centric coordinates
-        targetVelocity.rotate(-bot.localizer.pose.heading)
-        targetAcceleration.rotate(-bot.localizer.pose.heading)
+        targetVelocity.rotate(-Bot.localizer.pose.heading)
+        targetAcceleration.rotate(-Bot.localizer.pose.heading)
 
         // TODO: Heading interpolation
 
         // Calculate the PID outputs
-        var xCorrection = xPID.update(positionError.x, bot.dt)
-        var yCorrection = yPID.update(positionError.y, bot.dt)
+        var xCorrection = xPID.update(positionError.x, Bot.dt)
+        var yCorrection = yPID.update(positionError.y, Bot.dt)
 
         // Calculate adjusted velocity based on PID corrections
         // TODO: Add heading correction
         val adjustedVelocity = targetVelocity + Pose(xCorrection, yCorrection, 0.0)
-        bot.mecanumBase.setDriveVA(adjustedVelocity, targetAcceleration)
+        Bot.mecanumBase.setDriveVA(adjustedVelocity, targetAcceleration)
     }
 
     fun start() {

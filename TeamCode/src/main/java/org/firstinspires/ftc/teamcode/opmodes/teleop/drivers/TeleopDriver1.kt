@@ -5,7 +5,7 @@ import org.firstinspires.ftc.teamcode.Bot
 import org.firstinspires.ftc.teamcode.helpers.Toggle
 import org.firstinspires.ftc.teamcode.localization.Pose
 
-class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
+class TeleopDriver1 (var gamepad: Gamepad) {
     var driveSpeed = 0.5
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
@@ -19,13 +19,13 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
         drive()
         updateDriveSpeed()
         updateFieldCentric()
-        flywheelSpeed()
-        updateLaunchServos()
     }
 
     fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        bot.mecanumBase.setDrivePower(
+        if (fieldCentricToggle.state) direction.rotate(Bot.localizer.pose.heading) // Rotate to local coordinates
+
+        Bot.mecanumBase.setDrivePower(
             direction.x,
             direction.y,
             gamepad.right_stick_x.toDouble(),
@@ -47,23 +47,5 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
 
     fun updateFieldCentric() {
         fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
-    }
-
-    fun flywheelSpeed() {
-        if (gamepad.circle) {
-            bot.flywheel.setSpeed(0.67)
-        } else {
-            bot.flywheel.setSpeed(0.0)
-        }
-    }
-
-    fun updateLaunchServos() {
-        if (gamepad.dpad_up) {
-            bot.launchServos.triggerLaunch()
-        }
-        else if (gamepad.dpad_down) {
-            bot.launchServos.triggerRetract()
-        }
-        bot.launchServos.update()
     }
 }
