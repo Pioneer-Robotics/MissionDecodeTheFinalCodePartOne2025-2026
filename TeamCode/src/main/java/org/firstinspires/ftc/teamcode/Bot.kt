@@ -4,71 +4,85 @@ import com.acmerobotics.dashboard.FtcDashboard
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.teamcode.hardware.drivebase.MecanumBase
-import org.firstinspires.ftc.teamcode.hardware.VoltageHandler
+import org.firstinspires.ftc.teamcode.hardware.Flywheel
+import org.firstinspires.ftc.teamcode.hardware.implementations.AprilTagImpl
+import org.firstinspires.ftc.teamcode.hardware.implementations.FlywheelImpl
+import org.firstinspires.ftc.teamcode.hardware.implementations.LaunchServosImpl
+import org.firstinspires.ftc.teamcode.hardware.implementations.MecanumBaseImpl
+import org.firstinspires.ftc.teamcode.hardware.implementations.VoltageHandlerImpl
+import org.firstinspires.ftc.teamcode.hardware.interfaces.AprilTag
+import org.firstinspires.ftc.teamcode.hardware.interfaces.LaunchServos
+import org.firstinspires.ftc.teamcode.hardware.interfaces.MecanumBase
+import org.firstinspires.ftc.teamcode.hardware.interfaces.VoltageHandler
+import org.firstinspires.ftc.teamcode.hardware.mocks.AprilTagMock
+import org.firstinspires.ftc.teamcode.hardware.mocks.FlywheelMock
+import org.firstinspires.ftc.teamcode.hardware.mocks.LaunchServosMock
+import org.firstinspires.ftc.teamcode.hardware.mocks.MecanumBaseMock
+import org.firstinspires.ftc.teamcode.hardware.mocks.VoltageHandlerMock
 import org.firstinspires.ftc.teamcode.helpers.DashboardPlotter
 import org.firstinspires.ftc.teamcode.helpers.FileLogger
 import org.firstinspires.ftc.teamcode.localization.Localizer
-import org.firstinspires.ftc.teamcode.localization.Pose
+import org.firstinspires.ftc.teamcode.localization.localizers.LocalizerMock
 import org.firstinspires.ftc.teamcode.localization.localizers.Pinpoint
 import org.firstinspires.ftc.teamcode.pathing.follower.Follower
 
-class Bot {
-    companion object {
-        private val timer: ElapsedTime = ElapsedTime()
-        private var prevTime: Double = timer.milliseconds()
+class Bot(botFlavor: BotFlavor, hardwareMap: HardwareMap) {
+    enum class BotFlavor {
+        GOBILDA_STARTER_BOT,
+    }
 
-        var telemetryPacket: TelemetryPacket = TelemetryPacket(false)
+    // Timer
+    private val timer: ElapsedTime = ElapsedTime()
+    private var prevTime: Double = timer.milliseconds()
+    var dt: Double = 0.0 // Delta time in milliseconds
+        private set
 
-        lateinit var telemetry: Telemetry
-            private set // Prevent external modification
+    // Telemetry
+    var telemetryPacket: TelemetryPacket = TelemetryPacket(false)
 
-        var dt: Double = 0.0 // Delta time in milliseconds
-            private set
+    // Basic bot
+    var mecanumBase: MecanumBase = MecanumBaseMock()
+    var voltageHandler: VoltageHandler = VoltageHandlerMock()
+    var localizer: Localizer = LocalizerMock()
 
-        lateinit var mecanumBase: MecanumBase
-            private set
+    // General hardware
+    var aprilTagProcessor: AprilTag = AprilTagMock()
 
-        lateinit var follower: Follower
-            private set
+    // GoBilda starter bot
+    var launchServos: LaunchServos = LaunchServosMock()
+    var flywheel: Flywheel = FlywheelMock()
 
-        lateinit var localizer: Localizer
+    // Follower
+    var follower = Follower(this)
 
-        lateinit var voltageHandler: VoltageHandler
-            private set
+    init {
+        when (botFlavor) {
+            BotFlavor.GOBILDA_STARTER_BOT -> {
+                mecanumBase = MecanumBaseImpl(hardwareMap)
+                voltageHandler = VoltageHandlerImpl(hardwareMap)
+                localizer = Pinpoint(hardwareMap)
 
-        fun initialize(hardwareMap: HardwareMap, telemetry: Telemetry, startPose: Pose = Pose()) {
-            this.telemetry = telemetry
-            mecanumBase = MecanumBase(hardwareMap)
-            localizer = Pinpoint(hardwareMap, startPose)
-            follower = Follower()
-            voltageHandler = VoltageHandler(hardwareMap)
+                aprilTagProcessor = AprilTagImpl(hardwareMap)
+                launchServos = LaunchServosImpl(hardwareMap)
+                flywheel = FlywheelImpl(hardwareMap)
+            }
         }
+    }
 
-        /** Updates the bot's systems. Call this before every loop.  */
-        fun update() {
-            // Update delta time
-            dt = timer.milliseconds() - prevTime
-            prevTime = timer.milliseconds()
+    fun update() {
+        // Update delta time
+        dt = timer.milliseconds() - prevTime
+        prevTime = timer.milliseconds()
+    }
 
-            // Update localizer
-            localizer.update(dt / 1000.0) // Convert milliseconds to seconds
+    fun sendTelemetryPacket() {
+        FtcDashboard.getInstance().sendTelemetryPacket(telemetryPacket)
+        telemetryPacket = TelemetryPacket() // Reset the packet for the next loop
+    }
 
-            // Update follower
-            if (follower.path != null) follower.update()
-        }
-
-        fun sendTelemetryPacket() {
-            FtcDashboard.getInstance().sendTelemetryPacket(telemetryPacket)
-            telemetryPacket = TelemetryPacket() // Reset the packet for the next loop
-        }
-
-        fun stop() {
-            mecanumBase.stop()
-            follower.path = null // Clear the path
-            FileLogger.flush() // Save any pending logs
-            DashboardPlotter.clearPreviousPositions()
-        }
+    fun stop() {
+        mecanumBase.stop()
+        FileLogger.flush() // Save any pending logs
+        DashboardPlotter.clearPreviousPositions()
     }
 }

@@ -1,13 +1,16 @@
-package org.firstinspires.ftc.teamcode.hardware.drivebase
+package org.firstinspires.ftc.teamcode.hardware.implementations
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.HardwareNames
+import org.firstinspires.ftc.teamcode.hardware.constants.MecanumConstants
+import org.firstinspires.ftc.teamcode.hardware.interfaces.MecanumBase
 import org.firstinspires.ftc.teamcode.localization.Pose
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.sign
 
-class MecanumBase (hardwareMap: HardwareMap) {
+class MecanumBaseImpl(hardwareMap: HardwareMap) : MecanumBase {
     // Drive motors
     val leftFront = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_FRONT)
     val leftBack = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_BACK)
@@ -31,22 +34,13 @@ class MecanumBase (hardwareMap: HardwareMap) {
     /**
      * Sets the zero power behavior of all drive motors.
      */
-    fun setZeroPowerBehavior(behavior: DcMotor.ZeroPowerBehavior) {
+    override fun setZeroPowerBehavior(behavior: DcMotor.ZeroPowerBehavior) {
         for (motor in motors) {
             motor.zeroPowerBehavior = behavior
         }
     }
 
-    /**
-     * Sets the power of all drive motors to move in a specific direction.
-     * Robot centric (local coordinates) movement is used.
-     * @param x The x component of the movement vector (right is positive).
-     * @param y The y component of the movement vector (forward is positive).
-     * @param rotation The rotation component (counter-clockwise is positive).
-     * @param power Scaling factor for the drive power, default is [MecanumConstants.DEFAULT_DRIVE_POWER].
-     * @param adjustForStrafe Whether to adjust the x component for strafing inefficiency.
-     */
-    fun setDrivePower(x: Double, y: Double, rotation: Double, power: Double = MecanumConstants.DEFAULT_DRIVE_POWER, adjustForStrafe: Boolean = false) {
+    override fun setDrivePower(x: Double, y: Double, rotation: Double, power: Double, adjustForStrafe: Boolean) {
         // Adjust x for strafing if necessary
         val strafeFactor = MecanumConstants.MAX_FORWARD_VELOCITY / MecanumConstants.MAX_HORIZONTAL_VELOCITY
         val adjX = if (adjustForStrafe) x * strafeFactor else x
@@ -58,13 +52,7 @@ class MecanumBase (hardwareMap: HardwareMap) {
         rightBack.velocity = ((y + adjX - rotation) / denominator) * power * MecanumConstants.MAX_DRIVE_MOTOR_VELOCITY
     }
 
-    /**
-     * Calculates and sets drive powers using kinematics based on a target velocity and acceleration.
-     * Used in conjunction with a motion profile or trajectory following.
-     * @param vel The target velocity vector.
-     * @param accel The target acceleration vector.
-     */
-    fun setDriveVA(vel: Pose, accel: Pose) {
+    override fun setDriveVA(vel: Pose, accel: Pose) {
         val ff = vel * MecanumConstants.KV + accel * MecanumConstants.KA
         // Add static friction component if velocity is non-zero
         if (abs(vel.y) > 1e-3) ff.y += MecanumConstants.KS.y * sign(vel.y)
@@ -84,10 +72,7 @@ class MecanumBase (hardwareMap: HardwareMap) {
         }
     }
 
-    /**
-     * Sets the power of all drive motors to 0.0
-     */
-    fun stop() {
+    override fun stop() {
         for (motor in motors) {
             motor.power = 0.0
         }

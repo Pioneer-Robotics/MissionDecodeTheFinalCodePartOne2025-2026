@@ -4,47 +4,58 @@ import com.acmerobotics.dashboard.FtcDashboard
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.Bot
-import org.firstinspires.ftc.teamcode.helpers.DashboardPlotter
 import org.firstinspires.ftc.teamcode.opmodes.teleop.drivers.*
 
 @TeleOp(name = "Teleop")
 class Teleop : OpMode() {
+    private lateinit var bot: Bot
+
     private lateinit var driver1: TeleopDriver1
     private lateinit var driver2: TeleopDriver2
 
     private val dashboard = FtcDashboard.getInstance()
 
     override fun init() {
-        Bot.initialize(hardwareMap, telemetry)
-        driver1 = TeleopDriver1(gamepad1)
-        driver2 = TeleopDriver2(gamepad2)
+        bot = Bot(Bot.BotFlavor.GOBILDA_STARTER_BOT, hardwareMap)
+
+        driver1 = TeleopDriver1(gamepad1, bot)
+        driver2 = TeleopDriver2(gamepad2, bot)
     }
 
     override fun loop() {
         // Update bot
-        Bot.update()
+        bot.update()
+        bot.localizer.update(bot.dt)
 
         // Update gamepad inputs
         driver1.update()
         driver2.update()
 
         // Update telemetry
+        updateApril()
         updateTelemetry()
     }
 
     private fun updateTelemetry() {
         telemetry.addData("Drive Speed", driver1.driveSpeed)
         telemetry.addData("Field Centric", driver1.fieldCentric)
-        telemetry.addData("Pose", Bot.localizer.pose)
-        telemetry.addData("Velocity", Bot.localizer.velocity)
-        telemetry.addData("Voltage", Bot.voltageHandler.getVoltage())
+        telemetry.addData("Position", bot.localizer.pose)
+        telemetry.addData("Voltage", bot.voltageHandler.getVoltage())
         telemetry.update()
+    }
 
-        DashboardPlotter.plotBotPosition(Bot.telemetryPacket, Bot.localizer.pose)
-        Bot.sendTelemetryPacket()
+    private fun updateApril() {
+        val detections = bot.aprilTagProcessor.aprilTag.detections
+        for (detection in detections) {
+            // FIXME: If the processor loses the AprilTag during this loop, a null pointer error is thrown
+            telemetry.addData("Detection", detection.id)
+            telemetry.addLine("--Rel (x, y, z): (%.2f, %.2f, %.2f)".format(detection.ftcPose.x,detection.ftcPose.y,detection.ftcPose.z))
+            telemetry.addLine("--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(detection.ftcPose.yaw,detection.ftcPose.pitch,detection.ftcPose.roll))
+            telemetry.addLine("--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(detection.ftcPose.range,detection.ftcPose.bearing,detection.ftcPose.elevation))
+        }
     }
 
     override fun stop() {
-        Bot.stop()
+        bot.stop()
     }
 }

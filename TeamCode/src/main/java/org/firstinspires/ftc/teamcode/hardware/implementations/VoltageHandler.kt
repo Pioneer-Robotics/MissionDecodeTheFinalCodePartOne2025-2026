@@ -1,12 +1,13 @@
-package org.firstinspires.ftc.teamcode.hardware
+package org.firstinspires.ftc.teamcode.hardware.implementations
 
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.teamcode.hardware.interfaces.VoltageHandler
 
-class VoltageHandler(hardwareMap: HardwareMap) {
+class VoltageHandlerImpl(hardwareMap: HardwareMap) : VoltageHandler{
 
     private val voltageSensors = hardwareMap.voltageSensor
 
-    fun getVoltage(): Double {
+    override fun getVoltage(): Double {
         var lowestVoltage = Double.POSITIVE_INFINITY
         for (sensor in voltageSensors) {
             val voltage = sensor.voltage
