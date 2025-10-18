@@ -7,20 +7,18 @@ import org.firstinspires.ftc.teamcode.localization.Pose
 
 @Autonomous(name = "Forward KV Tuner", group = "Calibration")
 class ForwardKVTuner : OpMode() {
-    private lateinit var bot: Bot
-
     override fun init() {
-        bot = Bot(Bot.BotFlavor.GOBILDA_STARTER_BOT, hardwareMap)
+        Bot.initialize(hardwareMap, telemetry)
     }
 
     override fun loop() {
-        bot.update()
-        bot.mecanumBase.setDriveVA(
+        Bot.update()
+        Bot.mecanumBase.setDriveVA(
             Pose(0.0, 50.0, 0.0),   // 50 cm/s forward
             Pose(0.0, 0.0, 0.0)     // No acceleration, we are only tuning velocity
         )
-        telemetry.addData("Velocity (cm/s)", bot.localizer.velocity.y)
-        telemetry.addData("Position (cm)", bot.localizer.pose.y)
+        telemetry.addData("Velocity (cm/s)", Bot.localizer.velocity.y)
+        telemetry.addData("Position (cm)", Bot.localizer.pose.y)
         telemetry.update()
     }
 }
