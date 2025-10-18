@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
-import org.firstinspires.ftc.teamcode.GoBildaStarterBot
+import org.firstinspires.ftc.teamcode.Bot
 import org.firstinspires.ftc.teamcode.helpers.Toggle
 import org.firstinspires.ftc.teamcode.localization.Pose
 
-class TeleopDriver1 (var gamepad: Gamepad, val bot: GoBildaStarterBot) {
+class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     var driveSpeed = 0.5
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state

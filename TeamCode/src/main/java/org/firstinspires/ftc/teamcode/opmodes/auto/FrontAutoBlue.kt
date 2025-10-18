@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import org.firstinspires.ftc.teamcode.GoBildaStarterBot
+import org.firstinspires.ftc.teamcode.Bot
 import org.firstinspires.ftc.teamcode.localization.Pose
 import org.firstinspires.ftc.teamcode.pathing.paths.LinearPath
 
@@ -17,10 +17,10 @@ class FrontAutoBlue : OpMode() {
     }
 
     private var state = STATE.INIT
-    private lateinit var bot: GoBildaStarterBot
+    private lateinit var bot: Bot
 
     override fun init() {
-        bot = GoBildaStarterBot(hardwareMap, telemetry, Pose(67.0, 290.0))
+        bot = Bot(Bot.BotFlavor.GOBILDA_STARTER_BOT, hardwareMap)
     }
 
     override fun loop() {

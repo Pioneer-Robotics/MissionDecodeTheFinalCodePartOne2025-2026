@@ -1,30 +1,31 @@
-package org.firstinspires.ftc.teamcode.hardware
+package org.firstinspires.ftc.teamcode.hardware.implementations
 
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.HardwareNames
+import org.firstinspires.ftc.teamcode.hardware.interfaces.LaunchServos
 
-class LaunchServos (hardwareMap: HardwareMap) {
+class LaunchServosImpl (hardwareMap: HardwareMap) : LaunchServos {
     val servo1 = hardwareMap.get(CRServo::class.java, HardwareNames.LAUNCH_SERVO_L)
     val servo2 = hardwareMap.get(CRServo::class.java, HardwareNames.LAUNCH_SERVO_R)
     var launch = false
     var retract = false
     var timer = ElapsedTime()
 
-    fun triggerLaunch() {
+    override fun triggerLaunch() {
         launch = true
         retract = false
         timer.reset()
     }
 
-    fun triggerRetract() {
+    override fun triggerRetract() {
         launch = false
         retract = true
         timer.reset()
     }
 
-    fun update() {
+    override fun update() {
         if (timer.milliseconds() < 250) {
             if (launch) {
                 setPower(1.0)

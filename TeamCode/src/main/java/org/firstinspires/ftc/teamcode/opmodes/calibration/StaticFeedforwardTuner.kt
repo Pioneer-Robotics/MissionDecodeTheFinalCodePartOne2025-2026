@@ -7,6 +7,9 @@ import org.firstinspires.ftc.teamcode.helpers.FileLogger
 
 @Autonomous(name = "Static Feedforward Tuner", group = "Calibration")
 class StaticFeedforwardTuner : OpMode() {
+
+    private lateinit var bot: Bot
+    
     enum class State {
         FORWARD,
         DELAY,
@@ -23,31 +26,31 @@ class StaticFeedforwardTuner : OpMode() {
     var state: State = State.FORWARD
 
     override fun init() {
-        Bot.initialize(hardwareMap, telemetry)
-        Bot.localizer.reset() // Reset the localizer to the origin
+        bot = Bot(Bot.BotFlavor.GOBILDA_STARTER_BOT, hardwareMap)
+        bot.localizer.reset() // Reset the localizer to the origin
 
-        Bot.telemetryPacket.put("Current Power", currentPower)
-        Bot.telemetryPacket.put("Current Velocity", Bot.localizer.velocity.getLength())
-        Bot.sendTelemetryPacket()
+        bot.telemetryPacket.put("Current Power", currentPower)
+        bot.telemetryPacket.put("Current Velocity", bot.localizer.velocity.getLength())
+        bot.sendTelemetryPacket()
     }
 
     override fun loop() {
-        Bot.update()
+        bot.update()
         when (state) {
             State.FORWARD -> {
                 // Move forward until the velocity exceeds the threshold
-                if (Bot.localizer.velocity.y < velocityThreshold) {
+                if (bot.localizer.velocity.y < velocityThreshold) {
                     velocityTime = 0
-                    Bot.mecanumBase.setDrivePower(0.0, currentPower, 0.0, adjustForStrafe = false)
+                    bot.mecanumBase.setDrivePower(0.0, currentPower, 0.0, adjustForStrafe = false)
                     currentPower += step
-                    Bot.telemetryPacket.put("Current Power", currentPower)
-                    Bot.telemetryPacket.put("Current Velocity", Bot.localizer.velocity.y)
-                    Bot.sendTelemetryPacket()
+                    bot.telemetryPacket.put("Current Power", currentPower)
+                    bot.telemetryPacket.put("Current Velocity", bot.localizer.velocity.y)
+                    bot.sendTelemetryPacket()
                 } else {
                     if (velocityTime > velocityThresholdTime) {
-                        Bot.mecanumBase.stop()
+                        bot.mecanumBase.stop()
                         currentPower = startPower // Reset power for horizontal movement
-                        FileLogger.info("StaticFeedforwardTuner", "Forward movement complete. Power: $currentPower, Velocity: ${Bot.localizer.velocity.y}")
+                        FileLogger.info("StaticFeedforwardTuner", "Forward movement complete. Power: $currentPower, Velocity: ${bot.localizer.velocity.y}")
                         state = State.DELAY
                     } else {
                         velocityTime++
@@ -61,17 +64,17 @@ class StaticFeedforwardTuner : OpMode() {
             }
             State.HORIZONTAL -> {
                 // Move horizontally until the velocity exceeds the threshold
-                if (Bot.localizer.velocity.x < velocityThreshold) {
+                if (bot.localizer.velocity.x < velocityThreshold) {
                     velocityTime = 0
-                    Bot.mecanumBase.setDrivePower(currentPower, 0.0, 0.0, adjustForStrafe = false)
+                    bot.mecanumBase.setDrivePower(currentPower, 0.0, 0.0, adjustForStrafe = false)
                     currentPower += step
-                    Bot.telemetryPacket.put("Current Power", currentPower)
-                    Bot.telemetryPacket.put("Current Velocity", Bot.localizer.velocity.x)
-                    Bot.sendTelemetryPacket()
+                    bot.telemetryPacket.put("Current Power", currentPower)
+                    bot.telemetryPacket.put("Current Velocity", bot.localizer.velocity.x)
+                    bot.sendTelemetryPacket()
                 } else {
                     if (velocityTime > velocityThresholdTime) {
-                        Bot.mecanumBase.stop()
-                        FileLogger.info("StaticFeedforwardTuner", "Horizontal movement complete. Power: $currentPower, Velocity: ${Bot.localizer.velocity.x}")
+                        bot.mecanumBase.stop()
+                        FileLogger.info("StaticFeedforwardTuner", "Horizontal movement complete. Power: $currentPower, Velocity: ${bot.localizer.velocity.x}")
                         requestOpModeStop() // Stop the op mode after both movements
                     } else {
                         velocityTime++

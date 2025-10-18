@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import org.firstinspires.ftc.teamcode.GoBildaStarterBot
+import org.firstinspires.ftc.teamcode.Bot
 import org.firstinspires.ftc.teamcode.helpers.DashboardPlotter
 import org.firstinspires.ftc.teamcode.pathing.paths.HermitePath
 import org.firstinspires.ftc.teamcode.localization.Pose
@@ -16,10 +16,10 @@ class PathingTest : OpMode() {
     }
 
     private var state: State = State.INIT
-    private lateinit var bot: GoBildaStarterBot
+    private lateinit var bot: Bot
 
     override fun init() {
-        bot = GoBildaStarterBot(hardwareMap, telemetry)
+        bot = Bot(Bot.BotFlavor.GOBILDA_STARTER_BOT, hardwareMap)
         bot.telemetryPacket.put("Target Velocity", 0.0)
         bot.telemetryPacket.put("Current Velocity", 0.0)
         bot.sendTelemetryPacket()
