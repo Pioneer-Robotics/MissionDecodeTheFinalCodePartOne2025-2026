@@ -5,7 +5,7 @@ import org.firstinspires.ftc.teamcode.GoBildaStarterBot
 import org.firstinspires.ftc.teamcode.helpers.Toggle
 import org.firstinspires.ftc.teamcode.localization.Pose
 
-class TeleopDriver1 (var gamepad: Gamepad) {
+class TeleopDriver1 (var gamepad: Gamepad, val bot: GoBildaStarterBot) {
     var driveSpeed = 0.5
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
@@ -25,7 +25,7 @@ class TeleopDriver1 (var gamepad: Gamepad) {
 
     fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        GoBildaStarterBot.mecanumBase.setDrivePower(
+        bot.mecanumBase.setDrivePower(
             direction.x,
             direction.y,
             gamepad.right_stick_x.toDouble(),
@@ -51,19 +51,19 @@ class TeleopDriver1 (var gamepad: Gamepad) {
 
     fun flywheelSpeed() {
         if (gamepad.circle) {
-            GoBildaStarterBot.flywheel.setSpeed(0.67)
+            bot.flywheel.setSpeed(0.67)
         } else {
-            GoBildaStarterBot.flywheel.setSpeed(0.0)
+            bot.flywheel.setSpeed(0.0)
         }
     }
 
     fun updateLaunchServos() {
         if (gamepad.dpad_up) {
-            GoBildaStarterBot.launchServos.triggerLaunch()
+            bot.launchServos.triggerLaunch()
         }
         else if (gamepad.dpad_down) {
-            GoBildaStarterBot.launchServos.triggerRetract()
+            bot.launchServos.triggerRetract()
         }
-        GoBildaStarterBot.launchServos.update()
+        bot.launchServos.update()
     }
 }

@@ -3,12 +3,15 @@ package org.firstinspires.ftc.teamcode.opmodes.calibration
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import org.firstinspires.ftc.teamcode.Bot
+import org.firstinspires.ftc.teamcode.GoBildaStarterBot
 import org.firstinspires.ftc.teamcode.localization.Pose
 
 @Autonomous(name = "Forward KV Tuner", group = "Calibration")
 class ForwardKVTuner : OpMode() {
+    private lateinit var bot: GoBildaStarterBot
+
     override fun init() {
-        Bot.initialize(hardwareMap, telemetry)
+        bot = Bot(hardwareMap, telemetry)
     }
 
     override fun loop() {

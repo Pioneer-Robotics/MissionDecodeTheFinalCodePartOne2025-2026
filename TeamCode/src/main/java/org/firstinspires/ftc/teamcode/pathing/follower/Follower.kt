@@ -11,11 +11,12 @@ import org.firstinspires.ftc.teamcode.pathing.motionprofile.MotionState
 import org.firstinspires.ftc.teamcode.pathing.paths.Path
 import kotlin.math.*
 
-class Follower {
-    var motionProfile: MotionProfile? = null
+class Follower(private val bot: BotInterface) {
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID = PIDController(FollowerConstants.PID_X)
     private var yPID = PIDController(FollowerConstants.PID_Y)
+
+    var motionProfile: MotionProfile? = null
 
     var path: Path? = null
         set(value) {

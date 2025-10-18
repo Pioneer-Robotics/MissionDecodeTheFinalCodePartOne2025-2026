@@ -1,12 +1,13 @@
-package org.firstinspires.ftc.teamcode.hardware
+package org.firstinspires.ftc.teamcode.hardware.implementations
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.HardwareNames
+import org.firstinspires.ftc.teamcode.hardware.Flywheel
 
-class Flywheel (hardwareMap: HardwareMap) {
+class FlywheelImpl (hardwareMap: HardwareMap) : Flywheel {
     val flywheel = hardwareMap.get(DcMotorEx::class.java, HardwareNames.FLYWHEEL)
 
     init {
@@ -16,7 +17,7 @@ class Flywheel (hardwareMap: HardwareMap) {
         flywheel.direction = DcMotorSimple.Direction.FORWARD
     }
 
-    fun setSpeed(velocity: Double) {
+    override fun setSpeed(velocity: Double) {
         flywheel.power = velocity
     }
 }

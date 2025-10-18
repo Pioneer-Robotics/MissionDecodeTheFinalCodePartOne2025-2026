@@ -7,13 +7,13 @@ object PinpointConstants{
      * How far forwards (in mm) from the tracking point the Y (strafe) odometry pod is.
      * Forward increases (when looking from the top of the robot).
      */
-    const val Y_POD_OFFSET = 0.0
+    const val Y_POD_OFFSET = 134.0
 
     /**
      * How far sideways (in mm) from the tracking point the X (forward) odometry pod is.
      * Left increases (when looking from the top of the robot).
      */
-    const val X_POD_OFFSET = 134.0
+    const val X_POD_OFFSET = 137.0
 
     /** The direction of the Y (strafe) odometry pod. It should increase when moving left. */
     val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD
