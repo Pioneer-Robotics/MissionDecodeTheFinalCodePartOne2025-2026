@@ -3,13 +3,14 @@ package pioneer
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import org.firstinspires.ftc.robotcore.external.navigation.Position
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import pioneer.helpers.Pose
 import kotlin.math.PI
 
 @Config
 object Constants {
-
-    object HardwareNames{
+    object HardwareNames {
         // Drive motors
         const val DRIVE_LEFT_FRONT = "driveLF"
         const val DRIVE_LEFT_BACK = "driveLB"
@@ -51,7 +52,7 @@ object Constants {
     object Drive {
         // geometry (cm)
         const val TRACK_WIDTH_CM = 0.0
-        const val WHEEL_BASE_CM  = 0.0
+        const val WHEEL_BASE_CM = 0.0
 
         // limits
         const val MAX_DRIVE_MOTOR_VELOCITY_TPS = 2500.0
@@ -60,11 +61,12 @@ object Constants {
         const val DEFAULT_DRIVE_POWER = 0.7
 
         // motor directions (LF, LB, RF, RB)
-        val MOTOR_DIRECTIONS = arrayOf(
+        val MOTOR_DIRECTIONS =
+            arrayOf(
             DcMotorSimple.Direction.REVERSE,
             DcMotorSimple.Direction.REVERSE,
-            DcMotorSimple.Direction.FORWARD,
-            DcMotorSimple.Direction.FORWARD
+                DcMotorSimple.Direction.FORWARD,
+                DcMotorSimple.Direction.FORWARD,
         )
 
         // Feedforward gains using Pose(x,y,theta)
@@ -112,5 +114,23 @@ object Constants {
         @JvmField var Y_KP = 0.0
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.0
+    }
+
+    object Camera {
+        // Camera position constants (inches)
+        private const val X_OFFSET_INCH = 0.0
+        private const val Y_OFFSET_INCH = 0.0
+        private const val Z_OFFSET_INCH = 0.0
+
+        // Camera orientation constants (degrees)
+        private const val YAW_DEG = 0.0
+        private const val PITCH_DEG = 0.0
+        private const val ROLL_DEG = 0.0
+
+        val POSITION_IN: Position
+            get() = Position(DistanceUnit.INCH, X_OFFSET_INCH, Y_OFFSET_INCH, Z_OFFSET_INCH)
+
+        val ORIENTATION_DEG: YawPitchRollAngles
+            get() = YawPitchRollAngles(AngleUnit.DEGREES, YAW_DEG, PITCH_DEG, ROLL_DEG)
     }
 }

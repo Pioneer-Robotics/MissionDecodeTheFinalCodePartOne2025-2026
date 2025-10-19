@@ -5,9 +5,9 @@ import pioneer.hardware.interfaces.AprilTag
 import pioneer.helpers.FileLogger
 
 class AprilTagMock : AprilTag {
-    override val aprilTag: AprilTagProcessor
+    override val processor: AprilTagProcessor
         get() {
-            FileLogger.warn("NOT INITIALIZED", "aprilTag getter called on AprilTagMock")
+            FileLogger.warn("NOT INITIALIZED", "processor getter called on AprilTagMock")
             return AprilTagProcessor.Builder().build()
         }
 }
