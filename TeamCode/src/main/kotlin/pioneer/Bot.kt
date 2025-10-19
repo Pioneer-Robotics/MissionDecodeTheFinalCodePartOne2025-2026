@@ -1,12 +1,19 @@
 package pioneer
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.hardware.impl.AprilTagImpl
 import pioneer.hardware.impl.BatteryMonitorImpl
+import pioneer.hardware.impl.FlywheelImpl
 import pioneer.hardware.impl.MecanumBaseImpl
+import pioneer.hardware.interfaces.AprilTag
 import pioneer.hardware.interfaces.BatteryMonitor
+import pioneer.hardware.interfaces.Flywheel
+import pioneer.hardware.interfaces.LaunchServos
 import pioneer.hardware.interfaces.MecanumBase
+import pioneer.hardware.mock.AprilTagMock
 import pioneer.hardware.mock.BatteryMonitorMock
+import pioneer.hardware.mock.FlywheelMock
+import pioneer.hardware.mock.LaunchServosMock
 import pioneer.hardware.mock.MecanumBaseMock
 import pioneer.helpers.DeltaTimeTracker
 import pioneer.localization.Localizer
@@ -28,6 +35,13 @@ class Bot(botType: BotType, hardwareMap: HardwareMap) {
     var localizer: Localizer = LocalizerMock()
     var batteryMonitor: BatteryMonitor = BatteryMonitorMock()
 
+    // GoBilda starter bot specific components
+    var flywheel: Flywheel = FlywheelMock()
+    var launchServos: LaunchServos = LaunchServosMock()
+
+    // Other hardware components
+    var aprilTagProcessor: AprilTag = AprilTagMock()
+
     // Path follower
     var follower = Follower(this)
 
@@ -45,6 +59,9 @@ class Bot(botType: BotType, hardwareMap: HardwareMap) {
                 mecanumBase = MecanumBaseImpl(hardwareMap)
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
+                flywheel = FlywheelImpl(hardwareMap)
+                launchServos = LaunchServosMock()
+                aprilTagProcessor = AprilTagImpl(hardwareMap)
             }
         }
     }
