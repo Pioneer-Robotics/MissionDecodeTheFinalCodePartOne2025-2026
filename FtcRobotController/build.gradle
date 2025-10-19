@@ -25,6 +25,13 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     namespace = 'com.qualcomm.ftcrobotcontroller'
+
+    // Exclude all Java source directories
+    sourceSets {
+        main {
+                java.srcDirs = []
+        }
+    }
 }
 
 apply from: '../build.dependencies.gradle'
