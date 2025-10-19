@@ -7,18 +7,21 @@ import pioneer.helpers.Pose
 
 @Autonomous(name = "Horizontal KV Tuner", group = "Calibration")
 class HorizontalKVTuner : OpMode() {
+    private lateinit var bot: Bot
+
     override fun init() {
-        Bot.initialize(hardwareMap, telemetry)
+        bot = Bot(pioneer.BotType.BASIC_MECANUM_BOT, hardwareMap)
     }
 
     override fun loop() {
-        Bot.update()
-        Bot.mecanumBase.setDriveVA(
-            Pose(50.0, 0.0, 0.0),   // 50 cm/s sideways
-            Pose(0.0, 0.0, 0.0)     // No acceleration, we are only tuning velocity
+        bot.dtTracker.update()
+        bot.localizer.update(bot.dtTracker.dt)
+        bot.mecanumBase.setDriveVA(
+            Pose(x = 50.0), // 50 cm/s right
+            Pose()          // No acceleration, we are only tuning velocity
         )
-        telemetry.addData("Velocity (cm/s)", Bot.localizer.pose.vx)
-        telemetry.addData("Position (cm)", Bot.localizer.pose.x)
+        telemetry.addData("Velocity (cm/s)", bot.localizer.pose.vx)
+        telemetry.addData("Position (cm)", bot.localizer.pose.x)
         telemetry.update()
     }
 }

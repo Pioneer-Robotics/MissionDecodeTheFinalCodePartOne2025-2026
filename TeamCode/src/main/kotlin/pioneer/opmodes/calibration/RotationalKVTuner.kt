@@ -7,18 +7,21 @@ import pioneer.helpers.Pose
 
 @Autonomous(name = "Rotational KV Tuner", group = "Calibration")
 class RotationalKVTuner : OpMode() {
+    private lateinit var bot: Bot
+
     override fun init() {
-        Bot.initialize(hardwareMap, telemetry)
+        bot = Bot(pioneer.BotType.BASIC_MECANUM_BOT, hardwareMap)
     }
 
     override fun loop() {
-        Bot.update()
-        Bot.mecanumBase.setDriveVA(
-            Pose(theta = 1.0),    // 1 rad/s rotation (omega)
-            Pose()                // No acceleration
+        bot.dtTracker.update()
+        bot.localizer.update(bot.dtTracker.dt)
+        bot.mecanumBase.setDriveVA(
+            Pose(theta = 1.0),  // 1 rad/s clockwise
+            Pose()              // No acceleration, we are only tuning velocity
         )
-        telemetry.addData("Velocity (rad/s)", Bot.localizer.pose.omega)
-        telemetry.addData("Rotation (rad)", Bot.localizer.pose.theta)
+        telemetry.addData("Velocity (cm/s)", bot.localizer.pose.omega)
+        telemetry.addData("Position (cm)", bot.localizer.pose.theta)
         telemetry.update()
     }
 }

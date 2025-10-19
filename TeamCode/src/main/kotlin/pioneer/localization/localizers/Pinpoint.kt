@@ -47,7 +47,7 @@ class Pinpoint(
         val ay = (vy - prevPose.vy) / dt
 
         // Angular motion with coordinate conversion
-        val theta = -pinpoint.getHeading(AngleUnit.RADIANS)
+        val theta = pinpoint.getHeading(AngleUnit.RADIANS)
         val omega = (theta - prevPose.theta) / dt
         val alpha = (omega - prevPose.alpha) / dt
 

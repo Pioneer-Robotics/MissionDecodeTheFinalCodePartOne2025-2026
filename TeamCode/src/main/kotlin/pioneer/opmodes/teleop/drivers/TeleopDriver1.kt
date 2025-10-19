@@ -5,7 +5,7 @@ import pioneer.Bot
 import pioneer.helpers.Toggle
 import pioneer.helpers.Pose
 
-class TeleopDriver1 (var gamepad: Gamepad) {
+class TeleopDriver1 (val gamepad: Gamepad, val bot: Bot) {
     var driveSpeed = 0.5
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
@@ -24,10 +24,10 @@ class TeleopDriver1 (var gamepad: Gamepad) {
     fun drive() {
         var direction = Pose(x = gamepad.left_stick_x.toDouble(), y = -gamepad.left_stick_y.toDouble())
         if (fieldCentricToggle.state) {
-            direction = direction.rotate(Bot.localizer.pose.theta) // Rotate to local coordinates
+            direction = direction.rotate(bot.localizer.pose.theta) // Rotate to local coordinates
         }
 
-        Bot.mecanumBase.setDrivePower(
+        bot.mecanumBase.setDrivePower(
             direction.x,
             direction.y,
             gamepad.right_stick_x.toDouble(),

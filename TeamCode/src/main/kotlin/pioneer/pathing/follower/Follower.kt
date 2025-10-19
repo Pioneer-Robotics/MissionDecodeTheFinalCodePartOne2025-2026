@@ -12,7 +12,7 @@ import pioneer.pathing.motionprofile.MotionState
 import pioneer.pathing.paths.Path
 import kotlin.math.*
 
-class Follower {
+class Follower(private val bot: Bot) {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID = PIDController(
@@ -73,8 +73,8 @@ class Follower {
         val targetPointSecondDerivative = path!!.getSecondDerivative(pathT)
 
         // Calculate the position error and convert to robot-centric coordinates
-        var positionError = targetPoint - Bot.localizer.pose
-        positionError = positionError.rotate(-Bot.localizer.pose.theta)
+        var positionError = targetPoint - bot.localizer.pose
+        positionError = positionError.rotate(-bot.localizer.pose.theta)
 
         // Calculate 2D target velocity and acceleration based on path derivatives
         var targetVelocity = tangent * targetState.v
@@ -82,19 +82,19 @@ class Follower {
                 tangent * targetState.a
 
         // Convert target velocity and acceleration to robot-centric coordinates
-        targetVelocity = targetVelocity.rotate(-Bot.localizer.pose.theta)
-        targetAcceleration = targetAcceleration.rotate(-Bot.localizer.pose.theta)
+        targetVelocity = targetVelocity.rotate(-bot.localizer.pose.theta)
+        targetAcceleration = targetAcceleration.rotate(-bot.localizer.pose.theta)
 
         // TODO: Heading interpolation
 
         // Calculate the PID outputs
-        var xCorrection = xPID.update(positionError.x, Bot.dt)
-        var yCorrection = yPID.update(positionError.y, Bot.dt)
+        var xCorrection = xPID.update(positionError.x, bot.dtTracker.dt)
+        var yCorrection = yPID.update(positionError.y, bot.dtTracker.dt)
 
         // Calculate adjusted velocity based on PID corrections
         // TODO: Add heading correction
         val adjustedVelocity = targetVelocity + Pose(xCorrection, yCorrection, 0.0)
-        Bot.mecanumBase.setDriveVA(adjustedVelocity, targetAcceleration)
+        bot.mecanumBase.setDriveVA(adjustedVelocity, targetAcceleration)
     }
 
     fun start() {

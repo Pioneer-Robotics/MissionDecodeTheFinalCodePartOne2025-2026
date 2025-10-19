@@ -1,17 +1,17 @@
-package pioneer.hardware.drivebase
+package pioneer.hardware.impl
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.Constants
 import pioneer.Constants.HardwareNames
+import pioneer.hardware.interfaces.MecanumBase
 import pioneer.helpers.Pose
 import kotlin.math.abs
 import kotlin.math.sign
 import pioneer.Constants.Drive as DriveConstants
 
-class MecanumBase(
-    hardwareMap: HardwareMap,
-) {
+class MecanumBaseImpl(hardwareMap: HardwareMap) : MecanumBase {
     private val leftFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_FRONT)
     private val leftBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_BACK)
     private val rightFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_RIGHT_FRONT)
@@ -28,18 +28,18 @@ class MecanumBase(
         }
     }
 
-    fun setZeroPowerBehavior(behavior: DcMotor.ZeroPowerBehavior) {
+    override fun setZeroPowerBehavior(behavior: DcMotor.ZeroPowerBehavior) {
         motors.forEach { it.zeroPowerBehavior = behavior }
     }
 
     /**
      * Drive using robot-centric coordinates: x=strafe, y=forward, rotation=turn
      */
-    fun setDrivePower(
+    override fun setDrivePower(
         x: Double,
         y: Double,
         rotation: Double,
-        power: Double = DriveConstants.DEFAULT_DRIVE_POWER,
+        power: Double,
     ) {
         val leftFrontPower = y + x + rotation
         val leftBackPower = y - x + rotation
@@ -58,7 +58,7 @@ class MecanumBase(
     /**
      * Feedforward control for motion profiling
      */
-    fun setDriveVA(
+    override fun setDriveVA(
         velocity: Pose,
         acceleration: Pose,
     ) {
@@ -76,7 +76,7 @@ class MecanumBase(
         rightBack.power = (ffY + ffX - ffTheta).coerceIn(-1.0, 1.0)
     }
 
-    fun stop() {
+    override fun stop() {
         motors.forEach { it.power = 0.0 }
     }
 }
