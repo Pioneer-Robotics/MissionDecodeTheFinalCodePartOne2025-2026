@@ -1,26 +1,36 @@
 # Pioneer Robotics: Decode 2025-2026
 
-For the original README, visit the [FTC Robot Controller repository](https://github.com/FIRST-Tech-Challenge/FtcRobotController/blob/master/README.md).
+## Referencing the Original README
 
-## Syncing with the Upstream Repository
+For detailed information, refer to the [FTC Robot Controller repository README](https://github.com/FIRST-Tech-Challenge/FtcRobotController/blob/master/README.md).
 
-Keep your repository updated with the upstream FTC repository:
+## Keeping the Repository Updated
+
+To stay aligned with the upstream FTC repository:
 
 1. Add the upstream repository:
   ```bash
   git remote add upstream https://github.com/FIRST-Tech-Challenge/FtcRobotController
   ```
 
-2. Fetch the latest changes:
+2. Fetch the latest updates:
   ```bash
   git fetch upstream
   ```
 
-3. Merge the changes:
+3. Merge the updates:
   ```bash
   git merge upstream/master
   ```
 
-4. Resolve any merge conflicts if needed.
+4. Address any merge conflicts as necessary.
 
-Staying in sync ensures you have the latest updates and improvements from the FTC Robot Controller project.
+Regular updates ensure you benefit from the latest features and fixes.
+
+## Formatting Kotlin Code
+
+Use `ktlint` to format your Kotlin files:
+
+```bash
+ktlint -F <filename>
+```
