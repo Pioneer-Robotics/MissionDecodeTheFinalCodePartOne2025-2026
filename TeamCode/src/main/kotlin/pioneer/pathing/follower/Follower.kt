@@ -90,28 +90,20 @@ class Follower(private val bot: Bot) {
         )
 
         // Convert target velocity and acceleration to robot-centric coordinates
-        val rotatedVelocity = Pose(vx = targetPose.vx, vy = targetPose.vy).rotate(-bot.localizer.pose.theta)
-        val rotatedAcceleration = Pose(ax = targetPose.ax, ay = targetPose.ay).rotate(-bot.localizer.pose.theta)
-
-        // Update the target pose with rotated values
-        // TODO: Heading interpolation
-        val adjustedPose = targetPose.copy(
-            vx = rotatedVelocity.vx,
-            vy = rotatedVelocity.vy,
-            ax = rotatedAcceleration.ax,
-            ay = rotatedAcceleration.ay
-        )
+        val rotatedTargetPose = targetPose.rotate(-bot.localizer.pose.theta)
 
         // Calculate the PID outputs
         val xCorrection = xPID.update(positionError.x, bot.dtTracker.dt)
         val yCorrection = yPID.update(positionError.y, bot.dtTracker.dt)
 
-        // Apply corrections to velocity
-        // TODO: Add heading correction
-        val correctedPose = adjustedPose.copy(
-            vx = adjustedPose.vx + xCorrection,
-            vy = adjustedPose.vy + yCorrection
+        // Apply corrections to velocity directly
+        val correctedPose = rotatedTargetPose.copy(
+            vx = rotatedTargetPose.vx + xCorrection,
+            vy = rotatedTargetPose.vy + yCorrection
         )
+
+        // TODO: Heading interpolation
+        // TODO: Add heading error correction
 
         bot.mecanumBase.setDriveVA(correctedPose)
     }
