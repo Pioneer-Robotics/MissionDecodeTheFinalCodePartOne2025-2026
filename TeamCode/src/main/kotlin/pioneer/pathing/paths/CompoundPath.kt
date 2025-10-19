@@ -1,6 +1,6 @@
 package pioneer.pathing.paths
 
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 
 /**
  * Represents a compound path made up of multiple paths.

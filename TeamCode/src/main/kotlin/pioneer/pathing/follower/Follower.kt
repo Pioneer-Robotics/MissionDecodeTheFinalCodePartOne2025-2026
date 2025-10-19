@@ -5,7 +5,7 @@ import pioneer.Bot
 import pioneer.Constants.Follower as FollowerConstants
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 import pioneer.pathing.motionprofile.MotionProfile
 import pioneer.pathing.motionprofile.MotionProfileGenerator
 import pioneer.pathing.motionprofile.MotionState

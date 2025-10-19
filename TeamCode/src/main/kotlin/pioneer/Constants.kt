@@ -3,7 +3,7 @@ package pioneer
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.robotcore.hardware.DcMotorSimple
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 import kotlin.math.PI
 
 @Config

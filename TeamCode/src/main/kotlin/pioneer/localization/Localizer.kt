@@ -1,5 +1,7 @@
 package pioneer.localization
 
+import pioneer.helpers.Pose
+
 interface Localizer {
     /** Current pose of the robot */
     var pose: Pose

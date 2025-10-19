@@ -1,7 +1,6 @@
 package pioneer.helpers
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
-import pioneer.localization.Pose
 import pioneer.pathing.paths.Path
 import kotlin.math.cos
 import kotlin.math.sin

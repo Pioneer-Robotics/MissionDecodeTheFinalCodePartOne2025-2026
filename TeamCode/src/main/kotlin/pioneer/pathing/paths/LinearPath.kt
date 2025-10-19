@@ -1,7 +1,7 @@
 package pioneer.pathing.paths
 
 import pioneer.helpers.MathUtils
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 import pioneer.pathing.paths.Path.HeadingInterpolationMode
 
 /**

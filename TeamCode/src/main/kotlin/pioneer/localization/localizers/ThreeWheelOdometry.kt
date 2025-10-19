@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.Constants.HardwareNames
 import pioneer.helpers.MathUtils
 import pioneer.localization.Localizer
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 import kotlin.math.cos
 import kotlin.math.sin
 import pioneer.Constants.Odometry as OdometryConstants

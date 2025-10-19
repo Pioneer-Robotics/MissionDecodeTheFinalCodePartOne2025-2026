@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
 import pioneer.helpers.DashboardPlotter
 import pioneer.pathing.paths.HermitePath
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 import kotlin.math.hypot
 
 @Autonomous(name = "Pathing Test", group = "Testing")

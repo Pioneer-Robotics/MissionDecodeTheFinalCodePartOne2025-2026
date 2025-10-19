@@ -3,7 +3,7 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.helpers.Toggle
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 
 class TeleopDriver1 (var gamepad: Gamepad) {
     var driveSpeed = 0.5

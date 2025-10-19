@@ -10,7 +10,7 @@ import pioneer.hardware.BatteryMonitor
 import pioneer.helpers.DashboardPlotter
 import pioneer.helpers.FileLogger
 import pioneer.localization.Localizer
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
 

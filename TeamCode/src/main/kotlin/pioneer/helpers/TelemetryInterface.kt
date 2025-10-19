@@ -2,7 +2,6 @@ package pioneer.helpers
 
 import android.util.Log
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import pioneer.localization.Pose
 
 /** Class used to update both the phone telemetry and the dashboard telemetry.
  * Also logs telemetry to Logcat */

@@ -1,7 +1,7 @@
 package pioneer.pathing.paths
 
 import pioneer.helpers.Polynomial
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 import pioneer.pathing.paths.Path.HeadingInterpolationMode
 import kotlin.math.pow
 

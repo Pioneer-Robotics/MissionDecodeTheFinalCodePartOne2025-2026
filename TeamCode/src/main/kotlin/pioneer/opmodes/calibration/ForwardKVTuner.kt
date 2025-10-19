@@ -3,7 +3,7 @@ package pioneer.opmodes.calibration
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
-import pioneer.localization.Pose
+import pioneer.helpers.Pose
 
 @Autonomous(name = "Forward KV Tuner", group = "Calibration")
 class ForwardKVTuner : OpMode() {
