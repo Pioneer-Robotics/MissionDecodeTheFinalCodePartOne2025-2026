@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.hardware.impl.AprilTagImpl
 import pioneer.hardware.impl.BatteryMonitorImpl
 import pioneer.hardware.impl.FlywheelImpl
+import pioneer.hardware.impl.LaunchServosImpl
 import pioneer.hardware.impl.MecanumBaseImpl
 import pioneer.hardware.interfaces.AprilTag
 import pioneer.hardware.interfaces.BatteryMonitor
@@ -27,9 +28,6 @@ enum class BotType {
 }
 
 class Bot(botType: BotType, hardwareMap: HardwareMap) {
-    // Delta time tracker
-    var dtTracker = DeltaTimeTracker()
-
     // Basic hardware components
     var mecanumBase: MecanumBase = MecanumBaseMock()
     var localizer: Localizer = LocalizerMock()
@@ -60,7 +58,7 @@ class Bot(botType: BotType, hardwareMap: HardwareMap) {
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
                 flywheel = FlywheelImpl(hardwareMap)
-                launchServos = LaunchServosMock()
+                launchServos = LaunchServosImpl(hardwareMap)
                 aprilTagProcessor = AprilTagImpl(hardwareMap)
             }
         }
