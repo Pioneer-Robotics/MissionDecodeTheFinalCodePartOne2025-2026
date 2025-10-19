@@ -1,7 +1,6 @@
 package pioneer.opmodes.teleop
 
 import com.acmerobotics.dashboard.FtcDashboard
-import com.acmerobotics.dashboard.canvas.Fill
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
@@ -36,7 +35,19 @@ class Teleop : OpMode() {
         driver2.update()
 
         // Update telemetry
+        updateApril()
         updateTelemetry()
+    }
+
+    private fun updateApril() {
+        val detections = bot.aprilTagProcessor.aprilTag.detections
+        for (detection in detections) {
+            // FIXME: If the processor loses the AprilTag during this loop, a null pointer error is thrown
+            telemetry.addData("Detection", detection.id)
+            telemetry.addLine("--Rel (x, y, z): (%.2f, %.2f, %.2f)".format(detection.ftcPose.x,detection.ftcPose.y,detection.ftcPose.z))
+            telemetry.addLine("--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(detection.ftcPose.yaw,detection.ftcPose.pitch,detection.ftcPose.roll))
+            telemetry.addLine("--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(detection.ftcPose.range,detection.ftcPose.bearing,detection.ftcPose.elevation))
+        }
     }
 
     private fun updateTelemetry() {

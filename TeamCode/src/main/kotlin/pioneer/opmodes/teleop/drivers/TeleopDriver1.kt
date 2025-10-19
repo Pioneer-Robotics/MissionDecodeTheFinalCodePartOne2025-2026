@@ -2,10 +2,10 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
-import pioneer.helpers.Toggle
 import pioneer.helpers.Pose
+import pioneer.helpers.Toggle
 
-class TeleopDriver1 (val gamepad: Gamepad, val bot: Bot) {
+class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     var driveSpeed = 0.5
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
@@ -19,14 +19,12 @@ class TeleopDriver1 (val gamepad: Gamepad, val bot: Bot) {
         drive()
         updateDriveSpeed()
         updateFieldCentric()
+        flywheelSpeed()
+        updateLaunchServos()
     }
 
     fun drive() {
-        var direction = Pose(x = gamepad.left_stick_x.toDouble(), y = -gamepad.left_stick_y.toDouble())
-        if (fieldCentricToggle.state) {
-            direction = direction.rotate(bot.localizer.pose.theta) // Rotate to local coordinates
-        }
-
+        val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
         bot.mecanumBase.setDrivePower(
             direction.x,
             direction.y,
@@ -49,5 +47,23 @@ class TeleopDriver1 (val gamepad: Gamepad, val bot: Bot) {
 
     fun updateFieldCentric() {
         fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
+    }
+
+    fun flywheelSpeed() {
+        if (gamepad.circle) {
+            bot.flywheel.setSpeed(0.67)
+        } else {
+            bot.flywheel.setSpeed(0.0)
+        }
+    }
+
+    fun updateLaunchServos() {
+        if (gamepad.dpad_up) {
+            bot.launchServos.triggerLaunch()
+        }
+        else if (gamepad.dpad_down) {
+            bot.launchServos.triggerRetract()
+        }
+        bot.launchServos.update()
     }
 }
