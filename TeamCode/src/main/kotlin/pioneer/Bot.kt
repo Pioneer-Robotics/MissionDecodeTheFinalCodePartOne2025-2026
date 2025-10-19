@@ -49,14 +49,24 @@ class Bot(botType: BotType, hardwareMap: HardwareMap) {
         when (botType) {
             BotType.BASIC_MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap)
+                mecanumBase = MecanumBaseImpl(hardwareMap, 
+                    LF=Constants.HardwareNames.DRIVE_LEFT_FRONT,
+                    LB=Constants.HardwareNames.DRIVE_LEFT_BACK,
+                    RF=Constants.HardwareNames.DRIVE_RIGHT_FRONT,
+                    RB=Constants.HardwareNames.DRIVE_RIGHT_BACK,
+                )
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
             }
 
             BotType.GOBILDA_STARTER_BOT -> {
                 // Initialize hardware components for GoBilda Starter Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap)
+                mecanumBase = MecanumBaseImpl(hardwareMap,
+                    LF=Constants.HardwareNames.DRIVE_LEFT_FRONT,
+                    LB=Constants.HardwareNames.DRIVE_LEFT_BACK,
+                    RF=Constants.HardwareNames.DRIVE_RIGHT_FRONT,
+                    RB=Constants.HardwareNames.DRIVE_RIGHT_BACK,
+                )
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
                 flywheel = FlywheelImpl(hardwareMap)

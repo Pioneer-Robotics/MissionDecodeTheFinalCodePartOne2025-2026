@@ -17,8 +17,7 @@ class HorizontalKVTuner : OpMode() {
         bot.dtTracker.update()
         bot.localizer.update(bot.dtTracker.dt)
         bot.mecanumBase.setDriveVA(
-            Pose(x = 50.0), // 50 cm/s right
-            Pose()          // No acceleration, we are only tuning velocity
+            Pose(vx = 50.0, ax = 0.0), // 50 cm/s right
         )
         telemetry.addData("Velocity (cm/s)", bot.localizer.pose.vx)
         telemetry.addData("Position (cm)", bot.localizer.pose.x)

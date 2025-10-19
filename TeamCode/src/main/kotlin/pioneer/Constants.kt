@@ -54,17 +54,18 @@ object Constants {
         const val WHEEL_BASE_CM  = 0.0
 
         // limits
-        const val MAX_DRIVE_MOTOR_VELOCITY_TPS = 2500.0
+        const val MOTOR_MAX_VELOCITY_TPS = 2500.0
         const val MAX_FWD_VEL_CMPS = 150.0
         const val MAX_STRAFE_VEL_CMPS = 125.0
-        const val DEFAULT_DRIVE_POWER = 0.7
+        const val DEFAULT_POWER = 0.7
 
         // motor directions (LF, LB, RF, RB)
-        val MOTOR_DIRECTIONS = arrayOf(
-            DcMotorSimple.Direction.REVERSE,
-            DcMotorSimple.Direction.REVERSE,
-            DcMotorSimple.Direction.FORWARD,
-            DcMotorSimple.Direction.FORWARD
+        val MOTOR_DIRECTIONS =
+            arrayOf(
+                DcMotorSimple.Direction.REVERSE,
+                DcMotorSimple.Direction.REVERSE,
+                DcMotorSimple.Direction.FORWARD,
+                DcMotorSimple.Direction.FORWARD,
         )
 
         // Feedforward gains using Pose(x,y,theta)

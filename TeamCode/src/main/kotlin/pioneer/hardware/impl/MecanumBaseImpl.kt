@@ -3,19 +3,18 @@ package pioneer.hardware.impl
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.Constants
 import pioneer.Constants.HardwareNames
+import pioneer.Constants.Drive as DriveConstants
 import pioneer.hardware.interfaces.MecanumBase
 import pioneer.helpers.Pose
 import kotlin.math.abs
 import kotlin.math.sign
-import pioneer.Constants.Drive as DriveConstants
 
-class MecanumBaseImpl(hardwareMap: HardwareMap) : MecanumBase {
-    private val leftFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_FRONT)
-    private val leftBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_LEFT_BACK)
-    private val rightFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_RIGHT_FRONT)
-    private val rightBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.DRIVE_RIGHT_BACK)
+class MecanumBaseImpl(hardwareMap: HardwareMap, LF: String, LB: String, RF: String, RB: String) : MecanumBase {
+    private val leftFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, LF)
+    private val leftBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, LB)
+    private val rightFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, RF)
+    private val rightBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, RB)
 
     private val motors = arrayOf(leftFront, leftBack, rightFront, rightBack)
 
@@ -40,6 +39,7 @@ class MecanumBaseImpl(hardwareMap: HardwareMap) : MecanumBase {
         y: Double,
         rotation: Double,
         power: Double,
+        motor_max_vel_tps: Double = DriveConstants.MOTOR_MAX_VELOCITY_TPS,
     ) {
         val leftFrontPower = y + x + rotation
         val leftBackPower = y - x + rotation
@@ -49,26 +49,32 @@ class MecanumBaseImpl(hardwareMap: HardwareMap) : MecanumBase {
         val maxPower = maxOf(abs(leftFrontPower), abs(leftBackPower), abs(rightFrontPower), abs(rightBackPower), 1.0)
         val scale = power / maxPower
 
-        leftFront.velocity = leftFrontPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
-        leftBack.velocity = leftBackPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
-        rightFront.velocity = rightFrontPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
-        rightBack.velocity = rightBackPower * scale * DriveConstants.MAX_DRIVE_MOTOR_VELOCITY_TPS
+        leftFront.velocity = leftFrontPower * scale * max_motor_vel_tps
+        leftBack.velocity = leftBackPower * scale * max_motor_vel_tps
+        rightFront.velocity = rightFrontPower * scale * max_motor_vel_tps
+        rightBack.velocity = rightBackPower * scale * max_motor_vel_tps
+    }
+
+    fun setDrivePower(
+        pose: Pose,
+        power: Double = DriveConstants.DEFAULT_POWER,
+    ) {
+        setDrivePower(pose.vx, pose.vy, pose.omega, power)
     }
 
     /**
      * Feedforward control for motion profiling
      */
     override fun setDriveVA(
-        velocity: Pose,
-        acceleration: Pose,
+        pose: Pose,
     ) {
         // Calculate feedforward for each axis
-        val ffX = velocity.x * DriveConstants.kV.x + acceleration.x * DriveConstants.kA.x +
-                  if (abs(velocity.x) > 1e-3) DriveConstants.kS.x * sign(velocity.x) else 0.0
-        val ffY = velocity.y * DriveConstants.kV.y + acceleration.y * DriveConstants.kA.y +
-                  if (abs(velocity.y) > 1e-3) DriveConstants.kS.y * sign(velocity.y) else 0.0
-        val ffTheta = velocity.theta * DriveConstants.kV.theta + acceleration.theta * DriveConstants.kA.theta +
-                      if (abs(velocity.theta) > 1e-3) DriveConstants.kS.theta * sign(velocity.theta) else 0.0
+        val ffX = pose.vx * DriveConstants.kV.x + pose.ax * DriveConstants.kA.x +
+                  if (abs(pose.vx) > 1e-3) DriveConstants.kS.x * sign(pose.vx) else 0.0
+        val ffY = pose.vy * DriveConstants.kV.y + pose.ay * DriveConstants.kA.y +
+                  if (abs(pose.vy) > 1e-3) DriveConstants.kS.y * sign(pose.vy) else 0.0
+        val ffTheta = pose.omega * DriveConstants.kV.theta + pose.alpha * DriveConstants.kA.theta +
+                      if (abs(pose.omega) > 1e-3) DriveConstants.kS.theta * sign(pose.omega) else 0.0
 
         leftFront.power = (ffY + ffX + ffTheta).coerceIn(-1.0, 1.0)
         leftBack.power = (ffY - ffX + ffTheta).coerceIn(-1.0, 1.0)

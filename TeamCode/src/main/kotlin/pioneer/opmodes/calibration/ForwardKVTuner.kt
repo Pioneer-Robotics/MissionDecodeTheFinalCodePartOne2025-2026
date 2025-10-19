@@ -17,8 +17,7 @@ class ForwardKVTuner : OpMode() {
         bot.dtTracker.update()
         bot.localizer.update(bot.dtTracker.dt)
         bot.mecanumBase.setDriveVA(
-            Pose(y = 50.0), // 50 cm/s forward
-            Pose()          // No acceleration, we are only tuning velocity
+            Pose(vy = 50.0, ay = 0.0), // 50 cm/s forward
         )
         telemetry.addData("Velocity (cm/s)", bot.localizer.pose.vy)
         telemetry.addData("Position (cm)", bot.localizer.pose.y)

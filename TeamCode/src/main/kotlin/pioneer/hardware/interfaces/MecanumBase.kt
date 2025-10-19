@@ -11,12 +11,13 @@ interface MecanumBase {
         x: Double,
         y: Double,
         rotation: Double,
-        power: Double = Constants.Drive.DEFAULT_DRIVE_POWER,
+        power: Double = Constants.Drive.DEFAULT_POWER,
+        max_motor_vel_tps: Double = Constants.Drive.MOTOR_MAX_VELOCITY_TPS,
     )
 
     fun setDriveVA(
-        velocity: Pose,
-        acceleration: Pose,
+        pose: Pose,
+        max_motor_vel_tps: Double = Constants.Drive.MOTOR_MAX_VELOCITY_TPS,
     )
 
     fun stop()

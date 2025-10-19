@@ -19,7 +19,7 @@ class MecanumBaseMock : MecanumBase {
         FileLogger.warn("NOT INITIALIZED", "setDrivePower called on MecanumBaseMock")
     }
 
-    override fun setDriveVA(velocity: Pose, acceleration: Pose) {
+    override fun setDriveVA(pose: Pose) {
         FileLogger.warn("NOT INITIALIZED", "setDriveVA called on MecanumBaseMock")
     }
 

@@ -17,8 +17,7 @@ class RotationalKVTuner : OpMode() {
         bot.dtTracker.update()
         bot.localizer.update(bot.dtTracker.dt)
         bot.mecanumBase.setDriveVA(
-            Pose(theta = 1.0),  // 1 rad/s clockwise
-            Pose()              // No acceleration, we are only tuning velocity
+            Pose(omega = 1.0, alpha = 0.0),  // 1 rad/s clockwise
         )
         telemetry.addData("Velocity (cm/s)", bot.localizer.pose.omega)
         telemetry.addData("Position (cm)", bot.localizer.pose.theta)
