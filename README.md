@@ -29,8 +29,6 @@ To stay aligned with the upstream FTC repository:
 
 4. Address any merge conflicts as necessary.
 
-Regular updates ensure you benefit from the latest features and fixes.
-
 ## Formatting Kotlin Code
 
 Use `ktlint` to format your Kotlin files:
