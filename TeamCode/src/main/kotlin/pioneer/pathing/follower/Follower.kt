@@ -73,28 +73,47 @@ class Follower(private val bot: Bot) {
         val targetPointSecondDerivative = path!!.getSecondDerivative(pathT)
 
         // Calculate the position error and convert to robot-centric coordinates
-        var positionError = targetPoint - bot.localizer.pose
-        positionError = positionError.rotate(-bot.localizer.pose.theta)
+        var positionError = Pose(
+            x = targetPoint.x - bot.localizer.pose.x,
+            y = targetPoint.y - bot.localizer.pose.y
+        ).rotate(-bot.localizer.pose.theta)
 
         // Calculate 2D target velocity and acceleration based on path derivatives
-        var targetVelocity = tangent * targetState.v
-        var targetAcceleration = targetPointSecondDerivative * (targetState.v * targetState.v) +
-                tangent * targetState.a
+        val targetPose = Pose(
+            x = targetPoint.x,
+            y = targetPoint.y,
+            vx = tangent.x * targetState.v,
+            vy = tangent.y * targetState.v,
+            ax = targetPointSecondDerivative.x * (targetState.v * targetState.v) + tangent.x * targetState.a,
+            ay = targetPointSecondDerivative.y * (targetState.v * targetState.v) + tangent.y * targetState.a,
+            theta = bot.localizer.pose.theta
+        )
 
         // Convert target velocity and acceleration to robot-centric coordinates
-        targetVelocity = targetVelocity.rotate(-bot.localizer.pose.theta)
-        targetAcceleration = targetAcceleration.rotate(-bot.localizer.pose.theta)
+        val rotatedVelocity = Pose(vx = targetPose.vx, vy = targetPose.vy).rotate(-bot.localizer.pose.theta)
+        val rotatedAcceleration = Pose(ax = targetPose.ax, ay = targetPose.ay).rotate(-bot.localizer.pose.theta)
 
+        // Update the target pose with rotated values
         // TODO: Heading interpolation
+        val adjustedPose = targetPose.copy(
+            vx = rotatedVelocity.vx,
+            vy = rotatedVelocity.vy,
+            ax = rotatedAcceleration.ax,
+            ay = rotatedAcceleration.ay
+        )
 
         // Calculate the PID outputs
-        var xCorrection = xPID.update(positionError.x, bot.dtTracker.dt)
-        var yCorrection = yPID.update(positionError.y, bot.dtTracker.dt)
+        val xCorrection = xPID.update(positionError.x, bot.dtTracker.dt)
+        val yCorrection = yPID.update(positionError.y, bot.dtTracker.dt)
 
-        // Calculate adjusted velocity based on PID corrections
+        // Apply corrections to velocity
         // TODO: Add heading correction
-        val adjustedVelocity = targetVelocity + Pose(xCorrection, yCorrection, 0.0)
-        bot.mecanumBase.setDriveVA(adjustedVelocity, targetAcceleration)
+        val correctedPose = adjustedPose.copy(
+            vx = adjustedPose.vx + xCorrection,
+            vy = adjustedPose.vy + yCorrection
+        )
+
+        bot.mecanumBase.setDriveVA(correctedPose)
     }
 
     fun start() {

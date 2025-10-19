@@ -8,17 +8,12 @@ interface MecanumBase {
     fun setZeroPowerBehavior(behavior: DcMotor.ZeroPowerBehavior)
 
     fun setDrivePower(
-        x: Double,
-        y: Double,
-        rotation: Double,
+        pose: Pose,
         power: Double = Constants.Drive.DEFAULT_POWER,
-        max_motor_vel_tps: Double = Constants.Drive.MOTOR_MAX_VELOCITY_TPS,
+        max_motor_vel_tps: Double = Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
     )
 
-    fun setDriveVA(
-        pose: Pose,
-        max_motor_vel_tps: Double = Constants.Drive.MOTOR_MAX_VELOCITY_TPS,
-    )
+    fun setDriveVA(pose: Pose)
 
     fun stop()
 }

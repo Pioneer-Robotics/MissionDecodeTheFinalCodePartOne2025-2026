@@ -11,10 +11,9 @@ class MecanumBaseMock : MecanumBase {
     }
 
     override fun setDrivePower(
-        x: Double,
-        y: Double,
-        rotation: Double,
-        power: Double
+        pose: Pose,
+        power: Double,
+        max_motor_vel_tps: Double
     ) {
         FileLogger.warn("NOT INITIALIZED", "setDrivePower called on MecanumBaseMock")
     }

@@ -35,16 +35,14 @@ class MecanumBaseImpl(hardwareMap: HardwareMap, LF: String, LB: String, RF: Stri
      * Drive using robot-centric coordinates: x=strafe, y=forward, rotation=turn
      */
     override fun setDrivePower(
-        x: Double,
-        y: Double,
-        rotation: Double,
+        pose: Pose,
         power: Double,
-        motor_max_vel_tps: Double = DriveConstants.MOTOR_MAX_VELOCITY_TPS,
+        max_motor_vel_tps: Double = DriveConstants.MAX_MOTOR_VELOCITY_TPS,
     ) {
-        val leftFrontPower = y + x + rotation
-        val leftBackPower = y - x + rotation
-        val rightFrontPower = y - x - rotation
-        val rightBackPower = y + x - rotation
+        val leftFrontPower = pose.vy + pose.vx + pose.omega
+        val leftBackPower = pose.vy - pose.vx + pose.omega
+        val rightFrontPower = pose.vy - pose.vx - pose.omega
+        val rightBackPower = pose.vy + pose.vx - pose.omega
 
         val maxPower = maxOf(abs(leftFrontPower), abs(leftBackPower), abs(rightFrontPower), abs(rightBackPower), 1.0)
         val scale = power / maxPower
@@ -53,13 +51,6 @@ class MecanumBaseImpl(hardwareMap: HardwareMap, LF: String, LB: String, RF: Stri
         leftBack.velocity = leftBackPower * scale * max_motor_vel_tps
         rightFront.velocity = rightFrontPower * scale * max_motor_vel_tps
         rightBack.velocity = rightBackPower * scale * max_motor_vel_tps
-    }
-
-    fun setDrivePower(
-        pose: Pose,
-        power: Double = DriveConstants.DEFAULT_POWER,
-    ) {
-        setDrivePower(pose.vx, pose.vy, pose.omega, power)
     }
 
     /**

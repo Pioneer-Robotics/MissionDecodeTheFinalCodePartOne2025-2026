@@ -4,20 +4,21 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
+import pioneer.Constants.Drive.DEFAULT_POWER
 
 class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
-    var driveSpeed = 0.5
+    var drivePower = DEFAULT_POWER
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
 
     // Toggles
-    private var incDriveSpeed: Toggle = Toggle(false)
-    private var decDriveSpeed: Toggle = Toggle(false)
+    private var incDrivePower: Toggle = Toggle(false)
+    private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
 
     fun update() {
         drive()
-        updateDriveSpeed()
+        updateDrivePower()
         updateFieldCentric()
         flywheelSpeed()
         updateLaunchServos()
@@ -26,23 +27,25 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
         bot.mecanumBase.setDrivePower(
-            direction.x,
-            direction.y,
-            gamepad.right_stick_x.toDouble(),
-            driveSpeed
+            Pose(
+                vx = direction.x,
+                vy = direction.y,
+                omega = gamepad.right_stick_x.toDouble()
+            ),
+            drivePower
         )
     }
 
-    fun updateDriveSpeed() {
-        incDriveSpeed.toggle(gamepad.right_bumper)
-        decDriveSpeed.toggle(gamepad.left_bumper)
-        if (incDriveSpeed.justChanged) {
-            driveSpeed += 0.1
+    fun updateDrivePower() {
+        incDrivePower.toggle(gamepad.right_bumper)
+        decDrivePower.toggle(gamepad.left_bumper)
+        if (incDrivePower.justChanged) {
+            drivePower += 0.1
         }
-        if (decDriveSpeed.justChanged) {
-            driveSpeed -= 0.1
+        if (decDrivePower.justChanged) {
+            drivePower -= 0.1
         }
-        driveSpeed = driveSpeed.coerceIn(0.1, 1.0)
+        drivePower = drivePower.coerceIn(0.1, 1.0)
     }
 
     fun updateFieldCentric() {
