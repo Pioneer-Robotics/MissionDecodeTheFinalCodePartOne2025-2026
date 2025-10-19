@@ -76,15 +76,14 @@ object Constants {
     // -------- Pinpoint (odometry pods) --------
     object Pinpoint {
         // offsets from tracking point (mm): +forward, +left
-        const val Y_POD_OFFSET_MM = 0.0
-        const val X_POD_OFFSET_MM = 134.0
+        const val Y_POD_OFFSET = 137.0
+        const val X_POD_OFFSET = -134.0
         
         // encoder configuration. Y should increase left, X should increase forward
-        val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD
-        val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD
+        val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
+        val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
 
-        val ENCODER_RESOLUTION =
-            GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
+        val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
     }
 
     // -------- Follower (path following) --------
