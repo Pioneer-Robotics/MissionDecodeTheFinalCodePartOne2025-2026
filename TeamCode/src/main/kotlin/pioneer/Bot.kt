@@ -69,12 +69,12 @@ class Bot(
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
                 flywheel = FlywheelImpl(hardwareMap)
                 launchServos = LaunchServosMock()
-                aprilTagProcessor = AprilTagImpl(Constants.Camera.POSITION_IN, Constants.Camera.ORIENTATION_DEG)
+                aprilTagProcessor = AprilTagImpl(Constants.Camera.POSITION_IN, Constants.Camera.ORIENTATION_DEG).processor
                 camera =
                     CameraImpl(
                         hardwareMap,
                         Constants.HardwareNames.WEBCAM,
-                        processors = listOf(aprilTagProcessor.builder),
+                        processors = listOf(aprilTagProcessor),
                     )
             }
         }

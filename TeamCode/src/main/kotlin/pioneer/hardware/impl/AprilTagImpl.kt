@@ -16,7 +16,6 @@ class AprilTagImpl(
     position: Position = Position(DistanceUnit.INCH, 0.0, 0.0, 0.0),
     orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.DEGREES, 0.0, 0.0, 0.0),
 ) : AprilTag {
-    override private val processor: AprilTagProcessor
 
     private val library: AprilTagLibrary =
         AprilTagLibrary
@@ -24,7 +23,7 @@ class AprilTagImpl(
             .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
             .build()
 
-    val builder: AprilTagProcessor.Builder =
+    val processor: AprilTagProcessor =
         AprilTagProcessor
             .Builder()
             .setTaglibrary(library)

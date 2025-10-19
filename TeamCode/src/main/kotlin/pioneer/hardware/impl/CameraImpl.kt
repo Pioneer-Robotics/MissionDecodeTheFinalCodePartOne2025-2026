@@ -10,9 +10,8 @@ class CameraImpl(
     name: String,
     processors: List<VisionProcessor> = emptyList(),
 ) : Camera {
-    override private val portal: VisionPortal = VisionPortal
 
-    val builder: VisionPortal.Builder =
+    val portal: VisionPortal =
         VisionPortal
             .Builder()
             .setCamera(hardwareMap.get(WebcamName::class.java, name))
