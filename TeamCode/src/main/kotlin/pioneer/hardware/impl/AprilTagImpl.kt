@@ -29,12 +29,4 @@ class AprilTagImpl(
             .setTaglibrary(library)
             .setCameraPose(position, orientation)
             .build()
-
-    fun tags(): List<AprilTagDetection> {
-        return processor.getDetections()
-    }
-
-    fun numTags(): Int {
-        return tags().size()
-    }   
 }
