@@ -54,7 +54,7 @@ object Constants {
         const val WHEEL_BASE_CM  = 0.0
 
         // limits
-        const val MOTOR_MAX_VELOCITY_TPS = 2500.0
+        const val MAX_MOTOR_VELOCITY_TPS = 2500.0
         const val MAX_FWD_VEL_CMPS = 150.0
         const val MAX_STRAFE_VEL_CMPS = 125.0
         const val DEFAULT_POWER = 0.7
