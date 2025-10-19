@@ -4,6 +4,10 @@
 
 For detailed information, refer to the [FTC Robot Controller repository README](https://github.com/FIRST-Tech-Challenge/FtcRobotController/blob/master/README.md).
 
+## Official FTC Java Documentation
+
+For official Java documentation, visit the [FTC JavaDocs](https://javadoc.io/doc/org.firstinspires.ftc).
+
 ## Keeping the Repository Updated
 
 To stay aligned with the upstream FTC repository:
