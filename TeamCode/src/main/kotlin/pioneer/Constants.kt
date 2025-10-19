@@ -117,18 +117,18 @@ object Constants {
     }
 
     object Camera {
-        // Camera position constants (inches)
-        private const val X_OFFSET_INCH = 0.0
-        private const val Y_OFFSET_INCH = 0.0
-        private const val Z_OFFSET_INCH = 0.0
+        // Camera position constants (cm)
+        private const val X_OFFSET_CM = 0.0
+        private const val Y_OFFSET_CM = 0.0
+        private const val Z_OFFSET_CM = 0.0
 
         // Camera orientation constants (degrees)
         private const val YAW_DEG = 0.0
         private const val PITCH_DEG = 0.0
         private const val ROLL_DEG = 0.0
 
-        val POSITION_IN: Position
-            get() = Position(DistanceUnit.INCH, X_OFFSET_INCH, Y_OFFSET_INCH, Z_OFFSET_INCH)
+        val POSITION_CM: Position
+            get() = Position(DistanceUnit.CM, X_OFFSET_CM, Y_OFFSET_CM, Z_OFFSET_CM)
 
         val ORIENTATION_DEG: YawPitchRollAngles
             get() = YawPitchRollAngles(AngleUnit.DEGREES, YAW_DEG, PITCH_DEG, ROLL_DEG)
