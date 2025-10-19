@@ -6,8 +6,8 @@ import pioneer.helpers.FileLogger
 
 class CameraMock : Camera {
     override val portal: VisionPortal
-        get() = {
+        get() {
             FileLogger.warn("NOT INITIALIZED", "portal getter called on CameraMock")
-            VisionPortal.Builder().build()
+            return VisionPortal.Builder().build()
         }
 }
