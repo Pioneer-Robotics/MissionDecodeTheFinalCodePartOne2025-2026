@@ -9,8 +9,8 @@ interface MecanumBase {
 
     fun setDrivePower(
         pose: Pose,
-        power: Double = Constants.Drive.DEFAULT_POWER,
-        max_motor_vel_tps: Double = Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
+        power: Double,
+        maxMotorVelocityTps: Double
     )
 
     fun setDriveVA(pose: Pose)

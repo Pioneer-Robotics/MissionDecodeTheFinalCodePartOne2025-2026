@@ -3,29 +3,30 @@ package pioneer.hardware.impl
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.Constants.HardwareNames
-import pioneer.Constants.Drive as DriveConstants
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import pioneer.hardware.interfaces.MecanumBase
 import pioneer.helpers.Pose
+import pioneer.Constants.Drive as DriveConstants
 import kotlin.math.abs
 import kotlin.math.sign
 
-class MecanumBaseImpl(hardwareMap: HardwareMap, LF: String, LB: String, RF: String, RB: String) : MecanumBase {
-    private val leftFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, LF)
-    private val leftBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, LB)
-    private val rightFront: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, RF)
-    private val rightBack: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, RB)
-
-    private val motors = arrayOf(leftFront, leftBack, rightFront, rightBack)
-
-    init {
-        motors.forEachIndexed { index, motor ->
-            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-            motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
-            motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-            motor.direction = DriveConstants.MOTOR_DIRECTIONS[index]
+class MecanumBaseImpl(
+    hardwareMap: HardwareMap,
+    motorConfig: Map<String, DcMotorSimple.Direction>
+) : MecanumBase {
+    private val motors = motorConfig.map { (name, direction) ->
+        hardwareMap.get(DcMotorEx::class.java, name).apply {
+            mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            mode = DcMotor.RunMode.RUN_USING_ENCODER
+            zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+            this.direction = direction
         }
     }
+
+    private val leftFront: DcMotorEx = motors[0]
+    private val leftBack: DcMotorEx = motors[1]
+    private val rightFront: DcMotorEx = motors[2]
+    private val rightBack: DcMotorEx = motors[3]
 
     override fun setZeroPowerBehavior(behavior: DcMotor.ZeroPowerBehavior) {
         motors.forEach { it.zeroPowerBehavior = behavior }
@@ -37,7 +38,7 @@ class MecanumBaseImpl(hardwareMap: HardwareMap, LF: String, LB: String, RF: Stri
     override fun setDrivePower(
         pose: Pose,
         power: Double,
-        max_motor_vel_tps: Double = DriveConstants.MAX_MOTOR_VELOCITY_TPS,
+        maxMotorVelocityTps: Double
     ) {
         val leftFrontPower = pose.vy + pose.vx + pose.omega
         val leftBackPower = pose.vy - pose.vx + pose.omega
@@ -47,17 +48,17 @@ class MecanumBaseImpl(hardwareMap: HardwareMap, LF: String, LB: String, RF: Stri
         val maxPower = maxOf(abs(leftFrontPower), abs(leftBackPower), abs(rightFrontPower), abs(rightBackPower), 1.0)
         val scale = power / maxPower
 
-        leftFront.velocity = leftFrontPower * scale * max_motor_vel_tps
-        leftBack.velocity = leftBackPower * scale * max_motor_vel_tps
-        rightFront.velocity = rightFrontPower * scale * max_motor_vel_tps
-        rightBack.velocity = rightBackPower * scale * max_motor_vel_tps
+        leftFront.velocity = leftFrontPower * scale * maxMotorVelocityTps
+        leftBack.velocity = leftBackPower * scale * maxMotorVelocityTps
+        rightFront.velocity = rightFrontPower * scale * maxMotorVelocityTps
+        rightBack.velocity = rightBackPower * scale * maxMotorVelocityTps
     }
 
     /**
      * Feedforward control for motion profiling
      */
     override fun setDriveVA(
-        pose: Pose,
+        pose: Pose
     ) {
         // Calculate feedforward for each axis
         val ffX = pose.vx * DriveConstants.kV.x + pose.ax * DriveConstants.kA.x +

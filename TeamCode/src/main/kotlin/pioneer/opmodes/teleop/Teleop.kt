@@ -51,7 +51,7 @@ class Teleop : OpMode() {
     }
 
     private fun updateTelemetry() {
-        telemetry.addData("Drive Speed", driver1.driveSpeed)
+        telemetry.addData("Drive Speed", driver1.drivePower)
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Pose", bot.localizer.pose)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.localizer.pose.vx, bot.localizer.pose.vy))

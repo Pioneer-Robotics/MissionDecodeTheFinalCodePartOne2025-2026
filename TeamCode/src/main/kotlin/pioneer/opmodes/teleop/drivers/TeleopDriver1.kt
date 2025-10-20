@@ -4,10 +4,10 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
-import pioneer.Constants.Drive.DEFAULT_POWER
+import pioneer.Constants.Drive
 
 class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
-    var drivePower = DEFAULT_POWER
+    var drivePower = Drive.DEFAULT_POWER
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
 
@@ -32,7 +32,8 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
                 vy = direction.y,
                 omega = gamepad.right_stick_x.toDouble()
             ),
-            drivePower
+            drivePower,
+            Drive.MAX_MOTOR_VELOCITY_TPS
         )
     }
 
