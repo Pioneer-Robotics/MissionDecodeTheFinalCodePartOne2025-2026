@@ -42,6 +42,9 @@ abstract class BaseOpMode(
         // Call user-defined loop logic
         onLoop()
 
+        // Update path follower
+        bot.follower.update(dt)
+
         // Automatically handle telemetry updates
         updateTelemetry()
     }

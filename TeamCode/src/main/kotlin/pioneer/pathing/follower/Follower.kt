@@ -54,7 +54,7 @@ class Follower(private val bot: Bot) {
             return motionProfile!![t]
         }
 
-    fun update() {
+    fun update(dt: Double) {
         if (motionProfile == null || path == null) {
             FileLogger.error("Follower", "No path or motion profile set")
             return
@@ -88,8 +88,8 @@ class Follower(private val bot: Bot) {
         // TODO: Heading interpolation
 
         // Calculate the PID outputs
-        var xCorrection = xPID.update(positionError.x, bot.dtTracker.dt)
-        var yCorrection = yPID.update(positionError.y, bot.dtTracker.dt)
+        var xCorrection = xPID.update(positionError.x, dt)
+        var yCorrection = yPID.update(positionError.y, dt)
 
         // Calculate adjusted velocity based on PID corrections
         // TODO: Add heading correction
