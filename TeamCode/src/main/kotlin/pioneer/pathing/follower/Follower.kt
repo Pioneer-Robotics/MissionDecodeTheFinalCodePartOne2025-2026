@@ -54,7 +54,7 @@ class Follower(private val bot: Bot) {
             return motionProfile!![t]
         }
 
-    fun update() {
+    fun update(dt: Double) {
         if (motionProfile == null || path == null) {
             FileLogger.error("Follower", "No path or motion profile set")
             return
@@ -93,8 +93,8 @@ class Follower(private val bot: Bot) {
         val rotatedTargetPose = targetPose.rotate(-bot.localizer.pose.theta)
 
         // Calculate the PID outputs
-        val xCorrection = xPID.update(positionError.x, bot.dtTracker.dt)
-        val yCorrection = yPID.update(positionError.y, bot.dtTracker.dt)
+        val xCorrection = xPID.update(positionError.x, dt)
+        val yCorrection = yPID.update(positionError.y, dt)
 
         // Apply corrections to velocity directly
         val correctedPose = rotatedTargetPose.copy(

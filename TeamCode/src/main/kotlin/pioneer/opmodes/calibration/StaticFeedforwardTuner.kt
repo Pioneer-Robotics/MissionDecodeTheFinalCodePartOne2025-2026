@@ -8,19 +8,16 @@ import pioneer.helpers.Pose
 import pioneer.Bot
 import pioneer.Constants
 import pioneer.helpers.FileLogger
+import pioneer.opmodes.BaseOpMode
 import kotlin.math.hypot
 
 @Autonomous(name = "Static Feedforward Tuner", group = "Calibration")
-class StaticFeedforwardTuner : OpMode() {
-    private lateinit var bot: Bot
-
+class StaticFeedforwardTuner : BaseOpMode() {
     enum class State {
         FORWARD,
         DELAY,
         HORIZONTAL,
     }
-
-    var telemetryPacket = TelemetryPacket()
 
     val startPower = 0.0
     val step = 0.001 // Power increase per step
@@ -31,18 +28,14 @@ class StaticFeedforwardTuner : OpMode() {
     var velocityTime = 0
     var state: State = State.FORWARD
 
-    override fun init() {
-        bot = Bot(pioneer.BotType.BASIC_MECANUM_BOT, hardwareMap)
+    override fun onInit() {
         bot.localizer.reset() // Reset the localizer to the origin
 
         telemetryPacket.put("Current Power", currentPower)
         telemetryPacket.put("Current Velocity", hypot(bot.localizer.pose.vx, bot.localizer.pose.vy))
-        FtcDashboard.getInstance().sendTelemetryPacket(telemetryPacket)
     }
 
-    override fun loop() {
-        bot.dtTracker.update()
-        bot.localizer.update(bot.dtTracker.dt)
+    override fun onLoop() {
         when (state) {
             State.FORWARD -> {
                 // Move forward until the velocity exceeds the threshold
@@ -52,8 +45,6 @@ class StaticFeedforwardTuner : OpMode() {
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
                     telemetryPacket.put("Current Velocity", bot.localizer.pose.vy)
-                    FtcDashboard.getInstance().sendTelemetryPacket(telemetryPacket)
-                    telemetryPacket = TelemetryPacket() // Reset packet for next loop
                 } else {
                     if (velocityTime > velocityThresholdTime) {
                         bot.mecanumBase.stop()
@@ -78,8 +69,6 @@ class StaticFeedforwardTuner : OpMode() {
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
                     telemetryPacket.put("Current Velocity", bot.localizer.pose.vx)
-                    FtcDashboard.getInstance().sendTelemetryPacket(telemetryPacket)
-                    telemetryPacket = TelemetryPacket() // Reset packet for next loop
                 } else {
                     if (velocityTime > velocityThresholdTime) {
                         bot.mecanumBase.stop()
