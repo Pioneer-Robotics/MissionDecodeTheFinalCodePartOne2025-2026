@@ -6,6 +6,7 @@ import pioneer.hardware.impl.AprilTagImpl
 import pioneer.hardware.impl.BatteryMonitorImpl
 import pioneer.hardware.impl.CameraImpl
 import pioneer.hardware.impl.FlywheelImpl
+import pioneer.hardware.impl.LaunchServosImpl
 import pioneer.hardware.impl.MecanumBaseImpl
 import pioneer.hardware.interfaces.AprilTag
 import pioneer.hardware.interfaces.BatteryMonitor
@@ -34,9 +35,6 @@ class Bot(
     botType: BotType,
     hardwareMap: HardwareMap,
 ) {
-    // Delta time tracker
-    var dtTracker = DeltaTimeTracker()
-
     // Basic hardware components
     var mecanumBase: MecanumBase = MecanumBaseMock()
     var localizer: Localizer = LocalizerMock()
@@ -68,7 +66,7 @@ class Bot(
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
                 flywheel = FlywheelImpl(hardwareMap)
-                launchServos = LaunchServosMock()
+                launchServos = LaunchServosImpl(hardwareMap)
                 aprilTagProcessor = AprilTagImpl(Constants.Camera.POSITION_IN, Constants.Camera.ORIENTATION_DEG).processor
                 camera =
                     CameraImpl(
