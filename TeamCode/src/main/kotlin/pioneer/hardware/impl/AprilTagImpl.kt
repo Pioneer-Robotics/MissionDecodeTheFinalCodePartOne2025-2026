@@ -10,8 +10,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.hardware.interfaces.AprilTag
 
 class AprilTagImpl(
-    position: Position = Position(DistanceUnit.INCH, 0.0, 0.0, 0.0),
-    orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.DEGREES, 0.0, 0.0, 0.0),
+    position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0),
+    orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0),
 ) : AprilTag {
 
     private val library: AprilTagLibrary =
