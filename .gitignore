@@ -43,6 +43,9 @@ captures/
 *.iml
 .idea/
 
+# VS Code
+.vscode/
+
 # For Mac users
 .DS_Store
 
