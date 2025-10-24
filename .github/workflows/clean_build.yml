@@ -1,0 +1,57 @@
+name: Clean Build
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+
+    - name: Grant execute permission for Gradle wrapper
+      run: chmod +x gradlew
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v2
+      with:
+        api-level: 30
+        build-tools: 30.0.3
+        target: android-30
+
+    - name: Accept Licenses
+      run: yes | sdkmanager --licenses
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-cache-${{ runner.os }}-
+
+    - name: Cache Android build tools
+      uses: actions/cache@v3
+      with:
+        path: ~/.android
+        key: android-cache-${{ runner.os }}
+        restore-keys: |
+          android-cache-${{ runner.os }}-
+
+    - name: Clean and Build
+      run: ./gradlew clean build --parallel
+
+    - name: Run Tests
+      run: ./gradlew test
+
+    - name: Build APKs
+      run: ./gradlew assembleDebug
