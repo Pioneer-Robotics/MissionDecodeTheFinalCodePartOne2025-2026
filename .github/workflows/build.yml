@@ -1,4 +1,4 @@
-name: Clean Build
+name: Build
 on:
   push:
     branches:
@@ -21,32 +21,23 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Grant execute permission for Gradle wrapper
-      run: chmod +x gradlew
-      
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
-      
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v4
       with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          gradle-${{ runner.os }}-
-          
-    - name: Accept Android licenses
-      run: ./gradlew --no-daemon --quiet
+        cache-read-only: ${{ github.ref != 'refs/heads/master' }}
+        
+    - name: Build and Test
+      run: ./gradlew build --no-daemon
       
-    - name: Clean and Build with Tests
-      run: ./gradlew clean build --parallel --no-daemon
+    - name: Build Debug APK
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      run: ./gradlew assembleDebug --no-daemon
       
     - name: Upload APK
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: actions/upload-artifact@v4
-      if: success()
       with:
         name: debug-apk
-        path: app/build/outputs/apk/debug/*.apk
+        path: |
+          **/build/outputs/apk/debug/*.apk
         retention-days: 7
