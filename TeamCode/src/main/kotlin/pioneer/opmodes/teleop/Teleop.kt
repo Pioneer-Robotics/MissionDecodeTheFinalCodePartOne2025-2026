@@ -4,7 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.BotType
 import pioneer.helpers.DashboardPlotter
 import pioneer.opmodes.BaseOpMode
-import pioneer.opmodes.teleop.drivers.*
+import pioneer.opmodes.teleop.drivers.TeleopDriver1
+import pioneer.opmodes.teleop.drivers.TeleopDriver2
 
 @TeleOp(name = "Teleop")
 class Teleop : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
@@ -31,15 +32,34 @@ class Teleop : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
             // Check if tag or its properties are null to avoid null pointer exceptions
             if (detection != null && detection.ftcPose != null) {
                 telemetry.addData("Detection", detection.id)
-                telemetry.addLine("--Rel (x, y, z): (%.2f, %.2f, %.2f)".format(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z))
-                telemetry.addLine("--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll))
-                telemetry.addLine("--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation))
+                telemetry.addLine(
+                    "--Rel (x, y, z): (%.2f, %.2f, %.2f)".format(
+                        detection.ftcPose.x,
+                        detection.ftcPose.y,
+                        detection.ftcPose.z
+                    )
+                )
+                telemetry.addLine(
+                    "--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(
+                        detection.ftcPose.yaw,
+                        detection.ftcPose.pitch,
+                        detection.ftcPose.roll
+                    )
+                )
+                telemetry.addLine(
+                    "--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(
+                        detection.ftcPose.range,
+                        detection.ftcPose.bearing,
+                        detection.ftcPose.elevation
+                    )
+                )
             } else {
                 telemetry.addLine("No valid AprilTag detections.")
             }
         }
+    }
 
-    private fun updateTelemetry() {
+    private fun addTelemetryData() {
         telemetry.addData("Drive Power", driver1.drivePower)
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Pose", bot.localizer.pose)

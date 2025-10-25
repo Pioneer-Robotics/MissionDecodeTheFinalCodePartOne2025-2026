@@ -1,7 +1,6 @@
 package pioneer.hardware.interfaces
 
 import com.qualcomm.robotcore.hardware.DcMotor
-import pioneer.Constants
 import pioneer.helpers.Pose
 
 interface MecanumBase {

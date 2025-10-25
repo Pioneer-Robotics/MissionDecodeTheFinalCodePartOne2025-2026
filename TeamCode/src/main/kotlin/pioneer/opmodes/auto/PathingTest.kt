@@ -1,13 +1,7 @@
 package pioneer.opmodes.auto
 
-import com.acmerobotics.dashboard.FtcDashboard
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import pioneer.Bot
-import pioneer.BotType
 import pioneer.helpers.DashboardPlotter
-import pioneer.helpers.FileLogger
 import pioneer.pathing.paths.HermitePath
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode

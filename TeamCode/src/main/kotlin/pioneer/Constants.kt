@@ -3,6 +3,8 @@ package pioneer
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import pioneer.helpers.Pose
@@ -58,7 +60,7 @@ object Constants {
         const val MAX_MOTOR_VELOCITY_TPS = 2500.0
         const val MAX_FWD_VEL_CMPS = 150.0
         const val MAX_STRAFE_VEL_CMPS = 125.0
-        const val DEFAULT_DRIVE_POWER = 0.7
+        const val DEFAULT_POWER = 0.7
 
         // motor directions (LF, LB, RF, RB)
         val MOTOR_DIRECTIONS =
@@ -137,9 +139,9 @@ object Constants {
         private const val ROLL_DEG = 0.0
 
         val POSITION_CM: Position
-            get() = Position(DistanceUnit.CM, X_OFFSET_CM, Y_OFFSET_CM, Z_OFFSET_CM)
+            get() = Position(DistanceUnit.CM, X_OFFSET_CM, Y_OFFSET_CM, Z_OFFSET_CM, 0)
 
         val ORIENTATION_RAD: YawPitchRollAngles
-            get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD)
+            get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
     }
 }

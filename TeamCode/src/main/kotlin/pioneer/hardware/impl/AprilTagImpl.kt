@@ -10,8 +10,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.hardware.interfaces.AprilTag
 
 class AprilTagImpl(
-    position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0),
-    orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0),
+    position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0, 0),
+    orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0),
 ) : AprilTag {
 
     private val library: AprilTagLibrary =
@@ -20,10 +20,10 @@ class AprilTagImpl(
             .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
             .build()
 
-    val processor: AprilTagProcessor =
+    override val processor: AprilTagProcessor =
         AprilTagProcessor
             .Builder()
-            .setTaglibrary(library)
+            .setTagLibrary(library)
             .setCameraPose(position, orientation)
             .build()
 }

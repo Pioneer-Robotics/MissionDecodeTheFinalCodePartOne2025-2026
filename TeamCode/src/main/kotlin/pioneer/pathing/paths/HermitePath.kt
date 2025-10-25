@@ -14,7 +14,8 @@ import kotlin.math.pow
  */
 class HermitePath(override var startPose: Pose, override var endPose: Pose,
                   startVelocity: Pose = Pose(),
-                  endVelocity: Pose = Pose()) : Path {
+                  endVelocity: Pose = Pose()
+) : Path {
 
     // Enum for heading interpolation mode
     override var headingInterpolationMode: HeadingInterpolationMode = HeadingInterpolationMode.LINEAR

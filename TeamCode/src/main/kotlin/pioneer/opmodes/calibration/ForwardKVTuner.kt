@@ -1,8 +1,6 @@
 package pioneer.opmodes.calibration
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import pioneer.Bot
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 

@@ -12,7 +12,8 @@ class CompoundPath(val paths: List<Path>) : Path {
 
     override var startPose: Pose = paths.first().startPose
     override var endPose: Pose = paths.last().endPose
-    override var headingInterpolationMode: Path.HeadingInterpolationMode = Path.HeadingInterpolationMode.LINEAR
+    override var headingInterpolationMode: Path.HeadingInterpolationMode =
+        Path.HeadingInterpolationMode.LINEAR
 
     init {
         // Validate that the paths are connected end-to-end

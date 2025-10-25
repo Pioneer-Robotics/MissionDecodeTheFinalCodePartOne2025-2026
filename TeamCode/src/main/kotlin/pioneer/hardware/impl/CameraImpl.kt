@@ -1,6 +1,8 @@
 package pioneer.hardware.impl
 
+import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
+import pioneer.hardware.interfaces.Camera
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.VisionProcessor
 import kotlin.jvm.java
@@ -8,19 +10,16 @@ import kotlin.jvm.java
 class CameraImpl(
     hardwareMap: HardwareMap,
     name: String,
-    processors: List<VisionProcessor> = emptyList(),
+    processors: Array<VisionProcessor> = emptyArray(),
 ) : Camera {
 
-    val portal: VisionPortal =
+    override val portal: VisionPortal =
         VisionPortal
             .Builder()
             .setCamera(hardwareMap.get(WebcamName::class.java, name))
             .apply {
                 if (processors.isNotEmpty()) {
-                    addProcessors(processors)
+                    addProcessors(*processors)
                 }
             }.build()
-
-    val state: VisionPortal.State
-        get() = portal.getState()
 }

@@ -1,11 +1,7 @@
 package pioneer.opmodes.calibration
 
-import com.acmerobotics.dashboard.FtcDashboard
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.helpers.Pose
-import pioneer.Bot
 import pioneer.Constants
 import pioneer.helpers.FileLogger
 import pioneer.opmodes.BaseOpMode

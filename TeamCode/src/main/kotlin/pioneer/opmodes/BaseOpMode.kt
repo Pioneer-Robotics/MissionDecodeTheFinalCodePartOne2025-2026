@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
 import pioneer.BotType
-import pioneer.helpers.DashboardPlotter
 import pioneer.helpers.DeltaTimeTracker
 import pioneer.helpers.FileLogger
 
