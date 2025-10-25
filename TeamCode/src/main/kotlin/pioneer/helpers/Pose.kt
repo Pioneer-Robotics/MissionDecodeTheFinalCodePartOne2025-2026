@@ -7,7 +7,7 @@ import kotlin.math.hypot
 import kotlin.math.sin
 
 /**
- * Minimal 2D pose with motion derivatives.
+ * Minimal 2D pose with motion derivatives. All units are in centimeters and radians.
  */
 data class Pose(
     // Position
