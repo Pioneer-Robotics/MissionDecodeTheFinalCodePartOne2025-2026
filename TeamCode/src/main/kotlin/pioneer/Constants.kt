@@ -54,23 +54,23 @@ object Constants {
         const val WHEEL_BASE_CM  = 0.0
 
         // limits
-        const val MAX_DRIVE_MOTOR_VELOCITY_TPS = 2500.0
+        const val MAX_MOTOR_VELOCITY_TPS = 2500.0
         const val MAX_FWD_VEL_CMPS = 150.0
         const val MAX_STRAFE_VEL_CMPS = 125.0
-        const val DEFAULT_DRIVE_POWER = 0.7
-
-        // motor directions (LF, LB, RF, RB)
-        val MOTOR_DIRECTIONS = arrayOf(
-            DcMotorSimple.Direction.REVERSE,
-            DcMotorSimple.Direction.REVERSE,
-            DcMotorSimple.Direction.FORWARD,
-            DcMotorSimple.Direction.FORWARD
-        )
+        const val DEFAULT_POWER = 0.7
 
         // Feedforward gains using Pose(x,y,theta)
         val kV = Pose(x = 0.0067, y = 0.0067, theta = 0.25)
         val kA = Pose(x = 0.0,    y = 0.0,    theta = 0.0)
         val kS = Pose(x = 0.0,    y = 0.0,    theta = 0.0)
+
+        // Motor configuration
+        val MOTOR_CONFIG = mapOf(
+            HardwareNames.DRIVE_LEFT_FRONT to DcMotorSimple.Direction.REVERSE,
+            HardwareNames.DRIVE_LEFT_BACK to DcMotorSimple.Direction.REVERSE,
+            HardwareNames.DRIVE_RIGHT_FRONT to DcMotorSimple.Direction.FORWARD,
+            HardwareNames.DRIVE_RIGHT_BACK to DcMotorSimple.Direction.FORWARD
+        )
     }
 
     // -------- Pinpoint (odometry pods) --------

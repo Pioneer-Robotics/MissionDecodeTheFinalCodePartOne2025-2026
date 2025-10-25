@@ -35,7 +35,8 @@ class Teleop : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
             telemetry.addLine("--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(detection.ftcPose.range,detection.ftcPose.bearing,detection.ftcPose.elevation))
         }
 
-        telemetry.addData("Drive Speed", driver1.driveSpeed)
+    private fun updateTelemetry() {
+        telemetry.addData("Drive Power", driver1.drivePower)
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Pose", bot.localizer.pose)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.localizer.pose.vx, bot.localizer.pose.vy))
