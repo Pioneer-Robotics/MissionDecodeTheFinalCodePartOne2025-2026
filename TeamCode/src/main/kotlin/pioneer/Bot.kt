@@ -25,6 +25,7 @@ import pioneer.localization.Localizer
 import pioneer.localization.localizers.LocalizerMock
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
+import pioneer.Constants
 
 enum class BotType {
     BASIC_MECANUM_BOT,
@@ -55,14 +56,14 @@ class Bot(
         when (botType) {
             BotType.BASIC_MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap)
+                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
             }
 
             BotType.GOBILDA_STARTER_BOT -> {
                 // Initialize hardware components for GoBilda Starter Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap)
+                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
                 flywheel = FlywheelImpl(hardwareMap)

@@ -72,6 +72,10 @@ data class Pose(
         return copy(
             x = origin.x + dx * cosA - dy * sinA,
             y = origin.y + dx * sinA + dy * cosA,
+            vx = vx * cosA - vy * sinA,
+            vy = vx * sinA + vy * cosA,
+            ax = ax * cosA - ay * sinA,
+            ay = ax * sinA + ay * cosA,
             theta = wrap(theta + angle)
         )
     }
