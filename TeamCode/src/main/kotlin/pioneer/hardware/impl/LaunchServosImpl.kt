@@ -3,13 +3,13 @@ package pioneer.hardware.impl
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
-import pioneer.Constants
+import pioneer.constants.HardwareNames
 import pioneer.hardware.interfaces.LaunchServos
 import kotlin.jvm.java
 
-class LaunchServosImpl (hardwareMap: HardwareMap) : LaunchServos {
-    val servo1 = hardwareMap.get(CRServo::class.java, Constants.HardwareNames.LAUNCH_SERVO_L)
-    val servo2 = hardwareMap.get(CRServo::class.java, Constants.HardwareNames.LAUNCH_SERVO_R)
+class LaunchServosImpl (hardwareMap: HardwareMap, ) : LaunchServos {
+    val servo1 = hardwareMap.get(CRServo::class.java, HardwareNames.LAUNCH_SERVO_L)
+    val servo2 = hardwareMap.get(CRServo::class.java, HardwareNames.LAUNCH_SERVO_R)
 
     var launch = false
     var retract = false

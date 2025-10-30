@@ -2,7 +2,7 @@ package pioneer.opmodes.calibration
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.helpers.Pose
-import pioneer.Constants
+import pioneer.constants.Drive
 import pioneer.helpers.FileLogger
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.hypot
@@ -37,7 +37,7 @@ class StaticFeedforwardTuner : BaseOpMode() {
                 // Move forward until the velocity exceeds the threshold
                 if (bot.localizer.pose.vy < velocityThreshold) {
                     velocityTime = 0
-                    bot.mecanumBase.setDrivePower(Pose(vx = 0.0, vy = currentPower, omega = 0.0), Constants.Drive.DEFAULT_POWER, Constants.Drive.MAX_MOTOR_VELOCITY_TPS)
+                    bot.mecanumBase.setDrivePower(Pose(vx = 0.0, vy = currentPower, omega = 0.0), Drive.DEFAULT_POWER, Drive.MAX_MOTOR_VELOCITY_TPS)
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
                     telemetryPacket.put("Current Velocity", bot.localizer.pose.vy)
@@ -61,7 +61,7 @@ class StaticFeedforwardTuner : BaseOpMode() {
                 // Move horizontally until the velocity exceeds the threshold
                 if (bot.localizer.pose.vx < velocityThreshold) {
                     velocityTime = 0
-                    bot.mecanumBase.setDrivePower(Pose(vx = currentPower, vy = 0.0, omega = 0.0), Constants.Drive.DEFAULT_POWER, Constants.Drive.MAX_MOTOR_VELOCITY_TPS)
+                    bot.mecanumBase.setDrivePower(Pose(vx = currentPower, vy = 0.0, omega = 0.0), Drive.DEFAULT_POWER, Drive.MAX_MOTOR_VELOCITY_TPS)
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
                     telemetryPacket.put("Current Velocity", bot.localizer.pose.vx)
