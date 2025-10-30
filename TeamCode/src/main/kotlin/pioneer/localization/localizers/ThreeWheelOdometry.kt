@@ -1,15 +1,12 @@
 package pioneer.localization.localizers
 
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.Constants.HardwareNames
-import pioneer.helpers.MathUtils
-import pioneer.localization.Localizer
 import pioneer.helpers.Pose
-import kotlin.math.cos
+import pioneer.localization.localizers.Odometry
+import pioneer.localization.Localizer
+import com.qualcomm.robotcore.hardware.HardwareMap
+import kotlin.math.PI
 import kotlin.math.sin
-import pioneer.Constants.Odometry as OdometryConstants
+import kotlin.math.cos
 
 /**
  * Three-wheel odometry localizer using two parallel and one perpendicular tracking wheel.
@@ -17,41 +14,32 @@ import pioneer.Constants.Odometry as OdometryConstants
 class ThreeWheelOdometry(
     hardwareMap: HardwareMap,
     startPose: Pose = Pose(),
+    leftName: String = "odoLeft",
+    rightName: String = "odoRight",
+    centerName: String = "odoCenter",
+    ticksPerRev: Double = 2000.0,
+    wheelDiameterCM: Double = 4.8,
+    val trackWidthCM: Double = 40.0,
+    val forwardOffsetCM: Double = 10.0
 ) : Localizer {
     override var pose: Pose = startPose
     override var prevPose: Pose = startPose.copy()
 
-    // Previous encoder values
-    private var prevLeftTicks = 0
-    private var prevRightTicks = 0
-    private var prevCenterTicks = 0
-
-    // Hardware
-    private val odoLeft: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_LEFT)
-    private val odoRight: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_RIGHT)
-    private val odoCenter: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_CENTER)
-
-    init {
-        odoLeft.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        odoRight.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        odoCenter.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-    }
+    // Odometry instances
+    private val leftOdometry = Odometry(hardwareMap, leftName, ticksPerRev, wheelDiameterCM)
+    private val rightOdometry = Odometry(hardwareMap, rightName, ticksPerRev, wheelDiameterCM)
+    private val centerOdometry = Odometry(hardwareMap, centerName, ticksPerRev, wheelDiameterCM)
 
     override fun update(dt: Double) {
         // Get current encoder values
-        val curLeftTicks = -odoLeft.currentPosition
-        val curRightTicks = -odoRight.currentPosition
-        val curCenterTicks = -odoCenter.currentPosition
-
-        // Calculate wheel deltas in cm
-        val dLeftCM = (curLeftTicks - prevLeftTicks) * OdometryConstants.TICKS_TO_CM
-        val dRightCM = (curRightTicks - prevRightTicks) * OdometryConstants.TICKS_TO_CM
-        val dCenterCM = (curCenterTicks - prevCenterTicks) * OdometryConstants.TICKS_TO_CM
+        val dLeftCM = leftOdometry.toCentimeters()
+        val dRightCM = rightOdometry.toCentimeters()
+        val dCenterCM = centerOdometry.toCentimeters()
 
         // Calculate robot motion
-        val dTheta = (dLeftCM - dRightCM) / OdometryConstants.TRACK_WIDTH_CM
+        val dTheta = (dLeftCM - dRightCM) / trackWidthCM
         val forwardDisplacement = (dLeftCM + dRightCM) / 2.0
-        val lateralDisplacement = dCenterCM - (OdometryConstants.FORWARD_OFFSET_CM * dTheta)
+        val lateralDisplacement = dCenterCM - (forwardOffsetCM * dTheta)
 
         // Arc motion transformation to global coordinates
         val globalX: Double
@@ -72,38 +60,20 @@ class ThreeWheelOdometry(
         val cosCurrentTheta = cos(pose.theta)
         val newX = pose.x + sinCurrentTheta * globalX + cosCurrentTheta * globalY
         val newY = pose.y + cosCurrentTheta * globalX - sinCurrentTheta * globalY
-        val newTheta = MathUtils.normalizeRadians(pose.theta + dTheta)
-
-        // Calculate velocities and accelerations
-        val vx = (newX - pose.x) / dt
-        val vy = (newY - pose.y) / dt
-        val omega = dTheta / dt
-        val ax = (vx - prevPose.vx) / dt
-        val ay = (vy - prevPose.vy) / dt
-        val alpha = (omega - prevPose.omega) / dt
+        val newTheta = pose.theta + dTheta
 
         // Update poses
         prevPose = pose
-        pose = Pose(newX, newY, vx, vy, ax, ay, newTheta, omega, alpha)
-
-        // Update encoder values
-        prevLeftTicks = curLeftTicks
-        prevRightTicks = curRightTicks
-        prevCenterTicks = curCenterTicks
+        pose = Pose(newX, newY, vx = 0.0, vy = 0.0, ax = 0.0, ay = 0.0, theta = newTheta)
     }
 
     override fun reset(pose: Pose) {
         this.pose = pose
         prevPose = pose.copy()
 
-        // Reset encoder values
-        prevLeftTicks = 0
-        prevRightTicks = 0
-        prevCenterTicks = 0
-
-        // Reset hardware encoders
-        odoLeft.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        odoRight.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        odoCenter.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        // Reset odometry instances
+        leftOdometry.reset()
+        rightOdometry.reset()
+        centerOdometry.reset()
     }
 }
