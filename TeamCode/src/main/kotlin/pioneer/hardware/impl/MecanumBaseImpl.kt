@@ -68,10 +68,10 @@ class MecanumBaseImpl(
         val ffTheta = pose.omega * DriveConstants.kV.theta + pose.alpha * DriveConstants.kA.theta +
                       if (abs(pose.omega) > 1e-3) DriveConstants.kS.theta * sign(pose.omega) else 0.0
 
-        leftFront.power = (ffY + ffX + ffTheta).coerceIn(-1.0, 1.0)
-        leftBack.power = (ffY - ffX + ffTheta).coerceIn(-1.0, 1.0)
-        rightFront.power = (ffY - ffX - ffTheta).coerceIn(-1.0, 1.0)
-        rightBack.power = (ffY + ffX - ffTheta).coerceIn(-1.0, 1.0)
+        leftFront.power = (ffY + ffX - ffTheta).coerceIn(-1.0, 1.0)
+        leftBack.power = (ffY - ffX - ffTheta).coerceIn(-1.0, 1.0)
+        rightFront.power = (ffY - ffX + ffTheta).coerceIn(-1.0, 1.0)
+        rightBack.power = (ffY + ffX + ffTheta).coerceIn(-1.0, 1.0)
     }
 
     override fun stop() {

@@ -47,7 +47,7 @@ object Constants {
 
         // encoder
         const val TICKS_PER_REV = 2000.0
-        val TICKS_TO_CM: Double = (WHEEL_DIAMETER_CM * PI) / TICKS_PER_REV
+        const val TICKS_TO_CM: Double = (WHEEL_DIAMETER_CM * PI) / TICKS_PER_REV
     }
 
     // -------- Drivebase (mecanum) --------
@@ -88,8 +88,8 @@ object Constants {
     // -------- Pinpoint (odometry pods) --------
     object Pinpoint {
         // offsets from tracking point (mm): +forward, +left
-        const val Y_POD_OFFSET_MM = 137.0
-        const val X_POD_OFFSET_MM = -134.0
+        const val Y_POD_OFFSET_MM = -108.0
+        const val X_POD_OFFSET_MM = 125.0
         
         // encoder configuration. Y should increase left, X should increase forward
         val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED

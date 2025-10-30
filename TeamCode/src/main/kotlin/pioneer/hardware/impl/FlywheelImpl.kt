@@ -11,6 +11,9 @@ import kotlin.jvm.java
 class FlywheelImpl (hardwareMap: HardwareMap) : Flywheel {
     val flywheel = hardwareMap.get(DcMotorEx::class.java, Constants.HardwareNames.FLYWHEEL)
 
+    override val velocity
+        get() = flywheel.velocity
+
     init {
         flywheel.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         flywheel.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -19,6 +22,6 @@ class FlywheelImpl (hardwareMap: HardwareMap) : Flywheel {
     }
 
     override fun setSpeed(velocity: Double) {
-        flywheel.velocity = velocity
+        flywheel.power = velocity
     }
 }

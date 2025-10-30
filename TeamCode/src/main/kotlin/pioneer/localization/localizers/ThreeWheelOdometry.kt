@@ -26,6 +26,12 @@ class ThreeWheelOdometry(
     private var prevRightTicks = 0
     private var prevCenterTicks = 0
 
+    override var encoderXTicks: Int = 0
+        get() = (prevRightTicks + prevLeftTicks) / 2
+
+    override var encoderYTicks: Int = 0
+        get() = prevCenterTicks
+
     // Hardware
     private val odoLeft: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_LEFT)
     private val odoRight: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, HardwareNames.ODO_RIGHT)
