@@ -9,7 +9,7 @@ import kotlin.jvm.java
 
 class CameraImpl(
     hardwareMap: HardwareMap,
-    name: String,
+    name: String = "Webcam 1",
     processors: Array<VisionProcessor> = emptyArray(),
 ) : Camera {
 

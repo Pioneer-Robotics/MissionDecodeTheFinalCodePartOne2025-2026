@@ -19,8 +19,8 @@ class ThreeWheelOdometry(
     centerName: String = "odoCenter",
     ticksPerRev: Double = 2000.0,
     wheelDiameterCM: Double = 4.8,
-    val trackWidthCM: Double = 40.0,
-    val forwardOffsetCM: Double = 10.0
+    val trackWidthCM: Double = 26.5,
+    val forwardOffsetCM: Double = 15.1
 ) : Localizer {
     override var pose: Pose = startPose
     override var prevPose: Pose = startPose.copy()

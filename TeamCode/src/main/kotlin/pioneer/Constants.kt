@@ -10,21 +10,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import pioneer.helpers.Pose
 import kotlin.math.PI
 
-
-object HardwareNames {
-    // Odometry
-    const val ODO_LEFT = "odoLeft"
-    const val ODO_RIGHT = "odoRight"
-    const val ODO_CENTER = "odoCenter"
-
-    // Servos
-    const val LAUNCH_SERVO_L = "launchServoL"
-    const val LAUNCH_SERVO_R = "launchServoR"
-
-    // Other
-    const val WEBCAM = "Webcam 1"
-}
-
 // -------- Odometry (3-wheel) --------
 object Odometry {
     // geometry (cm)

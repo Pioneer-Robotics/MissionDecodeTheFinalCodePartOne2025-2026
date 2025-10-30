@@ -7,9 +7,9 @@ import pioneer.constants.HardwareNames
 import pioneer.hardware.interfaces.LaunchServos
 import kotlin.jvm.java
 
-class LaunchServosImpl (hardwareMap: HardwareMap, ) : LaunchServos {
-    val servo1 = hardwareMap.get(CRServo::class.java, HardwareNames.LAUNCH_SERVO_L)
-    val servo2 = hardwareMap.get(CRServo::class.java, HardwareNames.LAUNCH_SERVO_R)
+class LaunchServosImpl (hardwareMap: HardwareMap, leftName: String = "launchServoL", rightName: String = "launchServoR") : LaunchServos {
+    val servo1 = hardwareMap.get(CRServo::class.java, leftName)
+    val servo2 = hardwareMap.get(CRServo::class.java, rightName)
 
     var launch = false
     var retract = false

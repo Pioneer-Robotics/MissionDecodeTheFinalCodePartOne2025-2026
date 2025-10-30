@@ -1,6 +1,7 @@
 package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.constants.Camera as CameraConstants
 import pioneer.hardware.impl.AprilTagImpl
 import pioneer.hardware.impl.BatteryMonitorImpl
 import pioneer.hardware.impl.CameraImpl
@@ -53,26 +54,25 @@ class Bot(
         when (botType) {
             BotType.BASIC_MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
+                mecanumBase = MecanumBaseImpl(hardwareMap)
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
             }
 
             BotType.GOBILDA_STARTER_BOT -> {
                 // Initialize hardware components for GoBilda Starter Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
+                mecanumBase = MecanumBaseImpl(hardwareMap)
                 localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
                 flywheel = FlywheelImpl(hardwareMap)
                 launchServos = LaunchServosImpl(hardwareMap)
                 aprilTagProcessor = AprilTagImpl(
-                    Constants.Camera.POSITION_CM,
-                    Constants.Camera.ORIENTATION_RAD
+                    CameraConstants.POSITION_CM,
+                    CameraConstants.ORIENTATION_RAD
                 ).processor
                 camera =
                     CameraImpl(
                         hardwareMap,
-                        Constants.HardwareNames.WEBCAM,
                         processors = arrayOf(aprilTagProcessor),
                     )
             }
