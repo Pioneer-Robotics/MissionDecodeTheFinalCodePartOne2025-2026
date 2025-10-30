@@ -1,6 +1,7 @@
 package pioneer.localization.localizers
 
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotor.RunMode
 import com.qualcomm.robotcore.hardware.HardwareMap
 import kotlin.math.PI
 
@@ -23,7 +24,7 @@ class Odometry(
      * Resets the odometry hardware and internal state.
      */
     fun reset() {
-        odometer.mode = DcMotorEx.RunMode.STOP_AND_RESET_ENCODER
+        odometer.mode = RunMode.STOP_AND_RESET_ENCODER
     }
 
     /**
