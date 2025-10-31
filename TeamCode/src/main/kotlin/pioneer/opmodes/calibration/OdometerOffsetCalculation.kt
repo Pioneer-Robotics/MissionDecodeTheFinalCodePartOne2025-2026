@@ -12,7 +12,7 @@ class OdometerOffsetCalculation : BaseOpMode() {
     private var stopped = false
 
     override fun onInit() {
-        bot.localizer.update(dt) // Get initial encoder values
+        bot.localizer.update(chrono.dt) // Get initial encoder values
         initialXEncoderTicks = bot.localizer.encoderXTicks
         initialYEncoderTicks = bot.localizer.encoderYTicks
     }

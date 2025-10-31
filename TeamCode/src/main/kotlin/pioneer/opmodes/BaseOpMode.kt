@@ -23,7 +23,8 @@ abstract class BaseOpMode(
     private val dashboard = com.acmerobotics.dashboard.FtcDashboard.getInstance()
 
     // Tracker and getter for dt
-    private val chrono = Chrono()
+    protected val chrono = Chrono()
+    protected val dt get() = chrono.dt
 
     final override fun init() {
         bot = Bot(botType, hardwareMap)
@@ -33,9 +34,8 @@ abstract class BaseOpMode(
 
     final override fun loop() {
         // Update bot systems
-        chrono.update()
         if (bot.botType.supportsLocalizer) {
-            bot.localizer.update(chrono.dt)
+            bot.localizer.update(dt)
         }
 
         // Call user-defined loop logic
@@ -43,7 +43,7 @@ abstract class BaseOpMode(
 
         // Update path follower
         if (bot.botType.supportsLocalizer) {
-            bot.follower.update(chrono.dt)
+            bot.follower.update(dt)
         }
 
         // Automatically handle telemetry updates

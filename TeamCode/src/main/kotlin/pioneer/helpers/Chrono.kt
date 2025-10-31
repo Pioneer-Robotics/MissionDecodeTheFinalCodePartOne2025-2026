@@ -6,19 +6,19 @@ import kotlin.time.TimeSource
 class Chrono(private val source: TimeSource = TimeSource.Monotonic) {
     private var last = source.markNow()
 
-    /** Automatically updates and returns the new delta time. */
-    val dt: Duration
-        get() = update()
+    /** Automatically updates and returns the new delta time in seconds as a Double. */
+    val dt: Double
+        get() = update().inMilliseconds / 1000.0
 
     /** Compute elapsed time since last update and refresh the reference. */
-    fun update(): Duration {
+    private fun update(): Duration {
         val delta = last.elapsedNow()
         last = last + delta
         return delta
     }
 
     /** Check elapsed time without advancing the mark. */
-    fun peek(): Duration = last.elapsedNow()
+    fun peek(): Double = last.elapsedNow().inMilliseconds / 1000.0
 
     /** Reset the reference mark to now. */
     fun reset() {
