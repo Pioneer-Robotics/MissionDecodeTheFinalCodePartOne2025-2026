@@ -23,7 +23,6 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     var flywheelSpeed = 0.7
 
     fun update() {
-        chrono.update()
         drive()
         updateDrivePower()
         updateFieldCentric()
