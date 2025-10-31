@@ -24,7 +24,8 @@ abstract class BaseOpMode(
 
     // Tracker and getter for dt
     protected val chrono = Chrono()
-    protected val dt get() = chrono.dt
+    protected val dt: Double
+        get() = chrono.dt
 
     final override fun init() {
         bot = Bot(botType, hardwareMap)
