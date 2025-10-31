@@ -12,6 +12,12 @@ interface MecanumBase {
         maxMotorVelocityTps: Double
     )
 
+    fun setDriveVelocity(
+        pose: Pose,
+        power: Double,
+        maxMotorVelocityTps: Double
+    )
+
     fun setDriveVA(pose: Pose)
 
     fun stop()

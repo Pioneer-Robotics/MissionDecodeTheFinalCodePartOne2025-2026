@@ -48,6 +48,29 @@ class MecanumBaseImpl(
         val maxPower = maxOf(abs(leftFrontPower), abs(leftBackPower), abs(rightFrontPower), abs(rightBackPower), 1.0)
         val scale = power / maxPower
 
+        leftFront.power = leftFrontPower * scale
+        leftBack.power = leftBackPower * scale
+        rightFront.power = rightFrontPower * scale
+        rightBack.power = rightBackPower * scale
+    }
+
+    /**
+     * Drive using robot-centric coordinates: x=strafe, y=forward, rotation=turn
+     * Uses motor encoders by setting motor.velocity
+     */
+    override fun setDriveVelocity(
+        pose: Pose,
+        power: Double,
+        maxMotorVelocityTps: Double
+    ) {
+        val leftFrontPower = pose.vy + pose.vx + pose.omega
+        val leftBackPower = pose.vy - pose.vx + pose.omega
+        val rightFrontPower = pose.vy - pose.vx - pose.omega
+        val rightBackPower = pose.vy + pose.vx - pose.omega
+
+        val maxPower = maxOf(abs(leftFrontPower), abs(leftBackPower), abs(rightFrontPower), abs(rightBackPower), 1.0)
+        val scale = power / maxPower
+
         leftFront.velocity = leftFrontPower * scale * maxMotorVelocityTps
         leftBack.velocity = leftBackPower * scale * maxMotorVelocityTps
         rightFront.velocity = rightFrontPower * scale * maxMotorVelocityTps

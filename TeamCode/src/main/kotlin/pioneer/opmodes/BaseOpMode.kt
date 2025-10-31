@@ -23,7 +23,7 @@ abstract class BaseOpMode(
     private val dashboard = com.acmerobotics.dashboard.FtcDashboard.getInstance()
 
     // Tracker and getter for dt
-    protected val dtTracker = DeltaTimeTracker()
+    private val dtTracker = DeltaTimeTracker()
     protected val dt: Double
         get() = dtTracker.dt
 
@@ -36,13 +36,17 @@ abstract class BaseOpMode(
     final override fun loop() {
         // Update bot systems
         dtTracker.update()
-        bot.localizer.update(dt)
+        if (bot.botType.supportsLocalizer) {
+            bot.localizer.update(dt)
+        }
 
         // Call user-defined loop logic
         onLoop()
 
         // Update path follower
-        bot.follower.update(dt)
+        if (bot.botType.supportsLocalizer) {
+            bot.follower.update(dt)
+        }
 
         // Automatically handle telemetry updates
         updateTelemetry()

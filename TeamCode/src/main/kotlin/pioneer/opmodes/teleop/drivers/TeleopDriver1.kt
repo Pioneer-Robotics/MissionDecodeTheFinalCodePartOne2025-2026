@@ -1,9 +1,7 @@
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
-import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
-import pioneer.Constants
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.Constants.Drive
@@ -36,7 +34,7 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
 
     private fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        bot.mecanumBase.setDrivePower(
+        bot.mecanumBase.setDriveVelocity(
             Pose(
                 vx = direction.x,
                 vy = direction.y,

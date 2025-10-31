@@ -56,13 +56,16 @@ class Follower(private val bot: Bot) {
 
     fun update(dt: Double) {
         if (motionProfile == null || path == null) {
-            FileLogger.error("Follower", "No path or motion profile set")
+//            FileLogger.error("Follower", "No path or motion profile set")
             return
         }
         // Get the time since the follower started
         val t = elapsedTime.seconds().coerceAtMost(motionProfile!!.duration())
         // Get the target state from the motion profile
         val targetState = motionProfile!![t]
+
+        FileLogger.debug("Follower", "Target Velocity: " + targetState.v)
+        FileLogger.debug("Follower", "Target Acceleration " + targetState.a)
 
         // Calculate the parameter t for the path based on the target state
         val pathT = path!!.getTFromLength(targetState.x)
@@ -73,7 +76,7 @@ class Follower(private val bot: Bot) {
         val targetPointSecondDerivative = path!!.getSecondDerivative(pathT)
 
         // Calculate the position error and convert to robot-centric coordinates
-        var positionError = Pose(
+        val positionError = Pose(
             x = targetPoint.x - bot.localizer.pose.x,
             y = targetPoint.y - bot.localizer.pose.y
         ).rotate(-bot.localizer.pose.theta)
@@ -101,6 +104,9 @@ class Follower(private val bot: Bot) {
             vx = rotatedTargetPose.vx + xCorrection,
             vy = rotatedTargetPose.vy + yCorrection
         )
+
+        FileLogger.debug("Follower", "Rotated target pose: $rotatedTargetPose")
+        FileLogger.debug("Follower", "Corrected pose: $correctedPose")
 
         // TODO: Heading interpolation
         // TODO: Add heading error correction
