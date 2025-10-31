@@ -7,12 +7,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
-import pioneer.hardware.interfaces.AprilTag
+import pioneer.hardware.base.AprilTagBase
 
 class AprilTagImpl(
     position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0, 0),
     orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0),
-) : AprilTag {
+) : AprilTagBase() {
 
     private val library: AprilTagLibrary =
         AprilTagLibrary

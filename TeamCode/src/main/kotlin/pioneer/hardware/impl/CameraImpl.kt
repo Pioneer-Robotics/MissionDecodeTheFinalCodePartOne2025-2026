@@ -6,12 +6,13 @@ import pioneer.hardware.interfaces.Camera
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.VisionProcessor
 import kotlin.jvm.java
+import pioneer.hardware.base.CameraBase
 
 class CameraImpl(
     hardwareMap: HardwareMap,
     name: String = "Webcam 1",
     processors: Array<VisionProcessor> = emptyArray(),
-) : Camera {
+) : CameraBase(), Camera {
 
     override val portal: VisionPortal =
         VisionPortal

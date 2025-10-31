@@ -2,7 +2,7 @@ package pioneer.hardware.impl
 
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.VoltageSensor
-import pioneer.hardware.interfaces.BatteryMonitor
+import pioneer.hardware.base.BatteryMonitorBase
 
 /**
  * Monitors battery health from all available voltage sensors.
@@ -10,7 +10,7 @@ import pioneer.hardware.interfaces.BatteryMonitor
  */
 class BatteryMonitorImpl(
     hardwareMap: HardwareMap,
-) : BatteryMonitor {
+) : BatteryMonitorBase() {
     private val voltageSensors: List<VoltageSensor> = hardwareMap.voltageSensor.toList()
 
     /**

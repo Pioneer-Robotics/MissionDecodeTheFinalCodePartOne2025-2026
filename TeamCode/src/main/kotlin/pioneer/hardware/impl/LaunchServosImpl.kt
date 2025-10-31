@@ -4,10 +4,9 @@ import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.constants.HardwareNames
-import pioneer.hardware.interfaces.LaunchServos
-import kotlin.jvm.java
+import pioneer.hardware.base.LaunchServosBase
 
-class LaunchServosImpl (hardwareMap: HardwareMap, leftName: String = "launchServoL", rightName: String = "launchServoR") : LaunchServos {
+class LaunchServosImpl (hardwareMap: HardwareMap, leftName: String = "launchServoL", rightName: String = "launchServoR") : LaunchServosBase() {
     val servo1 = hardwareMap.get(CRServo::class.java, leftName)
     val servo2 = hardwareMap.get(CRServo::class.java, rightName)
 

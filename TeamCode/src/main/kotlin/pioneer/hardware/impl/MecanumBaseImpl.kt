@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.DcMotorSimple
-import pioneer.hardware.interfaces.MecanumBase
+import pioneer.hardware.base.MecanumBaseBase
 import pioneer.helpers.Pose
 import pioneer.constants.Drive
 import kotlin.math.abs
@@ -18,7 +18,7 @@ class MecanumBaseImpl(
         "rightFront" to DcMotorSimple.Direction.FORWARD,
         "rightBack" to DcMotorSimple.Direction.FORWARD
     )
-) : MecanumBase {
+) : MecanumBaseBase() {
     private val motors = motorConfig.mapValues { (name, direction) ->
         hardwareMap.get(DcMotorEx::class.java, name).apply {
             configureMotor(direction)
