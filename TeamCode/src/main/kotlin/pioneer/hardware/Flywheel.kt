@@ -1,10 +1,14 @@
-package pioneer.hardware.impl
+package pioneer.hardware
 
-import pioneer.hardware.base.FlywheelBase
+import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 
-class FlywheelImpl(hardwareMap: HardwareMap, name: String = "flywheel") : FlywheelBase() {
+class Flywheel(
+    hardwareMap: HardwareMap,
+    name: String = "flywheel",
+) {
     private val flywheel: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, name)
 
     init {
@@ -14,7 +18,7 @@ class FlywheelImpl(hardwareMap: HardwareMap, name: String = "flywheel") : Flywhe
         flywheel.direction = DcMotorSimple.Direction.FORWARD
     }
 
-    override fun setSpeed(velocity: Double) {
+    fun setSpeed(velocity: Double) {
         flywheel.velocity = velocity
     }
 }
