@@ -11,8 +11,8 @@ class Flywheel(
 ) {
     private val flywheel: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, name)
 
-    override val velocity
-        get() = flywheel.velocity
+    val velocity
+        get() = flywheel.getVelocity()
 
     init {
         flywheel.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -22,6 +22,6 @@ class Flywheel(
     }
 
     fun setSpeed(velocity: Double) {
-        flywheel.velocity = velocity
+        flywheel.setVelocity(velocity)
     }
 }

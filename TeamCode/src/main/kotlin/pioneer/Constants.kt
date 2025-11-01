@@ -50,7 +50,7 @@ object Pinpoint {
     val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
     val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
 
-val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
+    val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
 }
 
 // -------- Follower (path following) --------

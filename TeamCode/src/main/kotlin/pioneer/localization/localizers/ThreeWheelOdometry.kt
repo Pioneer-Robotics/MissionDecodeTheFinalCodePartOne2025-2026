@@ -4,6 +4,7 @@ import pioneer.helpers.Pose
 import pioneer.localization.localizers.Odometry
 import pioneer.localization.Localizer
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.DcMotor
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.cos
@@ -39,12 +40,6 @@ class ThreeWheelOdometry(
 
     override var encoderYTicks: Int = 0
         get() = prevCenterTicks
-
-    init {
-        odoLeft.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        odoRight.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        odoCenter.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-    }
 
     override fun update(dt: Double) {
         // Get current encoder values
