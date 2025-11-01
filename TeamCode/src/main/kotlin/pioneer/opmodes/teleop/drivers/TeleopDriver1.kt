@@ -34,7 +34,7 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
 
     private fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        bot.mecanumBase.setDriveVelocity(
+        bot.mecanumBase.setDrivePower(
             Pose(
                 vx = direction.x,
                 vy = direction.y,
