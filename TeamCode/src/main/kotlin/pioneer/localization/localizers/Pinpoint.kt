@@ -22,6 +22,8 @@ class Pinpoint(
     override var prevPose: Pose = startPose.copy()
 
     private val pinpoint = hardwareMap.get(GoBildaPinpointDriver::class.java, name)
+    override var encoderXTicks: Int = 0
+    override var encoderYTicks: Int = 0
 
     init {
         pinpoint.setOffsets(PinpointConstants.X_POD_OFFSET_MM, PinpointConstants.Y_POD_OFFSET_MM, DistanceUnit.MM)
@@ -53,6 +55,9 @@ class Pinpoint(
 
         prevPose = pose
         pose = Pose(x, y, vx, vy, ax, ay, theta, omega, alpha)
+
+        encoderXTicks = pinpoint.encoderX
+        encoderYTicks = pinpoint.encoderY
     }
 
     override fun reset(pose: Pose) {

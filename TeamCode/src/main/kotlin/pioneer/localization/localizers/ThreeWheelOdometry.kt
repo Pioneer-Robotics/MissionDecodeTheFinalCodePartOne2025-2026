@@ -26,15 +26,31 @@ class ThreeWheelOdometry(
     override var prevPose: Pose = startPose.copy()
 
     // Odometry instances
-    private val leftOdometry = Odometry(hardwareMap, leftName, ticksPerRev, wheelDiameterCM)
-    private val rightOdometry = Odometry(hardwareMap, rightName, ticksPerRev, wheelDiameterCM)
-    private val centerOdometry = Odometry(hardwareMap, centerName, ticksPerRev, wheelDiameterCM)
+    private val odoLeft = Odometry(hardwareMap, leftName, ticksPerRev, wheelDiameterCM)
+    private val odoRight = Odometry(hardwareMap, rightName, ticksPerRev, wheelDiameterCM)
+    private val odoCenter = Odometry(hardwareMap, centerName, ticksPerRev, wheelDiameterCM)
+    // Previous encoder values
+    private var prevLeftTicks = 0
+    private var prevRightTicks = 0
+    private var prevCenterTicks = 0
+
+    override var encoderXTicks: Int = 0
+        get() = (prevRightTicks + prevLeftTicks) / 2
+
+    override var encoderYTicks: Int = 0
+        get() = prevCenterTicks
+
+    init {
+        odoLeft.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        odoRight.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        odoCenter.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+    }
 
     override fun update(dt: Double) {
         // Get current encoder values
-        val dLeftCM = leftOdometry.toCentimeters()
-        val dRightCM = rightOdometry.toCentimeters()
-        val dCenterCM = centerOdometry.toCentimeters()
+        val dLeftCM = odoLeft.toCentimeters()
+        val dRightCM = odoRight.toCentimeters()
+        val dCenterCM = odoCenter.toCentimeters()
 
         // Calculate robot motion
         val dTheta = (dLeftCM - dRightCM) / trackWidthCM
@@ -72,8 +88,8 @@ class ThreeWheelOdometry(
         prevPose = pose.copy()
 
         // Reset odometry instances
-        leftOdometry.reset()
-        rightOdometry.reset()
-        centerOdometry.reset()
+        odoLeft.reset()
+        odoRight.reset()
+        odoCenter.reset()
     }
 }

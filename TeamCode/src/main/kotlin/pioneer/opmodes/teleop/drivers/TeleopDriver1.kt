@@ -5,8 +5,11 @@ import pioneer.Bot
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.constants.Drive
+import pioneer.helpers.DeltaTimeTracker
 
 class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
+    private val dtTracker = DeltaTimeTracker()
+
     var drivePower = Drive.DEFAULT_POWER
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
@@ -16,17 +19,22 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
 
+    // Other variables
+    var flywheelSpeed = 0.7
+
     fun update() {
+        dtTracker.update()
         drive()
         updateDrivePower()
         updateFieldCentric()
-        flywheelSpeed()
+        updateFlywheelSpeed()
+        flywheel()
         updateLaunchServos()
     }
 
-    fun drive() {
+    private fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        bot.mecanumBase.setDrivePower(
+        bot.mecanumBase.setDriveVelocity(
             Pose(
                 vx = direction.x,
                 vy = direction.y,
@@ -37,7 +45,7 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
         )
     }
 
-    fun updateDrivePower() {
+    private fun updateDrivePower() {
         incDrivePower.toggle(gamepad.right_bumper)
         decDrivePower.toggle(gamepad.left_bumper)
         if (incDrivePower.justChanged) {
@@ -49,19 +57,29 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
         drivePower = drivePower.coerceIn(0.1, 1.0)
     }
 
-    fun updateFieldCentric() {
+    private fun updateFieldCentric() {
         fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
     }
 
-    fun flywheelSpeed() {
+    private fun updateFlywheelSpeed() {
+        if (flywheelSpeed < 1.0 && gamepad.dpad_right) {
+            flywheelSpeed += 0.25 * dtTracker.dt / 1000
+        }
+        if (flywheelSpeed > 0.0 && gamepad.dpad_left) {
+            flywheelSpeed -= 0.25 * dtTracker.dt / 1000
+        }
+        flywheelSpeed.coerceIn(0.0, 1.0)
+    }
+
+    private fun flywheel() {
         if (gamepad.circle) {
-            bot.flywheel.setSpeed(0.67)
+            bot.flywheel.setSpeed(-flywheelSpeed)
         } else {
             bot.flywheel.setSpeed(0.0)
         }
     }
 
-    fun updateLaunchServos() {
+    private fun updateLaunchServos() {
         if (gamepad.dpad_up) {
             bot.launchServos.triggerLaunch()
         }

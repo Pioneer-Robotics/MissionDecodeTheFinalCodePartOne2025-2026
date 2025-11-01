@@ -9,6 +9,9 @@ interface Localizer {
     /** Previous pose for numerical differentiation */
     var prevPose: Pose
 
+    var encoderXTicks: Int
+    var encoderYTicks: Int
+
     /**
      * Updates the pose of the robot based on sensor data
      * @param dt The time since the last update in seconds

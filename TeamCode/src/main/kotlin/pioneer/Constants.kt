@@ -34,22 +34,23 @@ object Drive {
     const val DEFAULT_POWER = 0.7
 
     // Feedforward gains using Pose(x,y,theta)
-    val kV = Pose(x = 0.0067, y = 0.0067, theta = 0.25)
-    val kA = Pose(x = 0.0,    y = 0.0,    theta = 0.0)
-    val kS = Pose(x = 0.0,    y = 0.0,    theta = 0.0)
+    val kV = Pose(x = 0.006, y = 0.0052, theta = 0.025)
+    val kA = Pose(x = 0.0,   y = 0.0,    theta = 0.0)
+    val kS = Pose(x = 0.0,   y = 0.0,    theta = 0.0)
+
 }
 
 // -------- Pinpoint (odometry pods) --------
 object Pinpoint {
     // offsets from tracking point (mm): +forward, +left
-    const val Y_POD_OFFSET_MM = 137.0
-    const val X_POD_OFFSET_MM = -134.0
+    const val Y_POD_OFFSET_MM = -107.0
+    const val X_POD_OFFSET_MM = 125.0
     
     // encoder configuration. Y should increase left, X should increase forward
     val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
     val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
 
-    val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
+val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
 }
 
 // -------- Follower (path following) --------

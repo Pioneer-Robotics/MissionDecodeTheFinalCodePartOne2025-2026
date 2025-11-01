@@ -15,13 +15,13 @@ import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 
-enum class BotType {
-    BASIC_MECANUM_BOT,
-    GOBILDA_STARTER_BOT,
+enum class BotType(val supportsLocalizer: Boolean) {
+    BASIC_MECANUM_BOT(false),
+    GOBILDA_STARTER_BOT(true),
 }
 
 class Bot(
-    botType: BotType,
+    val botType: BotType,
     hardwareMap: HardwareMap,
 ) {
     // Basic hardware components
@@ -45,7 +45,6 @@ class Bot(
             BotType.BASIC_MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
                 mecanumBase = MecanumBase(hardwareMap)
-                localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitor(hardwareMap)
             }
 
