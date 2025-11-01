@@ -4,11 +4,11 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
-import pioneer.constants.Drive
-import pioneer.helpers.DeltaTimeTracker
+import pioneer.Constants.Drive
+import pioneer.helpers.Chrono
 
 class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
-    private val dtTracker = DeltaTimeTracker()
+    private val chrono = Chrono()
 
     var drivePower = Drive.DEFAULT_POWER
     val fieldCentric: Boolean
@@ -23,7 +23,6 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     var flywheelSpeed = 0.7
 
     fun update() {
-        dtTracker.update()
         drive()
         updateDrivePower()
         updateFieldCentric()
@@ -63,10 +62,10 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
 
     private fun updateFlywheelSpeed() {
         if (flywheelSpeed < 1.0 && gamepad.dpad_right) {
-            flywheelSpeed += 0.25 * dtTracker.dt / 1000
+            flywheelSpeed += 0.25 * chrono.dt / 1000
         }
         if (flywheelSpeed > 0.0 && gamepad.dpad_left) {
-            flywheelSpeed -= 0.25 * dtTracker.dt / 1000
+            flywheelSpeed -= 0.25 * chrono.dt / 1000
         }
         flywheelSpeed.coerceIn(0.0, 1.0)
     }

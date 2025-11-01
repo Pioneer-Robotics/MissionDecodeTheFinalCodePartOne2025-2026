@@ -12,7 +12,7 @@ class OdometerOffsetCalculation : BaseOpMode() {
 
     override fun onInit() {
         bot.localizer.reset() // Reset odometry to the origin
-        bot.localizer.update(dt) // Update to get initial encoder values
+        bot.localizer.update(chrono.dt) // Update to get initial encoder values
     }
 
     override fun onLoop() {
