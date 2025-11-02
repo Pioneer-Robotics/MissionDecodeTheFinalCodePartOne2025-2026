@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
-import pioneer.Constants.Drive
+import pioneer.constants.Drive
 import pioneer.helpers.Chrono
 
 class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
