@@ -3,7 +3,6 @@ package pioneer.decode
 import org.firstinspires.ftc.vision.opencv.ColorRange
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor
 
-
 interface Artifact {
     val name: String
     val color: ColorRange
