@@ -6,6 +6,7 @@ import pioneer.hardware.interfaces.Camera
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.VisionProcessor
 import kotlin.jvm.java
+import android.util.Size
 
 class CameraImpl(
     hardwareMap: HardwareMap,
@@ -17,7 +18,8 @@ class CameraImpl(
         VisionPortal
             .Builder()
             .setCamera(hardwareMap.get(WebcamName::class.java, name))
-//            .setCameraResolution()
+            .setCameraResolution(Size(640, 480))
+            .enableLiveView(true)
             .apply {
                 if (processors.isNotEmpty()) {
                     addProcessors(*processors)
