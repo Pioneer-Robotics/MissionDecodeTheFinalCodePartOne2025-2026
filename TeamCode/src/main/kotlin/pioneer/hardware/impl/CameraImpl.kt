@@ -17,6 +17,7 @@ class CameraImpl(
         VisionPortal
             .Builder()
             .setCamera(hardwareMap.get(WebcamName::class.java, name))
+//            .setCameraResolution()
             .apply {
                 if (processors.isNotEmpty()) {
                     addProcessors(*processors)
