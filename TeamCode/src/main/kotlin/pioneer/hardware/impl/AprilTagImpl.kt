@@ -12,6 +12,9 @@ import pioneer.hardware.interfaces.AprilTag
 class AprilTagImpl(
     position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0, 0),
     orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0),
+    distanceUnit: DistanceUnit = DistanceUnit.CM,
+    angleUnit: AngleUnit = AngleUnit.RADIANS,
+    draw: Boolean = false,
 ) : AprilTag {
 
     private val library: AprilTagLibrary =
@@ -25,6 +28,11 @@ class AprilTagImpl(
             .Builder()
             .setTagLibrary(library)
             .setCameraPose(position, orientation)
+            .setOutputUnits(distanceUnit, angleUnit)
+            .setDrawTagID(draw)
+            .setDrawTagOutline(draw)
+            .setDrawAxes(draw)
+            .setDrawCubeProjection(draw)
             .build()
-    //TODO: Camera calibration, f and c
+            //TODO: Camera calibration, f and c
 }
