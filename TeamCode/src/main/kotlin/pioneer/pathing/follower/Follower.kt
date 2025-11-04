@@ -2,7 +2,7 @@ package pioneer.pathing.follower
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
-import pioneer.Constants.Follower as FollowerConstants
+import pioneer.constants.Follower as FollowerConstants
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose

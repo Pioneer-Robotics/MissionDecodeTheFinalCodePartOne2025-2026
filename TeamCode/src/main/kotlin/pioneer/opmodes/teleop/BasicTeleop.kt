@@ -1,7 +1,7 @@
 package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import pioneer.Constants.Drive
+import pioneer.constants.Drive
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.opmodes.BaseOpMode
@@ -19,7 +19,7 @@ class BasicTeleop : BaseOpMode() {
 
     private fun drive() {
         val direction = Pose(gamepad1.left_stick_x.toDouble(), -gamepad1.left_stick_y.toDouble())
-        bot.mecanumBase.setDriveVelocity(
+        bot.mecanumBase.setDrivePower(
             Pose(
                 vx = direction.x,
                 vy = direction.y,
