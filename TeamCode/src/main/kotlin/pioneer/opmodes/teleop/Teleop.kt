@@ -41,22 +41,22 @@ class Teleop : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
                     "--Rel (x, y, z): (%.2f, %.2f, %.2f)".format(
                         detection.ftcPose.x,
                         detection.ftcPose.y,
-                        detection.ftcPose.z
-                    )
+                        detection.ftcPose.z,
+                    ),
                 )
                 telemetry.addLine(
                     "--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(
                         detection.ftcPose.yaw,
                         detection.ftcPose.pitch,
-                        detection.ftcPose.roll
-                    )
+                        detection.ftcPose.roll,
+                    ),
                 )
                 telemetry.addLine(
                     "--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(
                         detection.ftcPose.range,
                         detection.ftcPose.bearing,
-                        detection.ftcPose.elevation
-                    )
+                        detection.ftcPose.elevation,
+                    ),
                 )
             } else {
                 telemetry.addLine("No valid AprilTag detections.")

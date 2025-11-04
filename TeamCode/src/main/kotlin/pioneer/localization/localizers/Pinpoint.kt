@@ -5,9 +5,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
-import pioneer.constants.Pinpoint as PinpointConstants
-import pioneer.localization.Localizer
 import pioneer.helpers.Pose
+import pioneer.localization.Localizer
+import pioneer.constants.Pinpoint as PinpointConstants
 
 /**
  * GoBILDA Pinpoint localizer with coordinate conversion.

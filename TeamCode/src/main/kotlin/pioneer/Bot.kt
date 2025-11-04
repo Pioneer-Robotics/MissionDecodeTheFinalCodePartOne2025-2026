@@ -1,19 +1,19 @@
 package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.constants.Camera as CameraConstants
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.hardware.AprilTag
-import pioneer.hardware.Camera
 import pioneer.hardware.BatteryMonitor
+import pioneer.hardware.Camera
 import pioneer.hardware.Flywheel
 import pioneer.hardware.LaunchServos
-import pioneer.hardware.MockHardware
 import pioneer.hardware.MecanumBase
+import pioneer.hardware.MockHardware
 import pioneer.localization.Localizer
 import pioneer.localization.localizers.LocalizerMock
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import pioneer.constants.Camera as CameraConstants
 
 enum class BotType(val supportsLocalizer: Boolean) {
     BASIC_MECANUM_BOT(false),
@@ -55,10 +55,11 @@ class Bot(
                 batteryMonitor = BatteryMonitor(hardwareMap)
                 flywheel = Flywheel(hardwareMap)
                 launchServos = LaunchServos(hardwareMap)
-                aprilTagProcessor = AprilTag(
-                    CameraConstants.POSITION_CM,
-                    CameraConstants.ORIENTATION_RAD
-                ).processor
+                aprilTagProcessor =
+                    AprilTag(
+                        CameraConstants.POSITION_CM,
+                        CameraConstants.ORIENTATION_RAD,
+                    ).processor
                 camera =
                     Camera(
                         hardwareMap,

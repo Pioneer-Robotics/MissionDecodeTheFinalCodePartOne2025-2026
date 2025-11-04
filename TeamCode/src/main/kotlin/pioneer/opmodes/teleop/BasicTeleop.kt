@@ -23,10 +23,10 @@ class BasicTeleop : BaseOpMode() {
             Pose(
                 vx = direction.x,
                 vy = direction.y,
-                omega = gamepad1.right_stick_x.toDouble()
+                omega = gamepad1.right_stick_x.toDouble(),
             ),
             drivePower,
-            Drive.MAX_MOTOR_VELOCITY_TPS
+            Drive.MAX_MOTOR_VELOCITY_TPS,
         )
     }
 

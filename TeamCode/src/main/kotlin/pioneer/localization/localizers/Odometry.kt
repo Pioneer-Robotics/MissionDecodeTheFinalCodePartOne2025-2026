@@ -1,7 +1,7 @@
 package pioneer.localization.localizers
 
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import kotlin.math.PI
 
@@ -12,7 +12,7 @@ class Odometry(
     hardwareMap: HardwareMap,
     private val name: String,
     private val ticksPerRev: Double,
-    private val wheelDiameterCM: Double
+    private val wheelDiameterCM: Double,
 ) {
     private val odometer: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, name)
 

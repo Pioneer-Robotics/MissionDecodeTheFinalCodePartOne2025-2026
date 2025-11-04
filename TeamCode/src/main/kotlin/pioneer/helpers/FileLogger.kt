@@ -26,7 +26,7 @@ object FileLogger {
         DEBUG("DEBUG"),
         INFO("INFO"),
         WARN("WARN"),
-        ERROR("ERROR")
+        ERROR("ERROR"),
     }
 
     private fun initializeFile(): File {
@@ -47,11 +47,12 @@ object FileLogger {
         try {
             // Rotate existing files (log.2.txt -> log.3.txt, log.1.txt -> log.2.txt, etc.)
             for (i in (NUM_FILES - 2) downTo 0) {
-                val sourceFile = if (i == 0) {
-                    File("$BASE_FILE_NAME.txt")
-                } else {
-                    File("$BASE_FILE_NAME.$i.txt")
-                }
+                val sourceFile =
+                    if (i == 0) {
+                        File("$BASE_FILE_NAME.txt")
+                    } else {
+                        File("$BASE_FILE_NAME.$i.txt")
+                    }
                 val destFile = File("$BASE_FILE_NAME.${i + 1}.txt")
 
                 if (sourceFile.exists()) {
@@ -70,7 +71,11 @@ object FileLogger {
      * Logs a message with the specified level and tag.
      * Messages are buffered and flushed when queue size exceeds limit.
      */
-    fun log(level: LogLevel, tag: String, message: String) {
+    fun log(
+        level: LogLevel,
+        tag: String,
+        message: String,
+    ) {
         try {
             val timestamp = dateFormatter.format(Date())
             val logMessage = "[$timestamp] [$tag] [${level.displayName}] $message"
@@ -91,14 +96,29 @@ object FileLogger {
 
     private fun shouldFlush(): Boolean {
         return queueSize > MAX_QUEUE_SIZE ||
-               (currentFile.exists() && currentFile.length() + queueSize > MAX_FILE_SIZE)
+            (currentFile.exists() && currentFile.length() + queueSize > MAX_FILE_SIZE)
     }
 
     // Convenience methods for different log levels
-    fun debug(tag: String, message: String) = log(LogLevel.DEBUG, tag, message)
-    fun info(tag: String, message: String) = log(LogLevel.INFO, tag, message)
-    fun warn(tag: String, message: String) = log(LogLevel.WARN, tag, message)
-    fun error(tag: String, message: String) = log(LogLevel.ERROR, tag, message)
+    fun debug(
+        tag: String,
+        message: String,
+    ) = log(LogLevel.DEBUG, tag, message)
+
+    fun info(
+        tag: String,
+        message: String,
+    ) = log(LogLevel.INFO, tag, message)
+
+    fun warn(
+        tag: String,
+        message: String,
+    ) = log(LogLevel.WARN, tag, message)
+
+    fun error(
+        tag: String,
+        message: String,
+    ) = log(LogLevel.ERROR, tag, message)
 
     /**
      * Flushes the current log queue to file and rotates if necessary.

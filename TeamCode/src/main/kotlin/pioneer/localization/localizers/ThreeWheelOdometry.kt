@@ -1,13 +1,10 @@
 package pioneer.localization.localizers
 
-import pioneer.helpers.Pose
-import pioneer.localization.localizers.Odometry
-import pioneer.localization.Localizer
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.DcMotor
-import kotlin.math.PI
-import kotlin.math.sin
+import pioneer.helpers.Pose
+import pioneer.localization.Localizer
 import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Three-wheel odometry localizer using two parallel and one perpendicular tracking wheel.
@@ -21,7 +18,7 @@ class ThreeWheelOdometry(
     ticksPerRev: Double = 2000.0,
     wheelDiameterCM: Double = 4.8,
     val trackWidthCM: Double = 26.5,
-    val forwardOffsetCM: Double = 15.1
+    val forwardOffsetCM: Double = 15.1,
 ) : Localizer {
     override var pose: Pose = startPose
     override var prevPose: Pose = startPose.copy()
@@ -30,6 +27,7 @@ class ThreeWheelOdometry(
     private val odoLeft = Odometry(hardwareMap, leftName, ticksPerRev, wheelDiameterCM)
     private val odoRight = Odometry(hardwareMap, rightName, ticksPerRev, wheelDiameterCM)
     private val odoCenter = Odometry(hardwareMap, centerName, ticksPerRev, wheelDiameterCM)
+
     // Previous encoder values
     private var prevLeftTicks = 0
     private var prevRightTicks = 0

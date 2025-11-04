@@ -5,11 +5,15 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 
 /** Class used to update both the phone telemetry and the dashboard telemetry.
  * Also logs telemetry to Logcat */
-class TelemetryInterface(val phone : Telemetry, val dashboard : Telemetry) {
+class TelemetryInterface(val phone: Telemetry, val dashboard: Telemetry) {
     private val TAG = "Telemetry"
     var enableDashboard = true
 
-    fun addData(name : String, data : Any, useDashboard : Boolean? = null) {
+    fun addData(
+        name: String,
+        data: Any,
+        useDashboard: Boolean? = null,
+    ) {
         phone.addData(name, data)
         if (useDashboard == null) {
             if (enableDashboard) addDashboardData(name, data)
@@ -20,7 +24,10 @@ class TelemetryInterface(val phone : Telemetry, val dashboard : Telemetry) {
         Log.d(TAG, "$name: $data")
     }
 
-    fun addLine(line : String, useDashboard : Boolean? = null) {
+    fun addLine(
+        line: String,
+        useDashboard: Boolean? = null,
+    ) {
         phone.addLine(line)
         if (useDashboard == null) {
             if (enableDashboard) dashboard.addLine(line)
@@ -36,7 +43,10 @@ class TelemetryInterface(val phone : Telemetry, val dashboard : Telemetry) {
         phone.update()
     }
 
-    private fun addDashboardData(name: String, data: Any) {
+    private fun addDashboardData(
+        name: String,
+        data: Any,
+    ) {
         // Convert Pose objects to separate X Y and Theta (heading) for graphing
         if (data is Pose) {
             dashboard.addData("$name X", "%.3f".format(data.x))
