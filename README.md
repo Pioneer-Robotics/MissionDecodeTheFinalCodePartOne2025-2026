@@ -34,5 +34,5 @@ To stay aligned with the upstream FTC repository:
 Use `ktlint` to format your Kotlin files:
 
 ```bash
-ktlint -F <filename>
+./gradlew ktlintFormat
 ```

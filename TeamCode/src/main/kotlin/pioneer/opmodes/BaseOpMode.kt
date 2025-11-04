@@ -9,9 +9,8 @@ import pioneer.helpers.FileLogger
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode(
-    private val botType: BotType = BotType.BASIC_MECANUM_BOT
+    private val botType: BotType = BotType.BASIC_MECANUM_BOT,
 ) : OpMode() {
-
     // Bot instance
     protected lateinit var bot: Bot
         private set // Prevent external modification
@@ -65,6 +64,8 @@ abstract class BaseOpMode(
 
     // These functions are meant to be overridden in subclasses
     protected open fun onInit() {}
+
     protected open fun onLoop() {}
+
     protected open fun onStop() {}
 }

@@ -2,7 +2,6 @@ package pioneer.pathing.paths
 
 import pioneer.helpers.Pose
 
-
 /**
  * Path interface representing a path in 2D space
  */

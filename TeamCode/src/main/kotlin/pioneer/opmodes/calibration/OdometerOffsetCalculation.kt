@@ -1,10 +1,9 @@
 package pioneer.opmodes.calibration
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import kotlin.math.PI
-import pioneer.constants.Odometry as OdometryConstants
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
+import kotlin.math.PI
 
 @Autonomous(name = "Odometer Offset Calculator", group = "Calibration")
 class OdometerOffsetCalculation : BaseOpMode() {

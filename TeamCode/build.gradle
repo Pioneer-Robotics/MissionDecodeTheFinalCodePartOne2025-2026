@@ -11,10 +11,26 @@
 
 // Custom definitions may go here
 
+// ktlint configuration - plugins block must come before apply statements
+plugins {
+    id "org.jlleitschuh.gradle.ktlint" version "12.1.0"
+    id 'org.jetbrains.kotlin.android' apply false
+}
+
 // Include common definitions from above.
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
 apply plugin: 'kotlin-android'
+
+ktlint {
+    android = true
+    ignoreFailures = true  // Allow build to succeed, but still show warnings
+    reporters {
+        reporter "plain"
+        reporter "checkstyle"
+        reporter "sarif"
+    }
+}
 
 android {
     namespace = 'pioneer'

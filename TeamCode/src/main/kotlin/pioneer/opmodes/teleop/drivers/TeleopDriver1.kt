@@ -2,12 +2,12 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
-import pioneer.helpers.Pose
-import pioneer.helpers.Toggle
 import pioneer.constants.Drive
 import pioneer.helpers.Chrono
+import pioneer.helpers.Pose
+import pioneer.helpers.Toggle
 
-class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
+class TeleopDriver1(var gamepad: Gamepad, val bot: Bot) {
     private val chrono = Chrono()
 
     var drivePower = Drive.DEFAULT_POWER
@@ -37,10 +37,10 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
             Pose(
                 vx = direction.x,
                 vy = direction.y,
-                omega = gamepad.right_stick_x.toDouble()
+                omega = gamepad.right_stick_x.toDouble(),
             ),
             drivePower,
-            Drive.MAX_MOTOR_VELOCITY_TPS
+            Drive.MAX_MOTOR_VELOCITY_TPS,
         )
     }
 
@@ -81,8 +81,7 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     private fun updateLaunchServos() {
         if (gamepad.dpad_up) {
             bot.launchServos.triggerLaunch()
-        }
-        else if (gamepad.dpad_down) {
+        } else if (gamepad.dpad_down) {
             bot.launchServos.triggerRetract()
         }
         bot.launchServos.update()

@@ -2,7 +2,6 @@ package pioneer.constants
 
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
-import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Position
@@ -35,9 +34,8 @@ object Drive {
 
     // Feedforward gains using Pose(x,y,theta)
     val kV = Pose(x = 0.006, y = 0.0052, theta = 0.025)
-    val kA = Pose(x = 0.0,   y = 0.0,    theta = 0.0)
-    val kS = Pose(x = 0.0,   y = 0.0,    theta = 0.0)
-
+    val kA = Pose(x = 0.0, y = 0.0, theta = 0.0)
+    val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
 }
 
 // -------- Pinpoint (odometry pods) --------
@@ -45,7 +43,7 @@ object Pinpoint {
     // offsets from tracking point (mm): +forward, +left
     const val Y_POD_OFFSET_MM = -107.0
     const val X_POD_OFFSET_MM = 125.0
-    
+
     // encoder configuration. Y should increase left, X should increase forward
     val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
     val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
@@ -73,12 +71,16 @@ object Follower {
 
     // X-axis PID coefficients for the trajectory follower
     @JvmField var X_KP = 0.0
+
     @JvmField var X_KI = 0.0
+
     @JvmField var X_KD = 0.0
 
     // Y-axis PID coefficients for the trajectory follower
     @JvmField var Y_KP = 0.0
+
     @JvmField var Y_KI = 0.0
+
     @JvmField var Y_KD = 0.0
 }
 

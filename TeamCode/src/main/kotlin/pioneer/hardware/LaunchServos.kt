@@ -8,7 +8,7 @@ class LaunchServos(
     hardwareMap: HardwareMap,
     leftName: String = "launchServoL",
     rightName: String = "launchServoR",
-){
+) {
     val servo1 = hardwareMap.get(CRServo::class.java, leftName)
     val servo2 = hardwareMap.get(CRServo::class.java, rightName)
 
