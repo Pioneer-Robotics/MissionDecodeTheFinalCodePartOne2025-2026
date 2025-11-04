@@ -2,7 +2,6 @@ package pioneer.pathing.follower
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
-import pioneer.Constants.Follower as FollowerConstants
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
@@ -11,20 +10,23 @@ import pioneer.pathing.motionprofile.MotionProfileGenerator
 import pioneer.pathing.motionprofile.MotionState
 import pioneer.pathing.paths.Path
 import kotlin.math.*
+import pioneer.constants.Follower as FollowerConstants
 
 class Follower(private val bot: Bot) {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
-    private var xPID = PIDController(
-        kp = FollowerConstants.X_KP,
-        ki = FollowerConstants.X_KI,
-        kd = FollowerConstants.X_KD
-    )
-    private var yPID = PIDController(
-        kp = FollowerConstants.Y_KP,
-        ki = FollowerConstants.Y_KI,
-        kd = FollowerConstants.Y_KD
-    )
+    private var xPID =
+        PIDController(
+            kp = FollowerConstants.X_KP,
+            ki = FollowerConstants.X_KI,
+            kd = FollowerConstants.X_KD,
+        )
+    private var yPID =
+        PIDController(
+            kp = FollowerConstants.Y_KP,
+            ki = FollowerConstants.Y_KI,
+            kd = FollowerConstants.Y_KD,
+        )
 
     var path: Path? = null
         set(value) {
@@ -56,13 +58,16 @@ class Follower(private val bot: Bot) {
 
     fun update(dt: Double) {
         if (motionProfile == null || path == null) {
-            FileLogger.error("Follower", "No path or motion profile set")
+//            FileLogger.error("Follower", "No path or motion profile set")
             return
         }
         // Get the time since the follower started
         val t = elapsedTime.seconds().coerceAtMost(motionProfile!!.duration())
         // Get the target state from the motion profile
         val targetState = motionProfile!![t]
+
+        FileLogger.debug("Follower", "Target Velocity: " + targetState.v)
+        FileLogger.debug("Follower", "Target Acceleration " + targetState.a)
 
         // Calculate the parameter t for the path based on the target state
         val pathT = path!!.getTFromLength(targetState.x)
@@ -73,21 +78,23 @@ class Follower(private val bot: Bot) {
         val targetPointSecondDerivative = path!!.getSecondDerivative(pathT)
 
         // Calculate the position error and convert to robot-centric coordinates
-        var positionError = Pose(
-            x = targetPoint.x - bot.localizer.pose.x,
-            y = targetPoint.y - bot.localizer.pose.y
-        ).rotate(-bot.localizer.pose.theta)
+        val positionError =
+            Pose(
+                x = targetPoint.x - bot.localizer.pose.x,
+                y = targetPoint.y - bot.localizer.pose.y,
+            ).rotate(-bot.localizer.pose.theta)
 
         // Calculate 2D target velocity and acceleration based on path derivatives
-        val targetPose = Pose(
-            x = targetPoint.x,
-            y = targetPoint.y,
-            vx = tangent.x * targetState.v,
-            vy = tangent.y * targetState.v,
-            ax = targetPointSecondDerivative.x * (targetState.v * targetState.v) + tangent.x * targetState.a,
-            ay = targetPointSecondDerivative.y * (targetState.v * targetState.v) + tangent.y * targetState.a,
-            theta = bot.localizer.pose.theta
-        )
+        val targetPose =
+            Pose(
+                x = targetPoint.x,
+                y = targetPoint.y,
+                vx = tangent.x * targetState.v,
+                vy = tangent.y * targetState.v,
+                ax = targetPointSecondDerivative.x * (targetState.v * targetState.v) + tangent.x * targetState.a,
+                ay = targetPointSecondDerivative.y * (targetState.v * targetState.v) + tangent.y * targetState.a,
+                theta = bot.localizer.pose.theta,
+            )
 
         // Convert target velocity and acceleration to robot-centric coordinates
         val rotatedTargetPose = targetPose.rotate(-bot.localizer.pose.theta)
@@ -97,10 +104,14 @@ class Follower(private val bot: Bot) {
         val yCorrection = yPID.update(positionError.y, dt)
 
         // Apply corrections to velocity directly
-        val correctedPose = rotatedTargetPose.copy(
-            vx = rotatedTargetPose.vx + xCorrection,
-            vy = rotatedTargetPose.vy + yCorrection
-        )
+        val correctedPose =
+            rotatedTargetPose.copy(
+                vx = rotatedTargetPose.vx + xCorrection,
+                vy = rotatedTargetPose.vy + yCorrection,
+            )
+
+        FileLogger.debug("Follower", "Rotated target pose: $rotatedTargetPose")
+        FileLogger.debug("Follower", "Corrected pose: $correctedPose")
 
         // TODO: Heading interpolation
         // TODO: Add heading error correction
@@ -141,12 +152,13 @@ class Follower(private val bot: Bot) {
                 // Constant acceleration constraint
                 FollowerConstants.MAX_DRIVE_ACCELERATION
             }
-            motionProfile = MotionProfileGenerator.generateMotionProfile(
-                startState,
-                endState,
-                velocityConstraint,
-                accelerationConstraint,
-            )
+            motionProfile =
+                MotionProfileGenerator.generateMotionProfile(
+                    startState,
+                    endState,
+                    velocityConstraint,
+                    accelerationConstraint,
+                )
         } else {
             motionProfile = null
         }

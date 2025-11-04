@@ -17,6 +17,18 @@ class LocalizerMock : Localizer {
             return field
         }
 
+    override var encoderXTicks: Int = 0
+        get() {
+            FileLogger.warn("NOT INITIALIZED", "encoderXTicks getter called on LocalizerMock")
+            return field
+        }
+
+    override var encoderYTicks: Int = 0
+        get() {
+            FileLogger.warn("NOT INITIALIZED", "encoderYTicks getter called on LocalizerMock")
+            return field
+        }
+
     override fun update(dt: Double) {
         FileLogger.warn("NOT INITIALIZED", "update called on LocalizerMock")
     }

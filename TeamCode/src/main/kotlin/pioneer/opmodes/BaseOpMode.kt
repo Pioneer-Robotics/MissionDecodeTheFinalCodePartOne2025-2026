@@ -4,14 +4,13 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
 import pioneer.BotType
-import pioneer.helpers.DeltaTimeTracker
+import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode(
-    private val botType: BotType = BotType.BASIC_MECANUM_BOT
+    private val botType: BotType = BotType.BASIC_MECANUM_BOT,
 ) : OpMode() {
-
     // Bot instance
     protected lateinit var bot: Bot
         private set // Prevent external modification
@@ -23,9 +22,9 @@ abstract class BaseOpMode(
     private val dashboard = com.acmerobotics.dashboard.FtcDashboard.getInstance()
 
     // Tracker and getter for dt
-    protected val dtTracker = DeltaTimeTracker()
+    protected val chrono = Chrono()
     protected val dt: Double
-        get() = dtTracker.dt
+        get() = chrono.dt
 
     final override fun init() {
         bot = Bot(botType, hardwareMap)
@@ -35,14 +34,17 @@ abstract class BaseOpMode(
 
     final override fun loop() {
         // Update bot systems
-        dtTracker.update()
-        bot.localizer.update(dt)
+        if (bot.botType.supportsLocalizer) {
+            bot.localizer.update(dt)
+        }
 
         // Call user-defined loop logic
         onLoop()
 
         // Update path follower
-        bot.follower.update(dt)
+        if (bot.botType.supportsLocalizer) {
+            bot.follower.update(dt)
+        }
 
         // Automatically handle telemetry updates
         updateTelemetry()
@@ -62,6 +64,8 @@ abstract class BaseOpMode(
 
     // These functions are meant to be overridden in subclasses
     protected open fun onInit() {}
+
     protected open fun onLoop() {}
+
     protected open fun onStop() {}
 }

@@ -9,7 +9,7 @@ import pioneer.pathing.paths.Path.HeadingInterpolationMode
  * @param startPose The starting pose of the path
  * @param endPose The ending pose of the path
  */
-class LinearPath (override var startPose: Pose = Pose(), override var endPose: Pose = Pose()) :
+class LinearPath(override var startPose: Pose = Pose(), override var endPose: Pose = Pose()) :
     Path {
     // Constructor overloads
     constructor(startX: Double, startY: Double, endX: Double, endY: Double) : this(Pose(startX, startY), Pose(endX, endY))

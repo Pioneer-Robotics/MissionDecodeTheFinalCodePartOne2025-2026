@@ -9,7 +9,6 @@ import pioneer.helpers.Pose
  * @param paths A list of paths that make up the compound path.
  */
 class CompoundPath(val paths: List<Path>) : Path {
-
     override var startPose: Pose = paths.first().startPose
     override var endPose: Pose = paths.last().endPose
     override var headingInterpolationMode: Path.HeadingInterpolationMode =

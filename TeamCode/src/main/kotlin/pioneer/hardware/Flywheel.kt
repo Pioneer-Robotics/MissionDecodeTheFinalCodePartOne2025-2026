@@ -1,15 +1,18 @@
-package pioneer.hardware.impl
+package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.Constants
-import pioneer.hardware.interfaces.Flywheel
-import kotlin.jvm.java
 
-class FlywheelImpl (hardwareMap: HardwareMap) : Flywheel {
-    val flywheel = hardwareMap.get(DcMotorEx::class.java, Constants.HardwareNames.FLYWHEEL)
+class Flywheel(
+    hardwareMap: HardwareMap,
+    name: String = "flywheel",
+) {
+    private val flywheel: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, name)
+
+    val velocity
+        get() = flywheel.getVelocity()
 
     init {
         flywheel.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -18,7 +21,7 @@ class FlywheelImpl (hardwareMap: HardwareMap) : Flywheel {
         flywheel.direction = DcMotorSimple.Direction.FORWARD
     }
 
-    override fun setSpeed(velocity: Double) {
-        flywheel.velocity = velocity
+    fun setSpeed(velocity: Double) {
+        flywheel.setVelocity(velocity)
     }
 }

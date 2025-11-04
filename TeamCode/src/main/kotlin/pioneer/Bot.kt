@@ -1,50 +1,41 @@
 package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.hardware.impl.AprilTagImpl
-import pioneer.hardware.impl.BatteryMonitorImpl
-import pioneer.hardware.impl.CameraImpl
-import pioneer.hardware.impl.FlywheelImpl
-import pioneer.hardware.impl.LaunchServosImpl
-import pioneer.hardware.impl.MecanumBaseImpl
-import pioneer.hardware.interfaces.BatteryMonitor
-import pioneer.hardware.interfaces.Camera
-import pioneer.hardware.interfaces.Flywheel
-import pioneer.hardware.interfaces.LaunchServos
-import pioneer.hardware.interfaces.MecanumBase
-import pioneer.hardware.mock.AprilTagMock
-import pioneer.hardware.mock.BatteryMonitorMock
-import pioneer.hardware.mock.CameraMock
-import pioneer.hardware.mock.FlywheelMock
-import pioneer.hardware.mock.LaunchServosMock
-import pioneer.hardware.mock.MecanumBaseMock
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import pioneer.hardware.AprilTag
+import pioneer.hardware.BatteryMonitor
+import pioneer.hardware.Camera
+import pioneer.hardware.Flywheel
+import pioneer.hardware.LaunchServos
+import pioneer.hardware.MecanumBase
+import pioneer.hardware.MockHardware
 import pioneer.localization.Localizer
 import pioneer.localization.localizers.LocalizerMock
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import pioneer.constants.Camera as CameraConstants
 
-enum class BotType {
-    BASIC_MECANUM_BOT,
-    GOBILDA_STARTER_BOT,
+enum class BotType(val supportsLocalizer: Boolean) {
+    BASIC_MECANUM_BOT(false),
+    GOBILDA_STARTER_BOT(true),
 }
 
 class Bot(
-    botType: BotType,
+    val botType: BotType,
     hardwareMap: HardwareMap,
 ) {
     // Basic hardware components
-    var mecanumBase: MecanumBase = MecanumBaseMock()
+    var mecanumBase: MecanumBase = MecanumBase(MockHardware())
     var localizer: Localizer = LocalizerMock()
-    var batteryMonitor: BatteryMonitor = BatteryMonitorMock()
+    var batteryMonitor: BatteryMonitor = BatteryMonitor(MockHardware())
 
     // GoBilda starter bot specific components
-    var flywheel: Flywheel = FlywheelMock()
-    var launchServos: LaunchServos = LaunchServosMock()
+    var flywheel: Flywheel = Flywheel(MockHardware())
+    var launchServos: LaunchServos = LaunchServos(MockHardware())
 
     // Other hardware components
-    var aprilTagProcessor: AprilTagProcessor = AprilTagMock().processor
-    var camera: Camera = CameraMock()
+    var aprilTagProcessor: AprilTagProcessor = AprilTag().processor
+    var camera: Camera = Camera(MockHardware())
 
     // Path follower
     var follower = Follower(this)
@@ -53,26 +44,25 @@ class Bot(
         when (botType) {
             BotType.BASIC_MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
-                localizer = Pinpoint(hardwareMap)
-                batteryMonitor = BatteryMonitorImpl(hardwareMap)
+                mecanumBase = MecanumBase(hardwareMap)
+                batteryMonitor = BatteryMonitor(hardwareMap)
             }
 
             BotType.GOBILDA_STARTER_BOT -> {
                 // Initialize hardware components for GoBilda Starter Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
+                mecanumBase = MecanumBase(hardwareMap)
                 localizer = Pinpoint(hardwareMap)
-                batteryMonitor = BatteryMonitorImpl(hardwareMap)
-                flywheel = FlywheelImpl(hardwareMap)
-                launchServos = LaunchServosImpl(hardwareMap)
-                aprilTagProcessor = AprilTagImpl(
-                    Constants.Camera.POSITION_CM,
-                    Constants.Camera.ORIENTATION_RAD
-                ).processor
+                batteryMonitor = BatteryMonitor(hardwareMap)
+                flywheel = Flywheel(hardwareMap)
+                launchServos = LaunchServos(hardwareMap)
+                aprilTagProcessor =
+                    AprilTag(
+                        CameraConstants.POSITION_CM,
+                        CameraConstants.ORIENTATION_RAD,
+                    ).processor
                 camera =
-                    CameraImpl(
+                    Camera(
                         hardwareMap,
-                        Constants.HardwareNames.WEBCAM,
                         processors = arrayOf(aprilTagProcessor),
                     )
             }

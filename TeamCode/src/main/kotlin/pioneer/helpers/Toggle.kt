@@ -1,6 +1,5 @@
 package pioneer.helpers
 
-
 /**
  * This class is a wrapper class for booleans, but it allows you to negate
  * the boolean by pressing a button. The intended use case is that there is some boolean

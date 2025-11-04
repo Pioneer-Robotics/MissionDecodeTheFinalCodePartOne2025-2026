@@ -2,11 +2,14 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
+import pioneer.constants.Drive
+import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
-import pioneer.Constants.Drive
 
-class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
+class TeleopDriver1(var gamepad: Gamepad, val bot: Bot) {
+    private val chrono = Chrono()
+
     var drivePower = Drive.DEFAULT_POWER
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
@@ -16,28 +19,32 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
 
+    // Other variables
+    var flywheelSpeed = 0.7
+
     fun update() {
         drive()
         updateDrivePower()
         updateFieldCentric()
-        flywheelSpeed()
+        updateFlywheelSpeed()
+        flywheel()
         updateLaunchServos()
     }
 
-    fun drive() {
+    private fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
         bot.mecanumBase.setDrivePower(
             Pose(
                 vx = direction.x,
                 vy = direction.y,
-                omega = gamepad.right_stick_x.toDouble()
+                omega = gamepad.right_stick_x.toDouble(),
             ),
             drivePower,
-            Drive.MAX_MOTOR_VELOCITY_TPS
+            Drive.MAX_MOTOR_VELOCITY_TPS,
         )
     }
 
-    fun updateDrivePower() {
+    private fun updateDrivePower() {
         incDrivePower.toggle(gamepad.right_bumper)
         decDrivePower.toggle(gamepad.left_bumper)
         if (incDrivePower.justChanged) {
@@ -49,23 +56,32 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
         drivePower = drivePower.coerceIn(0.1, 1.0)
     }
 
-    fun updateFieldCentric() {
+    private fun updateFieldCentric() {
         fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
     }
 
-    fun flywheelSpeed() {
+    private fun updateFlywheelSpeed() {
+        if (flywheelSpeed < 1.0 && gamepad.dpad_right) {
+            flywheelSpeed += 0.25 * chrono.dt / 1000
+        }
+        if (flywheelSpeed > 0.0 && gamepad.dpad_left) {
+            flywheelSpeed -= 0.25 * chrono.dt / 1000
+        }
+        flywheelSpeed.coerceIn(0.0, 1.0)
+    }
+
+    private fun flywheel() {
         if (gamepad.circle) {
-            bot.flywheel.setSpeed(0.67)
+            bot.flywheel.setSpeed(-flywheelSpeed)
         } else {
             bot.flywheel.setSpeed(0.0)
         }
     }
 
-    fun updateLaunchServos() {
+    private fun updateLaunchServos() {
         if (gamepad.dpad_up) {
             bot.launchServos.triggerLaunch()
-        }
-        else if (gamepad.dpad_down) {
+        } else if (gamepad.dpad_down) {
             bot.launchServos.triggerRetract()
         }
         bot.launchServos.update()

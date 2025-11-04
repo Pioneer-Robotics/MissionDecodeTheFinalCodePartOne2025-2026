@@ -1,20 +1,18 @@
-package pioneer.hardware.impl
+package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
-import pioneer.hardware.interfaces.Camera
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.VisionProcessor
 import kotlin.jvm.java
 import android.util.Size
 
-class CameraImpl(
+class Camera(
     hardwareMap: HardwareMap,
-    name: String,
+    name: String = "Webcam 1",
     processors: Array<VisionProcessor> = emptyArray(),
-) : Camera {
-
-    override val portal: VisionPortal =
+) {
+    val portal: VisionPortal =
         VisionPortal
             .Builder()
             .setCamera(hardwareMap.get(WebcamName::class.java, name))

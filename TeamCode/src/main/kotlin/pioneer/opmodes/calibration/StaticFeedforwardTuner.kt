@@ -1,9 +1,9 @@
 package pioneer.opmodes.calibration
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import pioneer.helpers.Pose
-import pioneer.Constants
+import pioneer.constants.Drive
 import pioneer.helpers.FileLogger
+import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.hypot
 
@@ -37,7 +37,11 @@ class StaticFeedforwardTuner : BaseOpMode() {
                 // Move forward until the velocity exceeds the threshold
                 if (bot.localizer.pose.vy < velocityThreshold) {
                     velocityTime = 0
-                    bot.mecanumBase.setDrivePower(Pose(vx = 0.0, vy = currentPower, omega = 0.0), Constants.Drive.DEFAULT_POWER, Constants.Drive.MAX_MOTOR_VELOCITY_TPS)
+                    bot.mecanumBase.setDrivePower(
+                        Pose(vx = 0.0, vy = currentPower, omega = 0.0),
+                        Drive.DEFAULT_POWER,
+                        Drive.MAX_MOTOR_VELOCITY_TPS,
+                    )
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
                     telemetryPacket.put("Current Velocity", bot.localizer.pose.vy)
@@ -45,7 +49,10 @@ class StaticFeedforwardTuner : BaseOpMode() {
                     if (velocityTime > velocityThresholdTime) {
                         bot.mecanumBase.stop()
                         currentPower = startPower // Reset power for horizontal movement
-                        FileLogger.info("StaticFeedforwardTuner", "Forward movement complete. Power: $currentPower, Velocity: ${bot.localizer.pose.vy}")
+                        FileLogger.info(
+                            "StaticFeedforwardTuner",
+                            "Forward movement complete. Power: $currentPower, Velocity: ${bot.localizer.pose.vy}",
+                        )
                         state = State.DELAY
                     } else {
                         velocityTime++
@@ -61,14 +68,21 @@ class StaticFeedforwardTuner : BaseOpMode() {
                 // Move horizontally until the velocity exceeds the threshold
                 if (bot.localizer.pose.vx < velocityThreshold) {
                     velocityTime = 0
-                    bot.mecanumBase.setDrivePower(Pose(vx = currentPower, vy = 0.0, omega = 0.0), Constants.Drive.DEFAULT_POWER, Constants.Drive.MAX_MOTOR_VELOCITY_TPS)
+                    bot.mecanumBase.setDrivePower(
+                        Pose(vx = currentPower, vy = 0.0, omega = 0.0),
+                        Drive.DEFAULT_POWER,
+                        Drive.MAX_MOTOR_VELOCITY_TPS,
+                    )
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
                     telemetryPacket.put("Current Velocity", bot.localizer.pose.vx)
                 } else {
                     if (velocityTime > velocityThresholdTime) {
                         bot.mecanumBase.stop()
-                        FileLogger.info("StaticFeedforwardTuner", "Horizontal movement complete. Power: $currentPower, Velocity: ${bot.localizer.pose.vx}")
+                        FileLogger.info(
+                            "StaticFeedforwardTuner",
+                            "Horizontal movement complete. Power: $currentPower, Velocity: ${bot.localizer.pose.vx}",
+                        )
                         requestOpModeStop() // Stop the op mode after both movements
                     } else {
                         velocityTime++
