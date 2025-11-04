@@ -30,14 +30,7 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       
-    - name: Run ktlint check
-      id: ktlint
-      run: |
-        ./gradlew ktlintCheck --no-daemon || echo "ktlint_failed=true" >> $GITHUB_OUTPUT
-      continue-on-error: true
-      
     - name: Run ktlint format
-      if: steps.ktlint.outputs.ktlint_failed == 'true'
       run: ./gradlew ktlintFormat --no-daemon
       
     - name: Check for changes
