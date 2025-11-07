@@ -2,6 +2,7 @@ package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import pioneer.constants.Drive
 import pioneer.hardware.AprilTag
 import pioneer.hardware.BatteryMonitor
 import pioneer.hardware.Camera
@@ -51,9 +52,9 @@ class Bot(
 
             BotType.MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
+                mecanumBase = MecanumBase(hardwareMap, Drive.MOTOR_CONFIG)
                 localizer = Pinpoint(hardwareMap)
-                batteryMonitor = BatteryMonitorImpl(hardwareMap)
+                batteryMonitor = BatteryMonitor(hardwareMap)
             }
 
             BotType.GOBILDA_STARTER_BOT -> {
