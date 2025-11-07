@@ -2,7 +2,7 @@ package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
-import pioneer.hardware.AprilTag
+import pioneer.vision.AprilTag
 import pioneer.hardware.BatteryMonitor
 import pioneer.hardware.Camera
 import pioneer.hardware.Flywheel
