@@ -14,14 +14,14 @@ class AprilTag(
     distanceUnit: DistanceUnit = DistanceUnit.CM,
     angleUnit: AngleUnit = AngleUnit.RADIANS,
     draw: Boolean = false,
-) {
+) : Processor {
     private val library: AprilTagLibrary =
         AprilTagLibrary
             .Builder()
             .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
             .build()
 
-    val processor: AprilTagProcessor =
+    override val processor: AprilTagProcessor =
         AprilTagProcessor
             .Builder()
             .setTagLibrary(library)
