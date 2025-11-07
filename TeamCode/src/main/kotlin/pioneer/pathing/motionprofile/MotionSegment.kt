@@ -2,7 +2,7 @@ package pioneer.pathing.motionprofile
 
 class MotionSegment(
     val startState: MotionState,
-    val dt: Double
+    val dt: Double,
 ) {
     /**
      * Returns the [MotionState] at time [t].

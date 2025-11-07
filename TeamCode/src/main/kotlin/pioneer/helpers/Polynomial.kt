@@ -12,16 +12,16 @@ class Polynomial(coeffs: Array<Double>) {
          */
         fun add(vararg polynomials: Polynomial): Polynomial {
             if (polynomials.isEmpty()) return Polynomial(arrayOf(0.0))
-            
+
             val maxLength = polynomials.maxOf { it.coefficients.size }
             val result = DoubleArray(maxLength) { 0.0 }
-            
+
             polynomials.forEach { poly ->
                 poly.coefficients.forEachIndexed { index, coeff ->
                     result[index] += coeff
                 }
             }
-            
+
             return Polynomial(result.toTypedArray())
         }
     }
@@ -36,10 +36,13 @@ class Polynomial(coeffs: Array<Double>) {
     }
 
     // Evaluates as a nested polynomial
-    fun eval(x: Double, coeffs: Array<Double> = coefficients) : Double {
+    fun eval(
+        x: Double,
+        coeffs: Array<Double> = coefficients,
+    ): Double {
         var value = 0.0
         for (coeff in coeffs.reversed()) {
-            value = coeff + (x*value)
+            value = coeff + (x * value)
         }
         return value
     }
@@ -53,15 +56,15 @@ class Polynomial(coeffs: Array<Double>) {
     }
 
     fun vRef(): Polynomial {
-        val newCoeffs = Array(coefficients.size) {0.0}
+        val newCoeffs = Array(coefficients.size) { 0.0 }
         for (i in coefficients.indices) {
             newCoeffs[i] = -coefficients[i]
         }
         return Polynomial(newCoeffs)
     }
 
-    fun vScale(a: Double) : Polynomial {
-        val newCoeffs = Array(coefficients.size) {0.0}
+    fun vScale(a: Double): Polynomial {
+        val newCoeffs = Array(coefficients.size) { 0.0 }
         for (i in coefficients.indices) {
             newCoeffs[i] = coefficients[i] * a
         }
@@ -72,11 +75,11 @@ class Polynomial(coeffs: Array<Double>) {
 //
 //    }
 
-    fun square() : Polynomial {
-        val newCoeffs = Array(coefficients.size * 2 - 1) {0.0}
+    fun square(): Polynomial {
+        val newCoeffs = Array(coefficients.size * 2 - 1) { 0.0 }
         for (i in coefficients.indices) {
             for (j in coefficients.indices) {
-                val newIndex = i+j // Index is essentially equivalent to degree
+                val newIndex = i + j // Index is essentially equivalent to degree
                 val newCoeff = coefficients[i] * coefficients[j]
                 newCoeffs[newIndex] += newCoeff
             }
@@ -86,33 +89,39 @@ class Polynomial(coeffs: Array<Double>) {
 
     // --- Calculus ---
 
-    fun derivative() : Polynomial {
-        val der = Array(coefficients.size - 1) {0.0}
+    fun derivative(): Polynomial {
+        val der = Array(coefficients.size - 1) { 0.0 }
         for (i in 1..<coefficients.size) {
             der[i - 1] = coefficients[i] * i
         }
         return Polynomial(der)
     }
 
-    fun antiDerivative() : Polynomial {
-        val antiDer = Array<Double>(coefficients.size + 1) {0.0}
+    fun antiDerivative(): Polynomial {
+        val antiDer = Array<Double>(coefficients.size + 1) { 0.0 }
         for (i in coefficients.indices) {
-            antiDer[i + 1] = coefficients[i] / (i+1)
+            antiDer[i + 1] = coefficients[i] / (i + 1)
         }
         return Polynomial(antiDer)
     }
 
-    fun derEval(x: Double) : Double {
+    fun derEval(x: Double): Double {
         return derivative().eval(x)
     }
 
-    fun finiteInt(x1: Double, x2: Double) : Double {
+    fun finiteInt(
+        x1: Double,
+        x2: Double,
+    ): Double {
         val antiDer = antiDerivative()
         return antiDer.eval(x2) - antiDer.eval(x1)
     }
 
     // Evaluate nth derivative at x
-    fun nDerEval(x: Double, n: Int) : Double {
+    fun nDerEval(
+        x: Double,
+        n: Int,
+    ): Double {
         var der = this
         for (i in 1..n) {
             der = der.derivative()

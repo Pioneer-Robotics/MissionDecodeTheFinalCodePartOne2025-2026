@@ -4,7 +4,7 @@ import kotlin.math.abs
 
 /**
  * A PID/PIDF controller with integral clamping and output saturation.
- * 
+ *
  * @param kp Proportional gain
  * @param ki Integral gain
  * @param kd Derivative gain
@@ -14,7 +14,7 @@ class PIDController(
     val kp: Double,
     val ki: Double = 0.0,
     val kd: Double = 0.0,
-    val kf: Double = 0.0
+    val kf: Double = 0.0,
 ) {
     init {
         require(kp >= 0.0) { "kp must be non-negative" }
@@ -30,8 +30,10 @@ class PIDController(
 
     // Configuration
     var integralClamp = 1.0
-        set(value) { field = abs(value) }
-    
+        set(value) {
+            field = abs(value)
+        }
+
     var outputMin = Double.NEGATIVE_INFINITY
     var outputMax = Double.POSITIVE_INFINITY
 
@@ -41,23 +43,27 @@ class PIDController(
      * @param dt Time delta in seconds
      * @return Control output clamped to [outputMin, outputMax]
      */
-    fun update(error: Double, dt: Double): Double {
+    fun update(
+        error: Double,
+        dt: Double,
+    ): Double {
         if (dt <= 0) return 0.0
-        
+
         // Update integral with clamping
         integral = (integral + error * dt).coerceIn(-integralClamp, integralClamp)
-        
+
         // Calculate derivative
-        val derivative = if (isFirstUpdate) {
-            lastError = error
-            isFirstUpdate = false
-            0.0
-        } else {
-            val deriv = (error - lastError) / dt
-            lastError = error
-            deriv
-        }
-        
+        val derivative =
+            if (isFirstUpdate) {
+                lastError = error
+                isFirstUpdate = false
+                0.0
+            } else {
+                val deriv = (error - lastError) / dt
+                lastError = error
+                deriv
+            }
+
         // Calculate and clamp output
         val output = (kp * error) + (ki * integral) + (kd * derivative)
         return output.coerceIn(outputMin, outputMax)
@@ -71,20 +77,30 @@ class PIDController(
      * @param normalizeRadians Normalize angular error to [-π, π]
      * @return Control output including feedforward
      */
-    fun update(target: Double, current: Double, dt: Double, normalizeRadians: Boolean = false): Double {
-        val error = if (normalizeRadians) {
-            MathUtils.normalizeRadians(target - current)
-        } else {
-            target - current
-        }
-        
+    fun update(
+        target: Double,
+        current: Double,
+        dt: Double,
+        normalizeRadians: Boolean = false,
+    ): Double {
+        val error =
+            if (normalizeRadians) {
+                MathUtils.normalizeRadians(target - current)
+            } else {
+                target - current
+            }
+
         return update(error, dt) + (kf * target)
     }
 
     /**
      * Auto-timestamped update using system time.
      */
-    fun update(target: Double, current: Double, normalizeRadians: Boolean = false): Double {
+    fun update(
+        target: Double,
+        current: Double,
+        normalizeRadians: Boolean = false,
+    ): Double {
         val currentTime = System.nanoTime()
         val dt = (currentTime - lastTime) / 1e9
         lastTime = currentTime
@@ -104,7 +120,10 @@ class PIDController(
     /**
      * Sets output limits.
      */
-    fun setOutputLimits(min: Double, max: Double) {
+    fun setOutputLimits(
+        min: Double,
+        max: Double,
+    ) {
         require(min <= max) { "Minimum must be <= maximum" }
         outputMin = min
         outputMax = max

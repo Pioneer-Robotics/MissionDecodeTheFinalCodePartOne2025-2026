@@ -3,7 +3,7 @@ package pioneer.pathing.motionprofile
 class MotionState(
     val x: Double,
     val v: Double,
-    val a: Double
+    val a: Double,
 ) {
     /**
      * Returns the [MotionState] at time [t] with constant acceleration.
@@ -12,7 +12,7 @@ class MotionState(
         return MotionState(
             x + v * t + 0.5 * a * t * t,
             v + a * t,
-            a
+            a,
         )
     }
 

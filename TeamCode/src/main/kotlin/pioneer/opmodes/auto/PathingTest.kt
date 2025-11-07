@@ -3,9 +3,9 @@ package pioneer.opmodes.auto
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.BotType
 import pioneer.helpers.DashboardPlotter
-import pioneer.pathing.paths.HermitePath
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
+import pioneer.pathing.paths.HermitePath
 import kotlin.math.hypot
 
 @Autonomous(name = "Pathing Test", group = "Testing")
@@ -13,7 +13,7 @@ class PathingTest : BaseOpMode(BotType.MECANUM_BOT) {
     enum class State {
         INIT,
         RUNNING,
-        DONE
+        DONE,
     }
 
     private var state: State = State.INIT
@@ -43,7 +43,10 @@ class PathingTest : BaseOpMode(BotType.MECANUM_BOT) {
                 DashboardPlotter.plotGrid(telemetryPacket)
                 DashboardPlotter.plotBotPosition(telemetryPacket, bot.localizer.pose)
                 DashboardPlotter.plotPath(telemetryPacket, bot.follower.path!!)
-                DashboardPlotter.plotPoint(telemetryPacket, bot.follower.path!!.getPoint(bot.follower.targetState!!.x / bot.follower.path!!.getLength()))
+                DashboardPlotter.plotPoint(
+                    telemetryPacket,
+                    bot.follower.path!!.getPoint(bot.follower.targetState!!.x / bot.follower.path!!.getLength()),
+                )
             }
             State.DONE -> {
                 requestOpModeStop()

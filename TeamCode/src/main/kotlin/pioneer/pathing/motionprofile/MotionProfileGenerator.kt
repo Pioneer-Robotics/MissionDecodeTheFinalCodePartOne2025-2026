@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 
 private data class EvaluatedConstraint(
     val maxVel: Double,
-    val maxAccel: Double
+    val maxAccel: Double,
 )
 
 /**
@@ -28,8 +28,8 @@ object MotionProfileGenerator {
         endState: MotionState,
         velocityConstraint: VelocityConstraint,
         accelerationConstraint: AccelerationConstraint,
-        resolution: Double = 0.1 // Length of each segment in cm
-    ) : MotionProfile {
+        resolution: Double = 0.1, // Length of each segment in cm
+    ): MotionProfile {
         // Get the arc length between start and end states
         val length = endState.x - startState.x
         // Calculate the number of samples based on the resolution
@@ -39,30 +39,33 @@ object MotionProfileGenerator {
         // Generate a list of evenly spaced points along the path
         val displacements = MathUtils.linspace(startState.x, endState.x, samples)
         // Evaluate the constraints at each point
-        val constraintsList = displacements.map { s ->
-            val maxVel = velocityConstraint[s]
-            val maxAccel = accelerationConstraint[s]
-            EvaluatedConstraint(maxVel, maxAccel)
-        }
+        val constraintsList =
+            displacements.map { s ->
+                val maxVel = velocityConstraint[s]
+                val maxAccel = accelerationConstraint[s]
+                EvaluatedConstraint(maxVel, maxAccel)
+            }
 
         // Forward pass to calculate motion states
-        val forwardStates = forwardPass(
-            startState,
-            displacements,
-            constraintsList
-        ).toMutableList()
+        val forwardStates =
+            forwardPass(
+                startState,
+                displacements,
+                constraintsList,
+            ).toMutableList()
 
         // Backward pass to calculate motion states
-        val backwardStates = backwardPass(
-            endState,
-            displacements,
-            constraintsList
-        ).toMutableList()
+        val backwardStates =
+            backwardPass(
+                endState,
+                displacements,
+                constraintsList,
+            ).toMutableList()
 
         // Combine the forward and backward states
         val finalStates = mutableListOf<Pair<MotionState, Double>>()
         var i = 0
-        while(i < forwardStates.size && i < backwardStates.size) {
+        while (i < forwardStates.size && i < backwardStates.size) {
             var (forwardStartState, forwardDx) = forwardStates[i]
             var (backwardEndState, backwardDx) = backwardStates[i]
 
@@ -73,7 +76,7 @@ object MotionProfileGenerator {
                     // Adjust the forward state to match the backward state
                     forwardStates.add(
                         i + 1,
-                        Pair(afterDisplacement(forwardStartState, backwardDx), forwardDx - backwardDx)
+                        Pair(afterDisplacement(forwardStartState, backwardDx), forwardDx - backwardDx),
                     )
                     forwardDx = backwardDx
                 } else {
@@ -81,7 +84,7 @@ object MotionProfileGenerator {
                     // Adjust the backward state to match the forward state
                     backwardStates.add(
                         i + 1,
-                        Pair(afterDisplacement(backwardEndState, forwardDx), backwardDx - forwardDx)
+                        Pair(afterDisplacement(backwardEndState, forwardDx), backwardDx - forwardDx),
                     )
                     backwardDx = forwardDx
                 }
@@ -100,10 +103,12 @@ object MotionProfileGenerator {
                     // The forward start state is lower, but the end state is higher
                     val intersection = intersection(forwardStartState, backwardStartState)
                     finalStates.add(Pair(forwardStartState, intersection))
-                    finalStates.add(Pair(
-                        afterDisplacement(backwardStartState, intersection),
-                        backwardDx - intersection
-                    ))
+                    finalStates.add(
+                        Pair(
+                            afterDisplacement(backwardStartState, intersection),
+                            backwardDx - intersection,
+                        ),
+                    )
                 }
             } else {
                 if (backwardEndState.v <= forwardStartState.v) {
@@ -113,10 +118,12 @@ object MotionProfileGenerator {
                     // The backward start state is lower, but the end state is higher
                     val intersection = intersection(forwardStartState, backwardStartState)
                     finalStates.add(Pair(backwardStartState, intersection))
-                    finalStates.add(Pair(
-                        afterDisplacement(forwardStartState, intersection),
-                        forwardDx - intersection
-                    ))
+                    finalStates.add(
+                        Pair(
+                            afterDisplacement(forwardStartState, intersection),
+                            forwardDx - intersection,
+                        ),
+                    )
                 }
             }
             i++
@@ -126,18 +133,19 @@ object MotionProfileGenerator {
         val motionSegments = mutableListOf<MotionSegment>()
         for ((state, dx) in finalStates) {
             // Calculate the time taken for this segment
-            val dt = if (abs(state.a) < 1e-6) {
-                // If acceleration is zero, use constant velocity to calculate time
-                if (abs(state.v) < 1e-6) 0.0 else dx / state.v
-            } else {
-                // Use the kinematic equation to calculate time
-                val discriminant = state.v * state.v + 2 * state.a * dx
-                if (abs(discriminant) < 1e-6) {
-                    -state.v / state.a
+            val dt =
+                if (abs(state.a) < 1e-6) {
+                    // If acceleration is zero, use constant velocity to calculate time
+                    if (abs(state.v) < 1e-6) 0.0 else dx / state.v
                 } else {
-                    (sqrt(discriminant) - state.v) / state.a
+                    // Use the kinematic equation to calculate time
+                    val discriminant = state.v * state.v + 2 * state.a * dx
+                    if (abs(discriminant) < 1e-6) {
+                        -state.v / state.a
+                    } else {
+                        (sqrt(discriminant) - state.v) / state.a
+                    }
                 }
-            }
             // Create a motion segment for this state
             motionSegments.add(MotionSegment(state, dt))
         }
@@ -155,7 +163,7 @@ object MotionProfileGenerator {
     private fun forwardPass(
         startState: MotionState,
         displacements: List<Double>,
-        constraints: List<EvaluatedConstraint>
+        constraints: List<EvaluatedConstraint>,
     ): List<Pair<MotionState, Double>> {
         val forwardStates = mutableListOf<Pair<MotionState, Double>>()
         val dx = displacements[1] - displacements[0] // Assuming uniform spacing
@@ -209,14 +217,15 @@ object MotionProfileGenerator {
     private fun backwardPass(
         endState: MotionState,
         displacements: List<Double>,
-        constraints: List<EvaluatedConstraint>
+        constraints: List<EvaluatedConstraint>,
     ): List<Pair<MotionState, Double>> {
         // Reverse the constraints for backward processing
-        val reversedPass = forwardPass(
-            MotionState(0.0, endState.v, endState.a),
-            displacements,
-            constraints.reversed()
-        )
+        val reversedPass =
+            forwardPass(
+                MotionState(0.0, endState.v, endState.a),
+                displacements,
+                constraints.reversed(),
+            )
 
         // Reverse the states to match the original order
         return reversedPass.map { (state, dx) ->
@@ -231,7 +240,10 @@ object MotionProfileGenerator {
      * This method uses the current motion state and the displacement to compute
      * the new position and velocity, taking into account the acceleration.
      */
-    private fun afterDisplacement(state: MotionState, dx: Double): MotionState {
+    private fun afterDisplacement(
+        state: MotionState,
+        dx: Double,
+    ): MotionState {
         val discriminant = state.v * state.v + 2 * state.a * dx
         return if (abs(discriminant) < 1e-6) {
             MotionState(state.x + dx, 0.0, state.a)
@@ -244,7 +256,10 @@ object MotionProfileGenerator {
      * Calculates the intersection point between two motion states.
      * This method finds the displacement at which the two states would have the same velocity.
      */
-    private fun intersection(state1: MotionState, state2: MotionState): Double {
+    private fun intersection(
+        state1: MotionState,
+        state2: MotionState,
+    ): Double {
         return (state1.v * state1.v - state2.v * state2.v) / (2 * state2.a - 2 * state1.a)
     }
 }

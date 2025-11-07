@@ -1,7 +1,6 @@
 package pioneer.opmodes.calibration
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import pioneer.Constants
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.PI

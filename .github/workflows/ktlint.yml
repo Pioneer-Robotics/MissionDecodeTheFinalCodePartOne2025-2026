@@ -1,0 +1,46 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  ktlint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+        ref: ${{ github.event.pull_request.head.ref || github.ref }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+      
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - uses: gradle/actions/setup-gradle@v3
+      
+    - name: Format (non-fork) or check (fork)
+      run: |
+        if [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" && "${{ github.event_name }}" == "pull_request" ]]; then
+          ./gradlew ktlintCheck --no-daemon
+        else
+          ./gradlew ktlintFormat --no-daemon
+        fi
+      
+    - name: Commit formatting changes
+      if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
+      run: |
+        if [[ -n $(git status --porcelain) ]]; then
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add .
+          git commit -m "style: apply ktlint formatting [bot]"
+          git push
+        fi

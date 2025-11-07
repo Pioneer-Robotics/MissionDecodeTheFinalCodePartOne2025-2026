@@ -2,13 +2,13 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
+import pioneer.constants.Drive
+import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
-import pioneer.Constants.Drive
-import pioneer.helpers.DeltaTimeTracker
 
-class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
-    private val dtTracker = DeltaTimeTracker()
+class TeleopDriver1(var gamepad: Gamepad, val bot: Bot) {
+    private val chrono = Chrono()
 
     var drivePower = Drive.DEFAULT_POWER
     val fieldCentric: Boolean
@@ -23,7 +23,6 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     var flywheelSpeed = 0.7
 
     fun update() {
-        dtTracker.update()
         drive()
         updateDrivePower()
         updateFieldCentric()
@@ -34,14 +33,14 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
 
     private fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        bot.mecanumBase.setDriveVelocity(
+        bot.mecanumBase.setDrivePower(
             Pose(
                 vx = direction.x,
                 vy = direction.y,
-                omega = gamepad.right_stick_x.toDouble()
+                omega = gamepad.right_stick_x.toDouble(),
             ),
             drivePower,
-            Drive.MAX_MOTOR_VELOCITY_TPS
+            Drive.MAX_MOTOR_VELOCITY_TPS,
         )
     }
 
@@ -63,10 +62,10 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
 
     private fun updateFlywheelSpeed() {
         if (flywheelSpeed < 1.0 && gamepad.dpad_right) {
-            flywheelSpeed += 0.25 * dtTracker.dt / 1000
+            flywheelSpeed += 0.25 * chrono.dt / 1000
         }
         if (flywheelSpeed > 0.0 && gamepad.dpad_left) {
-            flywheelSpeed -= 0.25 * dtTracker.dt / 1000
+            flywheelSpeed -= 0.25 * chrono.dt / 1000
         }
         flywheelSpeed.coerceIn(0.0, 1.0)
     }
@@ -82,8 +81,7 @@ class TeleopDriver1 (var gamepad: Gamepad, val bot: Bot) {
     private fun updateLaunchServos() {
         if (gamepad.dpad_up) {
             bot.launchServos.triggerLaunch()
-        }
-        else if (gamepad.dpad_down) {
+        } else if (gamepad.dpad_down) {
             bot.launchServos.triggerRetract()
         }
         bot.launchServos.update()

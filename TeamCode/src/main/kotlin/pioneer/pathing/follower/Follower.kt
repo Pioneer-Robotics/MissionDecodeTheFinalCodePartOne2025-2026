@@ -2,7 +2,6 @@ package pioneer.pathing.follower
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
-import pioneer.Constants.Follower as FollowerConstants
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
@@ -11,20 +10,23 @@ import pioneer.pathing.motionprofile.MotionProfileGenerator
 import pioneer.pathing.motionprofile.MotionState
 import pioneer.pathing.paths.Path
 import kotlin.math.*
+import pioneer.constants.Follower as FollowerConstants
 
 class Follower(private val bot: Bot) {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
-    private var xPID = PIDController(
-        kp = FollowerConstants.X_KP,
-        ki = FollowerConstants.X_KI,
-        kd = FollowerConstants.X_KD
-    )
-    private var yPID = PIDController(
-        kp = FollowerConstants.Y_KP,
-        ki = FollowerConstants.Y_KI,
-        kd = FollowerConstants.Y_KD
-    )
+    private var xPID =
+        PIDController(
+            kp = FollowerConstants.X_KP,
+            ki = FollowerConstants.X_KI,
+            kd = FollowerConstants.X_KD,
+        )
+    private var yPID =
+        PIDController(
+            kp = FollowerConstants.Y_KP,
+            ki = FollowerConstants.Y_KI,
+            kd = FollowerConstants.Y_KD,
+        )
 
     var path: Path? = null
         set(value) {
@@ -146,12 +148,13 @@ class Follower(private val bot: Bot) {
                 // Constant acceleration constraint
                 FollowerConstants.MAX_DRIVE_ACCELERATION
             }
-            motionProfile = MotionProfileGenerator.generateMotionProfile(
-                startState,
-                endState,
-                velocityConstraint,
-                accelerationConstraint,
-            )
+            motionProfile =
+                MotionProfileGenerator.generateMotionProfile(
+                    startState,
+                    endState,
+                    velocityConstraint,
+                    accelerationConstraint,
+                )
         } else {
             motionProfile = null
         }
