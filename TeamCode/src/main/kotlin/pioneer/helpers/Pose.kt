@@ -27,7 +27,14 @@ data class Pose(
     // Angle wrap to (-π, π] using atan2(sin,cos) for numeric stability
     private fun wrap(a: Double): Double = atan2(sin(a), cos(a))
 
-    fun normalize(): Pose = copy(theta = wrap(theta))
+    // Normalize vector
+    fun normalize(): Pose {
+        return copy(
+            x = x / getLength(),
+            y = y / getLength(),
+            theta = wrap(theta)
+        )
+    }
 
     // Constant accel and angular accel over dt
     fun integrate(dt: Double): Pose {

@@ -36,6 +36,12 @@ interface Path {
     fun getLength(): Double
 
     /**
+     * Gets the pose on the path at the given parameter t
+     * @return Pose object with position, velocity, and acceleration
+     */
+    fun getPose(t: Double): Pose
+
+    /**
      * Gets the arc length from the start of the path to the given parameter t
      * @param t The parameter value in the range [0, 1]
      * @return The length of the path from the start to the given parameter
@@ -62,27 +68,6 @@ interface Path {
      * @return The point at the given parameter
      */
     fun getPoint(t: Double): Pose
-
-    /**
-     * Gets the derivative (tangent) at the given parameter t
-     * @param t The parameter value in the range [0, 1]
-     * @return The tangent vector at the given parameter
-     */
-    fun getTangent(t: Double): Pose
-
-    /**
-     * Gets the normal vector at the given parameter t
-     * @param t The parameter value in the range [0, 1]
-     * @return The normal vector at the given parameter
-     */
-    fun getNormal(t: Double): Pose
-
-    /**
-     * Gets the second derivative at the given parameter t
-     * @param t The parameter value in the range [0, 1]
-     * @return The second derivative vector at the given parameter
-     */
-    fun getSecondDerivative(t: Double): Pose
 
     /**
      * Gets the curvature at the given parameter t

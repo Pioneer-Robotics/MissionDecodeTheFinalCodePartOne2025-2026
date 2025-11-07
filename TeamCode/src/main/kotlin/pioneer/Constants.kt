@@ -63,11 +63,11 @@ object Constants {
         const val DEFAULT_POWER = 0.7
 
         // Feedforward gains using Pose(x,y,theta)
-        val kV = Pose(x = 0.006, y = 0.0052, theta = 0.025)
-        val kA = Pose(x = 0.0,   y = 0.0,    theta = 0.0)
-        val kS = Pose(x = 0.0,   y = 0.0,    theta = 0.0)
+        val kV = Pose(x = 0.006,  y = 0.0052, theta = 0.025)
+        val kA = Pose(x = 0.0025, y = 0.0001, theta = 0.0)
+        val kS = Pose(x = 0.0,    y = 0.0,    theta = 0.0)
 
-        // Motor configuration
+        // Motor configuration`
         val MOTOR_CONFIG = mapOf(
             HardwareNames.DRIVE_LEFT_FRONT to DcMotorSimple.Direction.REVERSE,
             HardwareNames.DRIVE_LEFT_BACK to DcMotorSimple.Direction.REVERSE,

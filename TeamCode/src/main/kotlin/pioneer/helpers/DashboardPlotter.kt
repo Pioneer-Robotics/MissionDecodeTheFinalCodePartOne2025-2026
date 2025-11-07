@@ -12,9 +12,11 @@ object DashboardPlotter {
     const val MAX_PREVIOUS_POSITIONS = 500
     private val previousPositions = mutableListOf<Pose>()
 
+    var scale = 1.0
+
     fun toDashboardCoordinates(pose: Pose): Pose {
         // Convert from robot coordinates to dashboard coordinates
-        val scale = 160.0 / 366.0 // Scale to make field the right size (366 cm wide)
+        val scale = 160.0 / 366.0 * scale // Scale to make field the right size (366 cm wide)
         return Pose(
             x = (pose.y * scale) - 72.5, // Offset to center the field
             y = (-pose.x * scale) + 72.5,

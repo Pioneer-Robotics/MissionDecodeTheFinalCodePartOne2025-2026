@@ -119,5 +119,4 @@ class Polynomial(coeffs: Array<Double>) {
         }
         return der.eval(x)
     }
-
 }

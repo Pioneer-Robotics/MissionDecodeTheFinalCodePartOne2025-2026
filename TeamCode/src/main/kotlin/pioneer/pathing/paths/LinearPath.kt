@@ -45,24 +45,14 @@ class LinearPath (override var startPose: Pose = Pose(), override var endPose: P
         return Pose(x, y, heading)
     }
 
-    override fun getTangent(t: Double): Pose {
-        val dx = endPose.x - startPose.x
-        val dy = endPose.y - startPose.y
-        val length = getLength()
-        return if (length != 0.0) {
-            Pose(dx / length, dy / length)
-        } else {
-            Pose(0.0, 0.0)
-        }
-    }
-
-    override fun getNormal(t: Double): Pose {
-        val tangent = getTangent(t)
-        return Pose(-tangent.y, tangent.x)
-    }
-
-    override fun getSecondDerivative(t: Double): Pose {
-        return Pose(0.0, 0.0) // Linear paths have zero second derivative
+    override fun getPose(t: Double): Pose {
+        return Pose(
+            x = startPose.x + (endPose.x - startPose.x) * t,
+            y = startPose.y + (endPose.y - startPose.y) * t,
+            theta = getHeading(t),
+            vx = (endPose.x - startPose.x) / getLength(),
+            vy = (endPose.y - startPose.y) / getLength()
+        )
     }
 
     override fun getCurvature(t: Double): Double {
