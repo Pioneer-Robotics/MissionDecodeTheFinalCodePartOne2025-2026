@@ -15,7 +15,9 @@ import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
 import pioneer.constants.Camera as CameraConstants
 
-enum class BotType(val supportsLocalizer: Boolean) {
+enum class BotType(
+    val supportsLocalizer: Boolean,
+) {
     BASIC_MECANUM_BOT(false),
     GOBILDA_STARTER_BOT(true),
 }
@@ -35,7 +37,7 @@ class Bot(
 
     // Other hardware components
     var aprilTagProcessor: AprilTagProcessor = AprilTag().processor
-    var camera: Camera = Camera(MockHardware())
+    var camera: Camera? = null // Don't create default Camera - prevents multiple VisionPortals
 
     // Path follower
     var follower = Follower(this)
@@ -59,6 +61,7 @@ class Bot(
                     AprilTag(
                         CameraConstants.POSITION_CM,
                         CameraConstants.ORIENTATION_RAD,
+                        draw = true,
                     ).processor
                 camera =
                     Camera(

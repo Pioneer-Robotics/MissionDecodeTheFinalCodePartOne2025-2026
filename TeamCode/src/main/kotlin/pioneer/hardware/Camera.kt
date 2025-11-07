@@ -1,16 +1,16 @@
 package pioneer.hardware
 
+import android.util.Size
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.VisionProcessor
 import kotlin.jvm.java
-import android.util.Size
 
 class Camera(
     hardwareMap: HardwareMap,
     name: String = "Webcam 1",
-    processors: Array<VisionProcessor> = emptyArray(),
+    val processors: Array<VisionProcessor> = emptyArray(),
 ) {
     val portal: VisionPortal =
         VisionPortal
@@ -23,4 +23,11 @@ class Camera(
                     addProcessors(*processors)
                 }
             }.build()
+
+    // Helper function to get a specific processor by type
+    inline fun <reified T : VisionProcessor> getProcessor(): T? = processors.filterIsInstance<T>().firstOrNull()
+
+    fun close() {
+        portal.close()
+    }
 }
