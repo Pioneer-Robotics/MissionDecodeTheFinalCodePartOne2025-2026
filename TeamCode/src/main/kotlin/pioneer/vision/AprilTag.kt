@@ -1,4 +1,4 @@
-package pioneer.hardware
+package pioneer.vision
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -15,7 +15,6 @@ class AprilTag(
     angleUnit: AngleUnit = AngleUnit.RADIANS,
     draw: Boolean = false,
 ) {
-
     private val library: AprilTagLibrary =
         AprilTagLibrary
             .Builder()
@@ -33,5 +32,5 @@ class AprilTag(
             .setDrawAxes(draw)
             .setDrawCubeProjection(draw)
             .build()
-            //TODO: Camera calibration, f and c
+    // TODO: Camera calibration, f and c
 }
