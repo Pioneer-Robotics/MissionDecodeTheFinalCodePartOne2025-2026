@@ -26,6 +26,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 
 enum class BotType(val supportsLocalizer: Boolean) {
     BASIC_MECANUM_BOT(false),
+    MECANUM_BOT(true),
     GOBILDA_STARTER_BOT(true),
 }
 
@@ -54,6 +55,13 @@ class Bot(
             BotType.BASIC_MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
                 mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
+                batteryMonitor = BatteryMonitorImpl(hardwareMap)
+            }
+
+            BotType.MECANUM_BOT -> {
+                // Initialize hardware components for Basic Mecanum Bot
+                mecanumBase = MecanumBaseImpl(hardwareMap, Constants.Drive.MOTOR_CONFIG)
+                localizer = Pinpoint(hardwareMap)
                 batteryMonitor = BatteryMonitorImpl(hardwareMap)
             }
 
