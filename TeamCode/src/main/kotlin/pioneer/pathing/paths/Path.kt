@@ -87,9 +87,7 @@ interface Path {
      * @param position The position to get the closest point to
      * @return The closest point on the path to the given position
      */
-    fun getClosestPoint(position: Pose): Pose {
-        return getPoint(getClosestPointT(position))
-    }
+    fun getClosestPoint(position: Pose): Pose = getPoint(getClosestPointT(position))
 
     /**
      * Gets the heading goal at the given parameter t based on the interpolation mode

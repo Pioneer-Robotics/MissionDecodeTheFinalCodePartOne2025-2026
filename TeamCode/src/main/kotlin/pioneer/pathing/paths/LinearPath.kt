@@ -9,25 +9,21 @@ import pioneer.pathing.paths.Path.HeadingInterpolationMode
  * @param startPose The starting pose of the path
  * @param endPose The ending pose of the path
  */
-class LinearPath(override var startPose: Pose = Pose(), override var endPose: Pose = Pose()) :
-    Path {
+class LinearPath(
+    override var startPose: Pose = Pose(),
+    override var endPose: Pose = Pose(),
+) : Path {
     // Constructor overloads
     constructor(startX: Double, startY: Double, endX: Double, endY: Double) : this(Pose(startX, startY), Pose(endX, endY))
 
     // Enum for heading interpolation mode
     override var headingInterpolationMode: HeadingInterpolationMode = HeadingInterpolationMode.LINEAR
 
-    override fun getLength(): Double {
-        return startPose.distanceTo(endPose)
-    }
+    override fun getLength(): Double = startPose.distanceTo(endPose)
 
-    override fun getLengthSoFar(t: Double): Double {
-        return getLength() * t
-    }
+    override fun getLengthSoFar(t: Double): Double = getLength() * t
 
-    override fun getTFromLength(length: Double): Double {
-        return length / getLength()
-    }
+    override fun getTFromLength(length: Double): Double = length / getLength()
 
     override fun getHeading(t: Double): Double {
         when (headingInterpolationMode) {
@@ -45,15 +41,14 @@ class LinearPath(override var startPose: Pose = Pose(), override var endPose: Po
         return Pose(x, y, heading)
     }
 
-    override fun getPose(t: Double): Pose {
-        return Pose(
+    override fun getPose(t: Double): Pose =
+        Pose(
             x = startPose.x + (endPose.x - startPose.x) * t,
             y = startPose.y + (endPose.y - startPose.y) * t,
             theta = getHeading(t),
             vx = (endPose.x - startPose.x) / getLength(),
-            vy = (endPose.y - startPose.y) / getLength()
+            vy = (endPose.y - startPose.y) / getLength(),
         )
-    }
 
     override fun getCurvature(t: Double): Double {
         return 0.0 // Linear paths have zero curvature

@@ -27,10 +27,12 @@ class PathingTest : BaseOpMode(BotType.MECANUM_BOT) {
     override fun onLoop() {
         when (state) {
             State.INIT -> {
-                bot.follower.path = HermitePath.Builder()
-                    .addPoint(Pose(0.0, 0.0), Pose(100.0, 0.0))
-                    .addPoint(Pose(50.0, 100.0), Pose(100.0, 0.0))
-                    .build()
+                bot.follower.path =
+                    HermitePath
+                        .Builder()
+                        .addPoint(Pose(0.0, 0.0), Pose(100.0, 0.0))
+                        .addPoint(Pose(50.0, 100.0), Pose(100.0, 0.0))
+                        .build()
                 bot.follower.start()
                 state = State.RUNNING
             }

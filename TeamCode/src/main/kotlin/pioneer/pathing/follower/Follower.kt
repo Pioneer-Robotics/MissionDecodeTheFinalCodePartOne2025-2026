@@ -12,7 +12,9 @@ import pioneer.pathing.paths.Path
 import kotlin.math.*
 import pioneer.constants.Follower as FollowerConstants
 
-class Follower(private val bot: Bot) {
+class Follower(
+    private val bot: Bot,
+) {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID =
@@ -74,26 +76,29 @@ class Follower(private val bot: Bot) {
 
         // Get the target point, first derivative (tangent), and second derivative (acceleration) from the path
         val pathTargetPose = path!!.getPose(pathT)
-        val tangent = Pose(pathTargetPose.vx, pathTargetPose.vy) /
+        val tangent =
+            Pose(pathTargetPose.vx, pathTargetPose.vy) /
                 sqrt(pathTargetPose.vx * pathTargetPose.vx + pathTargetPose.vy * pathTargetPose.vy)
         val curvature = path!!.getCurvature(pathT)
 
         // Calculate 2D target velocity and acceleration based on path derivatives
-        val targetPose = Pose(
-            x = pathTargetPose.x,
-            y = pathTargetPose.y,
-            vx = tangent.x * targetState.v,
-            vy = tangent.y * targetState.v,
-            ax = targetState.a * tangent.x + targetState.v.pow(2) * curvature * -tangent.y,
-            ay = targetState.a * tangent.y + targetState.v.pow(2) * curvature * tangent.x,
-            theta = bot.localizer.pose.theta
-        )
+        val targetPose =
+            Pose(
+                x = pathTargetPose.x,
+                y = pathTargetPose.y,
+                vx = tangent.x * targetState.v,
+                vy = tangent.y * targetState.v,
+                ax = targetState.a * tangent.x + targetState.v.pow(2) * curvature * -tangent.y,
+                ay = targetState.a * tangent.y + targetState.v.pow(2) * curvature * tangent.x,
+                theta = bot.localizer.pose.theta,
+            )
 
         // Calculate the position error and convert to robot-centric coordinates
-        val positionError = Pose(
-            x = targetPose.x - bot.localizer.pose.x,
-            y = targetPose.y - bot.localizer.pose.y
-        )
+        val positionError =
+            Pose(
+                x = targetPose.x - bot.localizer.pose.x,
+                y = targetPose.y - bot.localizer.pose.y,
+            )
 
         // Calculate the PID outputs
         val xCorrection = xPID.update(positionError.x, dt)
@@ -101,10 +106,12 @@ class Follower(private val bot: Bot) {
 
         // Apply corrections to velocity directly
         // Rotate to convert to robot-centric coordinates
-        val correctedPose = targetPose.copy(
-            vx = targetPose.vx + xCorrection,
-            vy = targetPose.vy + yCorrection
-        ).rotate(-bot.localizer.pose.theta)
+        val correctedPose =
+            targetPose
+                .copy(
+                    vx = targetPose.vx + xCorrection,
+                    vy = targetPose.vy + yCorrection,
+                ).rotate(-bot.localizer.pose.theta)
 
         FileLogger.debug("Follower", "Target pose: $targetPose")
         FileLogger.debug("Follower", "Corrected pose: $correctedPose")

@@ -19,7 +19,9 @@ abstract class BaseOpMode(
     protected var telemetryPacket = TelemetryPacket()
 
     // Dashboard instance
-    private val dashboard = com.acmerobotics.dashboard.FtcDashboard.getInstance()
+    private val dashboard =
+        com.acmerobotics.dashboard.FtcDashboard
+            .getInstance()
 
     // Tracker and getter for dt
     protected val chrono = Chrono()
