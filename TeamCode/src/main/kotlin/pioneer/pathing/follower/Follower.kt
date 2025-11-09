@@ -12,7 +12,9 @@ import pioneer.pathing.paths.Path
 import kotlin.math.*
 import pioneer.constants.Follower as FollowerConstants
 
-class Follower(private val bot: Bot) {
+class Follower(
+    private val bot: Bot,
+) {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID =
@@ -105,10 +107,11 @@ class Follower(private val bot: Bot) {
         // Apply corrections to velocity directly
         // Rotate to convert to robot-centric coordinates
         val correctedPose =
-            targetPose.copy(
-                vx = targetPose.vx + xCorrection,
-                vy = targetPose.vy + yCorrection,
-            ).rotate(-bot.localizer.pose.theta)
+            targetPose
+                .copy(
+                    vx = targetPose.vx + xCorrection,
+                    vy = targetPose.vy + yCorrection,
+                ).rotate(-bot.localizer.pose.theta)
 
         FileLogger.debug("Follower", "Target pose: $targetPose")
         FileLogger.debug("Follower", "Corrected pose: $correctedPose")

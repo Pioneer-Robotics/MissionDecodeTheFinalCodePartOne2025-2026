@@ -7,7 +7,9 @@ package pioneer.helpers
  * on the gamepad. Make that boolean a Toggle and call toggle(boolean)
  * every cycle using the desired button as the input to toggle()
  */
-class Toggle(startState: Boolean) {
+class Toggle(
+    startState: Boolean,
+) {
     var justChanged: Boolean = false
         private set // Prevents outside classes from changing value
 
