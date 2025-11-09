@@ -1,6 +1,6 @@
 [versions]
 ftc = "11.0.0"
-androidx-appcompat = "1.2.0"
+androidx-appcompat = "1.7.1"
 dashboard = "0.4.17"
 junit = "4.12"
 
