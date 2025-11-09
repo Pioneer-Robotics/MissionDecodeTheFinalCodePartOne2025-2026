@@ -32,7 +32,7 @@ data class Pose(
         return copy(
             x = x / getLength(),
             y = y / getLength(),
-            theta = wrap(theta)
+            theta = wrap(theta),
         )
     }
 

@@ -73,7 +73,7 @@ class HermitePath(
         return Pose(
             x = xHermite.eval(t),
             y = yHermite.eval(t),
-            theta = getHeading(t)
+            theta = getHeading(t),
         )
     }
 
