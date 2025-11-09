@@ -1,6 +1,5 @@
 package pioneer.opmodes.calibration
 
-import android.provider.SyncStateContract.Constants
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.constants.Odometry
 import pioneer.helpers.Pose
