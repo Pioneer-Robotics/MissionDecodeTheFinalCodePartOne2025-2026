@@ -2,7 +2,6 @@ package pioneer.constants
 
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -66,12 +65,13 @@ object Drive {
     val kA = Pose(x = 0.0025, y = 0.0001, theta = 0.0)
     val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
 
-    val MOTOR_CONFIG = mapOf(
-        HardwareNames.DRIVE_LEFT_FRONT to DcMotorSimple.Direction.REVERSE,
-        HardwareNames.DRIVE_LEFT_BACK to DcMotorSimple.Direction.REVERSE,
-        HardwareNames.DRIVE_RIGHT_FRONT to DcMotorSimple.Direction.FORWARD,
-        HardwareNames.DRIVE_RIGHT_BACK to DcMotorSimple.Direction.FORWARD
-    )
+    val MOTOR_CONFIG =
+        mapOf(
+            HardwareNames.DRIVE_LEFT_FRONT to DcMotorSimple.Direction.REVERSE,
+            HardwareNames.DRIVE_LEFT_BACK to DcMotorSimple.Direction.REVERSE,
+            HardwareNames.DRIVE_RIGHT_FRONT to DcMotorSimple.Direction.FORWARD,
+            HardwareNames.DRIVE_RIGHT_BACK to DcMotorSimple.Direction.FORWARD,
+        )
 }
 
 // -------- Pinpoint (odometry pods) --------
