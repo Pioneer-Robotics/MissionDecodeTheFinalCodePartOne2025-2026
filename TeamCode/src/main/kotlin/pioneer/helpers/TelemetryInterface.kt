@@ -5,7 +5,10 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 
 /** Class used to update both the phone telemetry and the dashboard telemetry.
  * Also logs telemetry to Logcat */
-class TelemetryInterface(val phone: Telemetry, val dashboard: Telemetry) {
+class TelemetryInterface(
+    val phone: Telemetry,
+    val dashboard: Telemetry,
+) {
     private val TAG = "Telemetry"
     var enableDashboard = true
 

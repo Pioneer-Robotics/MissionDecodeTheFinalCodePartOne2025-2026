@@ -7,7 +7,10 @@ import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 
-class TeleopDriver1(var gamepad: Gamepad, val bot: Bot) {
+class TeleopDriver1(
+    var gamepad: Gamepad,
+    val bot: Bot,
+) {
     private val chrono = Chrono()
 
     var drivePower = Drive.DEFAULT_POWER

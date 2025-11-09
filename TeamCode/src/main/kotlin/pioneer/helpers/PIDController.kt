@@ -135,11 +135,10 @@ class PIDController(
     val integralTerm: Double
         get() = integral
 
-    override fun toString(): String {
-        return if (hasFeedforward) {
+    override fun toString(): String =
+        if (hasFeedforward) {
             "PIDF(kp=$kp, ki=$ki, kd=$kd, kf=$kf)"
         } else {
             "PID(kp=$kp, ki=$ki, kd=$kd)"
         }
-    }
 }
