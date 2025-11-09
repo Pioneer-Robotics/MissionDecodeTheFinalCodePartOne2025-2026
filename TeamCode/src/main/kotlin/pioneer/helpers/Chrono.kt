@@ -4,7 +4,9 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
 
-class Chrono(private val source: TimeSource = TimeSource.Monotonic) {
+class Chrono(
+    private val source: TimeSource = TimeSource.Monotonic,
+) {
     private var last = source.markNow()
 
     /** Automatically updates and returns the new delta time in seconds as a Double. */
