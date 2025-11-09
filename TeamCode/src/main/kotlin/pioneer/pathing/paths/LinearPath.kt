@@ -51,7 +51,7 @@ class LinearPath(override var startPose: Pose = Pose(), override var endPose: Po
             y = startPose.y + (endPose.y - startPose.y) * t,
             theta = getHeading(t),
             vx = (endPose.x - startPose.x) / getLength(),
-            vy = (endPose.y - startPose.y) / getLength()
+            vy = (endPose.y - startPose.y) / getLength(),
         )
     }
 
