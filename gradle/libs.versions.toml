@@ -1,0 +1,18 @@
+[versions]
+ftc = "11.0.0"
+androidx-appcompat = "1.2.0"
+dashboard = "0.4.17"
+junit = "4.12"
+
+[libraries]
+ftc-inspection = { module = "org.firstinspires.ftc:Inspection", version.ref = "ftc" }
+ftc-blocks = { module = "org.firstinspires.ftc:Blocks", version.ref = "ftc" }
+ftc-robotcore = { module = "org.firstinspires.ftc:RobotCore", version.ref = "ftc" }
+ftc-robotserver = { module = "org.firstinspires.ftc:RobotServer", version.ref = "ftc" }
+ftc-onbotjava = { module = "org.firstinspires.ftc:OnBotJava", version.ref = "ftc" }
+ftc-hardware = { module = "org.firstinspires.ftc:Hardware", version.ref = "ftc" }
+ftc-common = { module = "org.firstinspires.ftc:FtcCommon", version.ref = "ftc" }
+ftc-vision = { module = "org.firstinspires.ftc:Vision", version.ref = "ftc" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
+acmerobotics-dashboard = { module = "com.acmerobotics.dashboard:dashboard", version.ref = "dashboard" }
+junit = { module = "junit:junit", version.ref = "junit" }

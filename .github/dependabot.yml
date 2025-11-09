@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Gradle dependencies (version catalog: gradle/libs.versions.toml)
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+    groups:
+      # Group PR for all FTC SDK dependencies
+      ftc-sdk:
+        patterns:
+          - "org.firstinspires.ftc:*"
+  
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"

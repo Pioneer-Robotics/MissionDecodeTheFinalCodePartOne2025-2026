@@ -27,4 +27,16 @@ android {
     namespace = 'com.qualcomm.ftcrobotcontroller'
 }
 
-apply from: '../build.dependencies.gradle'
+dependencies {
+    implementation libs.ftc.inspection
+    implementation libs.ftc.blocks
+    implementation libs.ftc.robotcore
+    implementation libs.ftc.robotserver
+    implementation libs.ftc.onbotjava
+    implementation libs.ftc.hardware
+    implementation libs.ftc.common
+    implementation libs.ftc.vision
+    implementation libs.androidx.appcompat
+    implementation libs.acmerobotics.dashboard
+    testImplementation libs.junit
+}
