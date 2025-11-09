@@ -107,10 +107,11 @@ class Follower(
         // Apply corrections to velocity directly
         // Rotate to convert to robot-centric coordinates
         val correctedPose =
-            targetPose.copy(
-                vx = targetPose.vx + xCorrection,
-                vy = targetPose.vy + yCorrection,
-            ).rotate(-bot.localizer.pose.theta)
+            targetPose
+                .copy(
+                    vx = targetPose.vx + xCorrection,
+                    vy = targetPose.vy + yCorrection,
+                ).rotate(-bot.localizer.pose.theta)
 
         FileLogger.debug("Follower", "Target pose: $targetPose")
         FileLogger.debug("Follower", "Corrected pose: $correctedPose")
