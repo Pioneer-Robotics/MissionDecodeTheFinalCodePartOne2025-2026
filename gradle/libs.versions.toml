@@ -2,7 +2,7 @@
 ftc = "11.0.0"
 androidx-appcompat = "1.2.0"
 dashboard = "0.5.1"
-junit = "4.12"
+junit = "4.13.2"
 
 [libraries]
 ftc-inspection = { module = "org.firstinspires.ftc:Inspection", version.ref = "ftc" }
