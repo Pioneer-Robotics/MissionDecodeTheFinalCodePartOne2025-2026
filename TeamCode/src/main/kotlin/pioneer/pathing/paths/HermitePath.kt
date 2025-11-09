@@ -70,27 +70,23 @@ class HermitePath(
     }
 
     override fun getPoint(t: Double): Pose {
-        val x = xHermite.eval(t)
-        val y = yHermite.eval(t)
-        val heading = getHeading(t)
-        return Pose(x, y, heading)
+        return Pose(
+            x = xHermite.eval(t),
+            y = yHermite.eval(t),
+            theta = getHeading(t)
+        )
     }
 
-    override fun getTangent(t: Double): Pose {
-        val xDer = xHermite.nDerEval(t, 1) // First derivative
-        val yDer = yHermite.nDerEval(t, 1)
-        return Pose(xDer, yDer)
-    }
-
-    override fun getNormal(t: Double): Pose {
-        val tangent = getTangent(t)
-        return Pose(-tangent.y, tangent.x)
-    }
-
-    override fun getSecondDerivative(t: Double): Pose {
-        val xDer2 = xHermite.nDerEval(t, 2) // Second derivative
-        val yDer2 = yHermite.nDerEval(t, 2)
-        return Pose(xDer2, yDer2)
+    override fun getPose(t: Double): Pose {
+        return Pose(
+            x = xHermite.eval(t),
+            y = yHermite.eval(t),
+            theta = getHeading(t),
+            vx = xHermite.nDerEval(t, 1),
+            vy = yHermite.nDerEval(t, 1),
+            ax = xHermite.nDerEval(t, 2),
+            ay = yHermite.nDerEval(t, 2),
+        )
     }
 
     override fun getCurvature(t: Double): Double {
@@ -99,7 +95,7 @@ class HermitePath(
         val xDer2 = xHermite.nDerEval(t, 2) // Second derivative
         val yDer2 = yHermite.nDerEval(t, 2)
 
-        val numerator = xDer * xDer2 - yDer2 * yDer
+        val numerator = xDer * yDer2 - yDer * xDer2
         var denominator = xDer.pow(2.0) + yDer.pow(2.0)
         denominator = denominator.pow(1.5)
 

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.constants.Drive
+import pioneer.constants.HardwareNames
 import pioneer.helpers.Pose
 import kotlin.math.abs
 import kotlin.math.sign
@@ -26,10 +27,10 @@ class MecanumBase(
             }
         }
 
-    private val leftFront get() = motors.getValue("leftFront")
-    private val leftBack get() = motors.getValue("leftBack")
-    private val rightFront get() = motors.getValue("rightFront")
-    private val rightBack get() = motors.getValue("rightBack")
+    private val leftFront get() = motors.getValue(HardwareNames.DRIVE_LEFT_FRONT)
+    private val leftBack get() = motors.getValue(HardwareNames.DRIVE_LEFT_BACK)
+    private val rightFront get() = motors.getValue(HardwareNames.DRIVE_RIGHT_FRONT)
+    private val rightBack get() = motors.getValue(HardwareNames.DRIVE_RIGHT_BACK)
 
     private fun DcMotorEx.configureMotor(direction: DcMotorSimple.Direction) {
         mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER

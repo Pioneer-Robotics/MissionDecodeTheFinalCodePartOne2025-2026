@@ -2,12 +2,40 @@ package pioneer.constants
 
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import pioneer.helpers.Pose
 import kotlin.math.PI
+
+object HardwareNames {
+    // Drive motors
+    const val DRIVE_LEFT_FRONT = "driveLF"
+    const val DRIVE_LEFT_BACK = "driveLB"
+    const val DRIVE_RIGHT_FRONT = "driveRF"
+    const val DRIVE_RIGHT_BACK = "driveRB"
+
+    // Other motors
+    const val FLYWHEEL = "flywheel"
+
+    // Odometry
+    const val ODO_LEFT = "odoLeft"
+    const val ODO_RIGHT = "odoRight"
+    const val ODO_CENTER = "odoCenter"
+
+    // Pinpoint
+    const val PINPOINT = "pinpoint"
+
+    // Servos
+    const val LAUNCH_SERVO_L = "launchServoL"
+    const val LAUNCH_SERVO_R = "launchServoR"
+
+    // Other
+    const val WEBCAM = "Webcam 1"
+}
 
 // -------- Odometry (3-wheel) --------
 object Odometry {
@@ -18,6 +46,7 @@ object Odometry {
 
     // encoder
     const val TICKS_PER_REV = 2000.0
+    const val TICKS_TO_CM = (WHEEL_DIAMETER_CM * PI) / TICKS_PER_REV
 }
 
 // -------- Drivebase (mecanum) --------
@@ -34,8 +63,15 @@ object Drive {
 
     // Feedforward gains using Pose(x,y,theta)
     val kV = Pose(x = 0.006, y = 0.0052, theta = 0.025)
-    val kA = Pose(x = 0.0, y = 0.0, theta = 0.0)
+    val kA = Pose(x = 0.0025, y = 0.0001, theta = 0.0)
     val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
+
+    val MOTOR_CONFIG = mapOf(
+        HardwareNames.DRIVE_LEFT_FRONT to DcMotorSimple.Direction.REVERSE,
+        HardwareNames.DRIVE_LEFT_BACK to DcMotorSimple.Direction.REVERSE,
+        HardwareNames.DRIVE_RIGHT_FRONT to DcMotorSimple.Direction.FORWARD,
+        HardwareNames.DRIVE_RIGHT_BACK to DcMotorSimple.Direction.FORWARD
+    )
 }
 
 // -------- Pinpoint (odometry pods) --------

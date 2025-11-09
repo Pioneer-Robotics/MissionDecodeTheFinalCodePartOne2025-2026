@@ -1,38 +1,47 @@
 package pioneer.opmodes.calibration
 
+import android.provider.SyncStateContract.Constants
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import pioneer.constants.Odometry
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.PI
 
 @Autonomous(name = "Odometer Offset Calculator", group = "Calibration")
 class OdometerOffsetCalculation : BaseOpMode() {
-    private var stopped = false
+    private val numRotations = 10
+    private var accumulatedTheta = 0.0
+    private var prevTheta = 0.0
+    private var initialXEncoderTicks = 0
+    private var initialYEncoderTicks = 0
 
     override fun onInit() {
-        bot.localizer.reset() // Reset odometry to the origin
-        bot.localizer.update(chrono.dt) // Update to get initial encoder values
+        bot.localizer.update(dt) // Get initial encoder values
+        initialXEncoderTicks = bot.localizer.encoderXTicks
+        initialYEncoderTicks = bot.localizer.encoderYTicks
     }
 
     override fun onLoop() {
-        bot.localizer.update(dt) // Update odometry
-
-        val dXEncoderTicks = bot.localizer.encoderXTicks
-        val dYEncoderTicks = bot.localizer.encoderYTicks
-
-        telemetry.addData("Theta", bot.localizer.pose.theta)
-
-        if (bot.localizer.pose.theta > (3 * PI / 4) || stopped) {
-            stopped = true
+        telemetry.addData("Theta", accumulatedTheta)
+        if (accumulatedTheta > 2 * PI * numRotations) {
             bot.mecanumBase.stop()
 
-            val xOffset = dXEncoderTicks / (3 * PI / 4) * 10
-            val yOffset = dYEncoderTicks / (3 * PI / 4) * 10
+            val dXEncoderTicks = initialXEncoderTicks - bot.localizer.encoderXTicks
+            val dYEncoderTicks = initialYEncoderTicks - bot.localizer.encoderYTicks
+
+            val xOffset = dXEncoderTicks / (3 * Math.PI / 4) * Odometry.TICKS_TO_CM * 10
+            val yOffset = dYEncoderTicks / (3 * Math.PI / 4) * Odometry.TICKS_TO_CM * 10
 
             telemetry.addData("X Offset", xOffset)
             telemetry.addData("Y Offset", yOffset)
         } else {
+            val dTheta = (bot.localizer.pose.theta - prevTheta) % (2 * PI)
+
+            accumulatedTheta += dTheta
+
             bot.mecanumBase.setDriveVA(Pose(omega = 0.75))
+
+            prevTheta = bot.localizer.pose.theta
         }
     }
 }

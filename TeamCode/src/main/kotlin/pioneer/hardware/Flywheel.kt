@@ -4,10 +4,11 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.constants.HardwareNames
 
 class Flywheel(
     hardwareMap: HardwareMap,
-    name: String = "flywheel",
+    name: String = HardwareNames.FLYWHEEL,
 ) {
     private val flywheel: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, name)
 

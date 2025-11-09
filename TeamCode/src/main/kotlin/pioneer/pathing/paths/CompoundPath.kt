@@ -8,7 +8,8 @@ import pioneer.helpers.Pose
  * should match the start pose of the next path in the list.
  * @param paths A list of paths that make up the compound path.
  */
-class CompoundPath(val paths: List<Path>) : Path {
+class CompoundPath(private val paths: List<Path>) : Path {
+
     override var startPose: Pose = paths.first().startPose
     override var endPose: Pose = paths.last().endPose
     override var headingInterpolationMode: Path.HeadingInterpolationMode =
@@ -39,22 +40,10 @@ class CompoundPath(val paths: List<Path>) : Path {
         return paths[pathIndex].getPoint(localT)
     }
 
-    override fun getTangent(t: Double): Pose {
+    override fun getPose(t: Double): Pose {
         val pathIndex = (t * paths.size).toInt().coerceIn(0, paths.size - 1)
         val localT = t * paths.size - pathIndex
-        return paths[pathIndex].getTangent(localT)
-    }
-
-    override fun getNormal(t: Double): Pose {
-        val pathIndex = (t * paths.size).toInt().coerceIn(0, paths.size - 1)
-        val localT = t * paths.size - pathIndex
-        return paths[pathIndex].getNormal(localT)
-    }
-
-    override fun getSecondDerivative(t: Double): Pose {
-        val pathIndex = (t * paths.size).toInt().coerceIn(0, paths.size - 1)
-        val localT = t * paths.size - pathIndex
-        return paths[pathIndex].getSecondDerivative(localT)
+        return paths[pathIndex].getPose(localT)
     }
 
     override fun getCurvature(t: Double): Double {
