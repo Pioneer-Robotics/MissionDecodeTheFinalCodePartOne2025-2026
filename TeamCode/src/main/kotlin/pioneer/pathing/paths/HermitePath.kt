@@ -69,16 +69,15 @@ class HermitePath(
         }
     }
 
-    override fun getPoint(t: Double): Pose {
-        return Pose(
+    override fun getPoint(t: Double): Pose =
+        Pose(
             x = xHermite.eval(t),
             y = yHermite.eval(t),
             theta = getHeading(t),
         )
-    }
 
-    override fun getPose(t: Double): Pose {
-        return Pose(
+    override fun getPose(t: Double): Pose =
+        Pose(
             x = xHermite.eval(t),
             y = yHermite.eval(t),
             theta = getHeading(t),
@@ -87,7 +86,6 @@ class HermitePath(
             ax = xHermite.nDerEval(t, 2),
             ay = yHermite.nDerEval(t, 2),
         )
-    }
 
     override fun getCurvature(t: Double): Double {
         val xDer = xHermite.derEval(t)
@@ -102,9 +100,7 @@ class HermitePath(
         return (numerator / denominator)
     }
 
-    override fun getClosestPointT(position: Pose): Double {
-        return compoundPath.getClosestPointT(position)
-    }
+    override fun getClosestPointT(position: Pose): Double = compoundPath.getClosestPointT(position)
 
     fun createCompoundPath(resolution: Int): Path {
         // Create a compound linear path to represent the Hermite path

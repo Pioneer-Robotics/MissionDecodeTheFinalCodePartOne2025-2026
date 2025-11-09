@@ -22,15 +22,17 @@ object FileLogger {
     private var queueSize = 0
     private var currentFile: File = initializeFile()
 
-    enum class LogLevel(val displayName: String) {
+    enum class LogLevel(
+        val displayName: String,
+    ) {
         DEBUG("DEBUG"),
         INFO("INFO"),
         WARN("WARN"),
         ERROR("ERROR"),
     }
 
-    private fun initializeFile(): File {
-        return try {
+    private fun initializeFile(): File =
+        try {
             val file = File("$BASE_FILE_NAME.txt")
             file.parentFile?.mkdirs()
             if (!file.exists()) {
@@ -41,7 +43,6 @@ object FileLogger {
             // Fallback to a temp file if primary location fails
             File.createTempFile("ftc_log", ".txt")
         }
-    }
 
     private fun rotateFiles() {
         try {
@@ -94,10 +95,9 @@ object FileLogger {
         }
     }
 
-    private fun shouldFlush(): Boolean {
-        return queueSize > MAX_QUEUE_SIZE ||
+    private fun shouldFlush(): Boolean =
+        queueSize > MAX_QUEUE_SIZE ||
             (currentFile.exists() && currentFile.length() + queueSize > MAX_FILE_SIZE)
-    }
 
     // Convenience methods for different log levels
     fun debug(

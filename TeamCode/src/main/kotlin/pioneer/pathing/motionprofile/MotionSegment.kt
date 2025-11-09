@@ -14,7 +14,5 @@ class MotionSegment(
      */
     fun end() = startState[dt]
 
-    override fun toString(): String {
-        return "MotionSegment(startState=$startState, dt=$dt)"
-    }
+    override fun toString(): String = "MotionSegment(startState=$startState, dt=$dt)"
 }
