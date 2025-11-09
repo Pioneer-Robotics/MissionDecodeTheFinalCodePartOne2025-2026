@@ -1,7 +1,9 @@
 package pioneer.helpers
 
 // Note: coeffs are least to most significant
-class Polynomial(coeffs: Array<Double>) {
+class Polynomial(
+    coeffs: Array<Double>,
+) {
     val coefficients = coeffs
 
     companion object {
@@ -31,9 +33,7 @@ class Polynomial(coeffs: Array<Double>) {
     /**
      * Adds this polynomial with another polynomial.
      */
-    operator fun plus(other: Polynomial): Polynomial {
-        return add(this, other)
-    }
+    operator fun plus(other: Polynomial): Polynomial = add(this, other)
 
     // Evaluates as a nested polynomial
     fun eval(
@@ -105,9 +105,7 @@ class Polynomial(coeffs: Array<Double>) {
         return Polynomial(antiDer)
     }
 
-    fun derEval(x: Double): Double {
-        return derivative().eval(x)
-    }
+    fun derEval(x: Double): Double = derivative().eval(x)
 
     fun finiteInt(
         x1: Double,

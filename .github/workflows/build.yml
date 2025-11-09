@@ -32,7 +32,7 @@ jobs:
           gradle-${{ runner.os }}-
         
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+      uses: gradle/actions/setup-gradle@v5
       with:
         cache-read-only: ${{ github.ref != 'refs/heads/master' }}
         
@@ -45,7 +45,7 @@ jobs:
       
     - name: Upload APK
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: debug-apk
         path: |

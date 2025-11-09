@@ -28,13 +28,12 @@ data class Pose(
     private fun wrap(a: Double): Double = atan2(sin(a), cos(a))
 
     // Normalize vector
-    fun normalize(): Pose {
-        return copy(
+    fun normalize(): Pose =
+        copy(
             x = x / getLength(),
             y = y / getLength(),
             theta = wrap(theta),
         )
-    }
 
     // Constant accel and angular accel over dt
     fun integrate(dt: Double): Pose {
@@ -53,10 +52,15 @@ data class Pose(
     // Time derivative assuming constant accel terms
     fun derivative(): Pose =
         Pose(
-            vx, vy,
-            ax, ay,
-            0.0, 0.0,
-            omega, alpha, 0.0,
+            vx,
+            vy,
+            ax,
+            ay,
+            0.0,
+            0.0,
+            omega,
+            alpha,
+            0.0,
         )
 
     // Metrics
@@ -96,9 +100,12 @@ data class Pose(
     // Minimal linear ops (θ wrapped)
     operator fun plus(o: Pose): Pose =
         copy(
-            x = x + o.x, y = y + o.y,
-            vx = vx + o.vx, vy = vy + o.vy,
-            ax = ax + o.ax, ay = ay + o.ay,
+            x = x + o.x,
+            y = y + o.y,
+            vx = vx + o.vx,
+            vy = vy + o.vy,
+            ax = ax + o.ax,
+            ay = ay + o.ay,
             theta = wrap(theta + o.theta),
             omega = omega + o.omega,
             alpha = alpha + o.alpha,
@@ -106,9 +113,12 @@ data class Pose(
 
     operator fun minus(o: Pose): Pose =
         copy(
-            x = x - o.x, y = y - o.y,
-            vx = vx - o.vx, vy = vy - o.vy,
-            ax = ax - o.ax, ay = ay - o.ay,
+            x = x - o.x,
+            y = y - o.y,
+            vx = vx - o.vx,
+            vy = vy - o.vy,
+            ax = ax - o.ax,
+            ay = ay - o.ay,
             theta = wrap(theta - o.theta),
             omega = omega - o.omega,
             alpha = alpha - o.alpha,
@@ -116,9 +126,12 @@ data class Pose(
 
     operator fun times(s: Double): Pose =
         copy(
-            x = x * s, y = y * s,
-            vx = vx * s, vy = vy * s,
-            ax = ax * s, ay = ay * s,
+            x = x * s,
+            y = y * s,
+            vx = vx * s,
+            vy = vy * s,
+            ax = ax * s,
+            ay = ay * s,
             theta = wrap(theta * s),
             omega = omega * s,
             alpha = alpha * s,
@@ -127,9 +140,12 @@ data class Pose(
     operator fun div(s: Double): Pose {
         require(s != 0.0) { "Cannot divide by zero" }
         return copy(
-            x = x / s, y = y / s,
-            vx = vx / s, vy = vy / s,
-            ax = ax / s, ay = ay / s,
+            x = x / s,
+            y = y / s,
+            vx = vx / s,
+            vy = vy / s,
+            ax = ax / s,
+            ay = ay / s,
             theta = wrap(theta / s),
             omega = omega / s,
             alpha = alpha / s,
@@ -138,9 +154,12 @@ data class Pose(
 
     operator fun unaryMinus(): Pose =
         copy(
-            x = -x, y = -y,
-            vx = -vx, vy = -vy,
-            ax = -ax, ay = -ay,
+            x = -x,
+            y = -y,
+            vx = -vx,
+            vy = -vy,
+            ax = -ax,
+            ay = -ay,
             theta = -theta,
             omega = -omega,
             alpha = -alpha,
