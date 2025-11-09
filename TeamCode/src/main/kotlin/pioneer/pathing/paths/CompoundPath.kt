@@ -8,9 +8,7 @@ import pioneer.helpers.Pose
  * should match the start pose of the next path in the list.
  * @param paths A list of paths that make up the compound path.
  */
-class CompoundPath(
-    private val paths: List<Path>,
-) : Path {
+class CompoundPath(private val paths: List<Path>) : Path {
     override var startPose: Pose = paths.first().startPose
     override var endPose: Pose = paths.last().endPose
     override var headingInterpolationMode: Path.HeadingInterpolationMode =
