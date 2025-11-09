@@ -1,15 +1,23 @@
 package pioneer.opmodes
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
+import com.acmerobotics.dashboard.FtcDashboard
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
+import pioneer.general.Period
+import pioneer.general.AllianceColor
+import pioneer.helpers.OpModeDataTransfer
+import pioneer.helpers.OpModeDataTransfer.OMDT
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode(
     private val botType: BotType = BotType.BASIC_MECANUM_BOT,
+    private val period: Period = Period.NONE,
+    private val allianceColor: AllianceColor = AllianceColor.NONE
 ) : OpMode() {
     // Bot instance
     protected lateinit var bot: Bot
@@ -20,8 +28,7 @@ abstract class BaseOpMode(
 
     // Dashboard instance
     private val dashboard =
-        com.acmerobotics.dashboard.FtcDashboard
-            .getInstance()
+        FtcDashboard.getInstance()
 
     // Tracker and getter for dt
     protected val chrono = Chrono()
@@ -32,6 +39,22 @@ abstract class BaseOpMode(
         bot = Bot(botType, hardwareMap)
         onInit() // Call user-defined init method
         updateTelemetry()
+
+        // TODO: Finish loading OpModeDataTransfer
+        if (period == Period.TELEOP) {
+            OpModeDataTransfer.loadOrNull()?.let { omdt ->
+                omdt.pose?.let { pose ->
+                    if (bot.botType.supportsLocalizer) {
+                    bot.localizer.pose = pose
+                    }
+                }
+                omdt.data["alliance"]?.let { alliance ->
+                    if (alliance is AllianceColor) {
+                    // Handle alliance color if needed
+                    }
+                }
+            }
+        }
     }
 
     final override fun loop() {
@@ -56,6 +79,20 @@ abstract class BaseOpMode(
         bot.mecanumBase.stop() // Ensure motors are stopped
         FileLogger.flush() // Flush any logged data
         onStop() // Call user-defined stop method
+        
+        if (period == Period.AUTO) {
+            // Save end pose to OpModeDataTransfer
+            val omdt = OMDT().apply { 
+                data["alliance"] = allianceColor
+                if (bot.botType.supportsLocalizer) {
+                    data["pose"] = bot.localizer.pose
+                }
+            }
+            OpModeDataTransfer.save(omdt)
+        }
+        else if (period == Period.TELEOP) {
+            OpModeDataTransfer.clear()
+        }
     }
 
     private fun updateTelemetry() {
