@@ -46,17 +46,18 @@ class Bot(
         when (botType) {
             BotType.BASIC_MECANUM_BOT -> {
                 // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBase(hardwareMap)
-                batteryMonitor = BatteryMonitor(hardwareMap)
+                // mecanumBase = MecanumBase(hardwareMap)
+                // batteryMonitor = BatteryMonitor(hardwareMap)
             }
 
             BotType.GOBILDA_STARTER_BOT -> {
                 // Initialize hardware components for GoBilda Starter Bot
-                mecanumBase = MecanumBase(hardwareMap)
-                localizer = Pinpoint(hardwareMap)
-                batteryMonitor = BatteryMonitor(hardwareMap)
-                flywheel = Flywheel(hardwareMap)
-                launchServos = LaunchServos(hardwareMap)
+                // mecanumBase = MecanumBase(hardwareMap)  // Uncomment if you have mecanum motors
+                // localizer = Pinpoint(hardwareMap)  // Uncomment if you have Pinpoint sensor
+                // batteryMonitor = BatteryMonitor(hardwareMap)  // Uncomment if needed
+                // flywheel = Flywheel(hardwareMap)  // Uncomment if you have flywheel motor
+                // launchServos = LaunchServos(hardwareMap)  // Uncomment if you have launch servos
+
                 aprilTagProcessor =
                     AprilTag(
                         CameraConstants.POSITION_CM,
