@@ -1,6 +1,8 @@
 package pioneer.pathing.motionprofile
 
-class MotionProfile(val segments: List<MotionSegment>) {
+class MotionProfile(
+    val segments: List<MotionSegment>,
+) {
     init {
         require(segments.isNotEmpty()) { "MotionProfile must have at least one segment." }
     }

@@ -228,11 +228,12 @@ object MotionProfileGenerator {
             )
 
         // Reverse the states to match the original order
-        return reversedPass.map { (state, dx) ->
-            Pair(afterDisplacement(state, dx), dx)
-        }.map { (state, dx) ->
-            Pair(MotionState(endState.x - state.x, state.v, -state.a), dx)
-        }.reversed()
+        return reversedPass
+            .map { (state, dx) ->
+                Pair(afterDisplacement(state, dx), dx)
+            }.map { (state, dx) ->
+                Pair(MotionState(endState.x - state.x, state.v, -state.a), dx)
+            }.reversed()
     }
 
     /**
@@ -259,7 +260,5 @@ object MotionProfileGenerator {
     private fun intersection(
         state1: MotionState,
         state2: MotionState,
-    ): Double {
-        return (state1.v * state1.v - state2.v * state2.v) / (2 * state2.a - 2 * state1.a)
-    }
+    ): Double = (state1.v * state1.v - state2.v * state2.v) / (2 * state2.a - 2 * state1.a)
 }
