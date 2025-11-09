@@ -16,7 +16,9 @@ import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
 import pioneer.constants.Camera as CameraConstants
 
-enum class BotType(val supportsLocalizer: Boolean) {
+enum class BotType(
+    val supportsLocalizer: Boolean,
+) {
     BASIC_MECANUM_BOT(false),
     MECANUM_BOT(true),
     GOBILDA_STARTER_BOT(true),
