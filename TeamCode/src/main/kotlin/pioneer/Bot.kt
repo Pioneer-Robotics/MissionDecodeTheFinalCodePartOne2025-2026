@@ -21,14 +21,10 @@ class Bot private constructor(
     private val hardwareComponents: Map<Class<out HardwareComponent>, HardwareComponent>,
 ) {
     // Type-safe access
-    internal inline fun <reified T : HardwareComponent> get(): T? {
-        return hardwareComponents[T::class.java] as? T
-    }
+    internal inline fun <reified T : HardwareComponent> get(): T? = hardwareComponents[T::class.java] as? T
 
     // Check if a component is present
-    internal inline fun <reified T : HardwareComponent> has(): Boolean {
-        return hardwareComponents.containsKey(T::class.java)
-    }
+    internal inline fun <reified T : HardwareComponent> has(): Boolean = hardwareComponents.containsKey(T::class.java)
 
     fun initAll() {
         hardwareComponents.values.forEach { it.init() }
@@ -54,24 +50,29 @@ class Bot private constructor(
     // Companion for builder and fromType
     companion object {
         fun builder() = Builder()
-        fun fromType(type: BotType, hardwareMap: HardwareMap) : Bot {
-            return when (type) {
-                BotType.MECANUM_BOT -> builder()
-                    .add(MecanumBase(hardwareMap))
-                    .add(Pinpoint(hardwareMap))
-                    .add(BatteryMonitor(hardwareMap))
-                    .build()
-                BotType.GOBILDA_STARTER_BOT -> builder()
-                    .add(MecanumBase(hardwareMap))
-                    .add(Pinpoint(hardwareMap))
-                    .add(LaunchServos(hardwareMap))
-                    .add(Flywheel(hardwareMap))
-                    .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
-                    .add(BatteryMonitor(hardwareMap))
-                    .build()
+
+        fun fromType(
+            type: BotType,
+            hardwareMap: HardwareMap,
+        ): Bot =
+            when (type) {
+                BotType.MECANUM_BOT ->
+                    builder()
+                        .add(MecanumBase(hardwareMap))
+                        .add(Pinpoint(hardwareMap))
+                        .add(BatteryMonitor(hardwareMap))
+                        .build()
+                BotType.GOBILDA_STARTER_BOT ->
+                    builder()
+                        .add(MecanumBase(hardwareMap))
+                        .add(Pinpoint(hardwareMap))
+                        .add(LaunchServos(hardwareMap))
+                        .add(Flywheel(hardwareMap))
+                        .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                        .add(BatteryMonitor(hardwareMap))
+                        .build()
                 BotType.CUSTOM -> throw IllegalArgumentException("Use Bot.builder() to create a custom bot")
             }
-        }
     }
 
     class Builder {
@@ -83,8 +84,6 @@ class Bot private constructor(
             return this
         }
 
-        fun build(): Bot {
-            return Bot(BotType.CUSTOM, components.toMap())
-        }
+        fun build(): Bot = Bot(BotType.CUSTOM, components.toMap())
     }
 }

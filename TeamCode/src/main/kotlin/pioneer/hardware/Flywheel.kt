@@ -16,7 +16,9 @@ class Flywheel(
 
     var velocity
         get() = flywheel.velocity
-        set(value) { flywheel.velocity = value }
+        set(value) {
+            flywheel.velocity = value
+        }
 
     override fun init() {
         flywheel = hardwareMap.get(DcMotorEx::class.java, motorName)

@@ -19,7 +19,6 @@ class Pinpoint(
     private val pinpointName: String = "pinpoint",
     private val startPose: Pose = Pose(),
 ) : Localizer {
-
     override val name = "PinpointLocalizer"
 
     override var pose: Pose = startPose

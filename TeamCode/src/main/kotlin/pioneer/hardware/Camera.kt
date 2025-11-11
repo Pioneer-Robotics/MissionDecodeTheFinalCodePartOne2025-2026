@@ -19,32 +19,32 @@ class Camera(
     private val cameraName: String = HardwareNames.WEBCAM,
     private val processors: Array<VisionProcessor> = emptyArray(),
 ) : HardwareComponent {
-
     override val name = "Camera"
 
     private lateinit var portal: VisionPortal
 
     override fun init() {
-        portal = VisionPortal
-            .Builder()
-            .setCamera(hardwareMap.get(WebcamName::class.java, cameraName))
-            .apply {
-                if (processors.isNotEmpty()) {
-                    addProcessors(*processors)
-                }
-            }.build()
+        portal =
+            VisionPortal
+                .Builder()
+                .setCamera(hardwareMap.get(WebcamName::class.java, cameraName))
+                .apply {
+                    if (processors.isNotEmpty()) {
+                        addProcessors(*processors)
+                    }
+                }.build()
     }
 
     companion object {
         fun createAprilTagProcessor(
             position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0, 0),
-            orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0)
+            orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0),
         ): VisionProcessor {
             val library: AprilTagLibrary =
-                    AprilTagLibrary
-                        .Builder()
-                        .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
-                        .build()
+                AprilTagLibrary
+                    .Builder()
+                    .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
+                    .build()
 
             val processor: AprilTagProcessor =
                 AprilTagProcessor

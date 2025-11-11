@@ -12,18 +12,19 @@ import kotlin.math.sign
 
 class MecanumBase(
     private val hardwareMap: HardwareMap,
-    private val motorConfig: Map<String, DcMotorSimple.Direction> = Drive.MOTOR_CONFIG
+    private val motorConfig: Map<String, DcMotorSimple.Direction> = Drive.MOTOR_CONFIG,
 ) : HardwareComponent {
     override val name = "MecanumBase"
 
     private lateinit var motors: Map<String, DcMotorEx>
 
     override fun init() {
-        motors = motorConfig.mapValues { (name, direction) ->
-            hardwareMap.get(DcMotorEx::class.java, name).apply {
-                configureMotor(direction)
+        motors =
+            motorConfig.mapValues { (name, direction) ->
+                hardwareMap.get(DcMotorEx::class.java, name).apply {
+                    configureMotor(direction)
+                }
             }
-        }
     }
 
     private val leftFront get() = motors.getValue(HardwareNames.DRIVE_LEFT_FRONT)

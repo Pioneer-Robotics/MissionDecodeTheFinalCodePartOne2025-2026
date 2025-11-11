@@ -7,8 +7,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 /**
  * MockHardware is a mock implementation of an FTC HardwareMap for testing purposes.
  */
-@Deprecated("DO NOT USE: Instantiating a hardware object will cause a null pointer error")
 // FIXME
+@Deprecated("DO NOT USE: Instantiating a hardware object will cause a null pointer error")
 class MockHardwareMap : HardwareMap(null, null) {
     init {
         // Add mock DcMotors

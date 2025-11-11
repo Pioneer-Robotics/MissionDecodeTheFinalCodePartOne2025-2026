@@ -1,7 +1,6 @@
 package pioneer.pathing.follower
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import pioneer.Bot
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
@@ -16,7 +15,7 @@ import pioneer.constants.Follower as FollowerConstants
 
 class Follower(
     private val localizer: Localizer,
-    private val mecanumBase: MecanumBase
+    private val mecanumBase: MecanumBase,
 ) {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()

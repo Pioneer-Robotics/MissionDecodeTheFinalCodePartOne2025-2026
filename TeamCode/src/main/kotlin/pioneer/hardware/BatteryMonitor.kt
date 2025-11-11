@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.VoltageSensor
 class BatteryMonitor(
     private val hardwareMap: HardwareMap,
 ) : HardwareComponent {
-
     override val name = "BatteryMonitor"
 
     private lateinit var voltageSensors: List<VoltageSensor>
@@ -44,8 +43,9 @@ class BatteryMonitor(
      */
     val averageVoltage: Double
         get() {
-            val validVoltages = voltageSensors
-                .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
+            val validVoltages =
+                voltageSensors
+                    .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
             return if (validVoltages.isNotEmpty()) validVoltages.average() else 0.0
         }
 

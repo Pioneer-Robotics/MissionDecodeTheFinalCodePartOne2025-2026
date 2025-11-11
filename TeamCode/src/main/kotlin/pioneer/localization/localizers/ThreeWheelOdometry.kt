@@ -20,7 +20,6 @@ class ThreeWheelOdometry(
     private val trackWidthCM: Double = 26.5,
     private val forwardOffsetCM: Double = 15.1,
 ) : Localizer {
-
     override val name = "ThreeWheelOdometryLocalizer"
 
     override lateinit var pose: Pose
