@@ -26,11 +26,11 @@ object DashboardPlotter {
 
     fun plotBotPosition(
         packet: TelemetryPacket,
-        position: Pose,
+        position: Pose?,
         showPathTaken: Boolean = true,
         color: String = "#000000",
     ) {
-        val pose = toDashboardCoordinates(position)
+        val pose = toDashboardCoordinates(position ?: return)
         previousPositions.add(pose)
         if (previousPositions.size > MAX_PREVIOUS_POSITIONS) {
             previousPositions.removeAt(0)

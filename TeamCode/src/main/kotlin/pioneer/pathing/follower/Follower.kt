@@ -1,10 +1,11 @@
 package pioneer.pathing.follower
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import pioneer.Bot
+import pioneer.hardware.MecanumBase
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
+import pioneer.localization.Localizer
 import pioneer.pathing.motionprofile.MotionProfile
 import pioneer.pathing.motionprofile.MotionProfileGenerator
 import pioneer.pathing.motionprofile.MotionState
@@ -13,7 +14,8 @@ import kotlin.math.*
 import pioneer.constants.Follower as FollowerConstants
 
 class Follower(
-    private val bot: Bot,
+    private val localizer: Localizer,
+    private val mecanumBase: MecanumBase,
 ) {
     var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
@@ -90,14 +92,14 @@ class Follower(
                 vy = tangent.y * targetState.v,
                 ax = targetState.a * tangent.x + targetState.v.pow(2) * curvature * -tangent.y,
                 ay = targetState.a * tangent.y + targetState.v.pow(2) * curvature * tangent.x,
-                theta = bot.localizer.pose.theta,
+                theta = localizer.pose.theta,
             )
 
         // Calculate the position error and convert to robot-centric coordinates
         val positionError =
             Pose(
-                x = targetPose.x - bot.localizer.pose.x,
-                y = targetPose.y - bot.localizer.pose.y,
+                x = targetPose.x - localizer.pose.x,
+                y = targetPose.y - localizer.pose.y,
             )
 
         // Calculate the PID outputs
@@ -111,7 +113,7 @@ class Follower(
                 .copy(
                     vx = targetPose.vx + xCorrection,
                     vy = targetPose.vy + yCorrection,
-                ).rotate(-bot.localizer.pose.theta)
+                ).rotate(-localizer.pose.theta)
 
         FileLogger.debug("Follower", "Target pose: $targetPose")
         FileLogger.debug("Follower", "Corrected pose: $correctedPose")
@@ -119,7 +121,7 @@ class Follower(
         // TODO: Heading interpolation
         // TODO: Add heading error correction
 
-        bot.mecanumBase.setDriveVA(correctedPose)
+        mecanumBase.setDriveVA(correctedPose)
     }
 
     fun start() {

@@ -8,56 +8,60 @@ import com.qualcomm.robotcore.hardware.VoltageSensor
  * Provides battery voltage information for power management and telemetry.
  */
 class BatteryMonitor(
-    hardwareMap: HardwareMap,
-) {
-    private val voltageSensors: List<VoltageSensor> = hardwareMap.voltageSensor.toList()
+    private val hardwareMap: HardwareMap,
+) : HardwareComponent {
+    override val name = "BatteryMonitor"
 
-    /**
-     * Gets the lowest voltage reading from all available sensors.
-     * @return Minimum voltage in volts, or 0.0 if no valid readings
-     */
-    fun getVoltage(): Double =
-        voltageSensors
-            .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
-            .minOrNull() ?: 0.0
+    private lateinit var voltageSensors: List<VoltageSensor>
 
-    /**
-     * Gets the highest voltage reading from all available sensors.
-     * @return Maximum voltage in volts, or 0.0 if no valid readings
-     */
-    fun getMaxVoltage(): Double =
-        voltageSensors
-            .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
-            .maxOrNull() ?: 0.0
-
-    /**
-     * Gets average voltage from all valid sensors.
-     * @return Average voltage in volts, or 0.0 if no valid readings
-     */
-    fun getAverageVoltage(): Double {
-        val validVoltages =
-            voltageSensors
-                .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
-
-        return if (validVoltages.isNotEmpty()) {
-            validVoltages.average()
-        } else {
-            0.0
-        }
+    override fun init() {
+        voltageSensors = hardwareMap.voltageSensor.toList()
     }
+
+    /**
+     * Minimum voltage in volts, or 0.0 if no valid readings
+     */
+    val voltage: Double
+        get() {
+            return voltageSensors
+                .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
+                .minOrNull() ?: 0.0
+        }
+
+    /**
+     * Maximum voltage in volts, or 0.0 if no valid readings
+     */
+    val maxVoltage: Double
+        get() {
+            return voltageSensors
+                .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
+                .maxOrNull() ?: 0.0
+        }
+
+    /**
+     * Average voltage in volts, or 0.0 if no valid readings
+     */
+    val averageVoltage: Double
+        get() {
+            val validVoltages =
+                voltageSensors
+                    .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
+            return if (validVoltages.isNotEmpty()) validVoltages.average() else 0.0
+        }
+
+    /**
+     * List of valid voltage readings
+     */
+    val allVoltages: List<Double>
+        get() {
+            return voltageSensors
+                .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
+        }
 
     /**
      * Checks if battery voltage is critically low.
      * @param threshold Minimum acceptable voltage (default: 11.0V)
      * @return True if voltage is below threshold
      */
-    fun isVoltageLow(threshold: Double): Boolean = getVoltage() < threshold
-
-    /**
-     * Gets all valid voltage readings for debugging.
-     * @return List of valid voltage readings
-     */
-    fun getAllVoltages(): List<Double> =
-        voltageSensors
-            .mapNotNull { sensor -> sensor.voltage.takeIf { it > 0.0 } }
+    fun isVoltageLow(threshold: Double): Boolean = voltage < threshold
 }

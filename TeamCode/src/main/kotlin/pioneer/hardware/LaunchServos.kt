@@ -6,16 +6,25 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.constants.HardwareNames
 
 class LaunchServos(
-    hardwareMap: HardwareMap,
-    leftName: String = HardwareNames.LAUNCH_SERVO_L,
-    rightName: String = HardwareNames.LAUNCH_SERVO_R,
-) {
-    val servo1 = hardwareMap.get(CRServo::class.java, leftName)
-    val servo2 = hardwareMap.get(CRServo::class.java, rightName)
+    private val hardwareMap: HardwareMap,
+    private val leftName: String = HardwareNames.LAUNCH_SERVO_L,
+    private val rightName: String = HardwareNames.LAUNCH_SERVO_R,
+) : HardwareComponent {
+    override val name = "LaunchServos"
+
+    private lateinit var servo1: CRServo
+    private lateinit var servo2: CRServo
 
     var launch = false
+        private set
     var retract = false
+        private set
     var timer = ElapsedTime()
+
+    override fun init() {
+        servo1 = hardwareMap.get(CRServo::class.java, leftName)
+        servo2 = hardwareMap.get(CRServo::class.java, rightName)
+    }
 
     fun triggerLaunch() {
         launch = true

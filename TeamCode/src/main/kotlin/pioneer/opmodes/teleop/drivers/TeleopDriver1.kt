@@ -36,7 +36,7 @@ class TeleopDriver1(
 
     private fun drive() {
         val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        bot.mecanumBase.setDrivePower(
+        bot.mecanumBase?.setDrivePower(
             Pose(
                 vx = direction.x,
                 vy = direction.y,
@@ -75,18 +75,18 @@ class TeleopDriver1(
 
     private fun flywheel() {
         if (gamepad.circle) {
-            bot.flywheel.setSpeed(-flywheelSpeed)
+            bot.flywheel?.velocity = -flywheelSpeed
         } else {
-            bot.flywheel.setSpeed(0.0)
+            bot.flywheel?.velocity = 0.0
         }
     }
 
     private fun updateLaunchServos() {
         if (gamepad.dpad_up) {
-            bot.launchServos.triggerLaunch()
+            bot.launchServos?.triggerLaunch()
         } else if (gamepad.dpad_down) {
-            bot.launchServos.triggerRetract()
+            bot.launchServos?.triggerRetract()
         }
-        bot.launchServos.update()
+        bot.launchServos?.update()
     }
 }
