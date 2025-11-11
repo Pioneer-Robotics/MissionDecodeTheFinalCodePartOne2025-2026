@@ -7,22 +7,22 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.constants.HardwareNames
 
 class Flywheel(
-    hardwareMap: HardwareMap,
-    name: String = HardwareNames.FLYWHEEL,
-) {
-    private val flywheel: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, name)
+    private val hardwareMap: HardwareMap = MockHardwareMap(),
+    private val motorName: String = HardwareNames.FLYWHEEL,
+) : HardwareComponent {
+    override val name = "Flywheel"
 
-    val velocity
-        get() = flywheel.getVelocity()
+    private lateinit var flywheel: DcMotorEx
 
-    init {
+    var velocity
+        get() = flywheel.velocity
+        set(value) { flywheel.velocity = value }
+
+    override fun init() {
+        flywheel = hardwareMap.get(DcMotorEx::class.java, motorName)
         flywheel.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         flywheel.mode = DcMotor.RunMode.RUN_USING_ENCODER
         flywheel.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
         flywheel.direction = DcMotorSimple.Direction.FORWARD
-    }
-
-    fun setSpeed(velocity: Double) {
-        flywheel.setVelocity(velocity)
     }
 }

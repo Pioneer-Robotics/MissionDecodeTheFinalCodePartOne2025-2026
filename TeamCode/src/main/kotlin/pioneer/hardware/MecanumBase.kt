@@ -11,21 +11,26 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 class MecanumBase(
-    hardwareMap: HardwareMap,
-    motorConfig: Map<String, DcMotorSimple.Direction> =
+    private val hardwareMap: HardwareMap = MockHardwareMap(),
+    private val motorConfig: Map<String, DcMotorSimple.Direction> =
         mapOf(
             "leftFront" to DcMotorSimple.Direction.REVERSE,
             "leftBack" to DcMotorSimple.Direction.REVERSE,
             "rightFront" to DcMotorSimple.Direction.FORWARD,
             "rightBack" to DcMotorSimple.Direction.FORWARD,
         ),
-) {
-    private val motors =
-        motorConfig.mapValues { (name, direction) ->
+) : HardwareComponent {
+    override val name = "MecanumBase"
+
+    private lateinit var motors: Map<String, DcMotorEx>
+
+    override fun init() {
+        motors = motorConfig.mapValues { (name, direction) ->
             hardwareMap.get(DcMotorEx::class.java, name).apply {
                 configureMotor(direction)
             }
         }
+    }
 
     private val leftFront get() = motors.getValue(HardwareNames.DRIVE_LEFT_FRONT)
     private val leftBack get() = motors.getValue(HardwareNames.DRIVE_LEFT_BACK)
@@ -70,7 +75,7 @@ class MecanumBase(
 
         val motorPowers = calculateMotorPowers(Pose(ffX, ffY, ffTheta))
         motors.values.forEachIndexed { index, motor ->
-            motor.setPower(motorPowers[index].coerceIn(-1.0, 1.0))
+            motor.power = motorPowers[index].coerceIn(-1.0, 1.0)
         }
     }
 
@@ -91,6 +96,6 @@ class MecanumBase(
     ): Double = v * kV + a * kA + if (abs(v) > 1e-3) kS * sign(v) else 0.0
 
     fun stop() {
-        motors.values.forEach { it.setPower(0.0) }
+        motors.values.forEach { it.power = 0.0 }
     }
 }

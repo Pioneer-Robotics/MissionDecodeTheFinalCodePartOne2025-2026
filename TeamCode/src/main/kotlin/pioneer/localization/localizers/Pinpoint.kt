@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
+import pioneer.hardware.MockHardwareMap
 import pioneer.helpers.Pose
 import pioneer.localization.Localizer
 import pioneer.constants.Pinpoint as PinpointConstants
@@ -14,18 +15,23 @@ import pioneer.constants.Pinpoint as PinpointConstants
  * Pinpoint: X+ forward, Y+ left → Robot: X+ right, Y+ forward
  */
 class Pinpoint(
-    hardwareMap: HardwareMap,
-    name: String = "pinpoint",
-    startPose: Pose = Pose(),
+    private val hardwareMap: HardwareMap = MockHardwareMap(),
+    private val pinpointName: String = "pinpoint",
+    private val startPose: Pose = Pose(),
 ) : Localizer {
+
+    override val name = "PinpointLocalizer"
+
     override var pose: Pose = startPose
     override var prevPose: Pose = startPose.copy()
 
-    private val pinpoint = hardwareMap.get(GoBildaPinpointDriver::class.java, name)
+    private lateinit var pinpoint: GoBildaPinpointDriver
     override var encoderXTicks: Int = 0
     override var encoderYTicks: Int = 0
 
-    init {
+    override fun init() {
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver::class.java, pinpointName)
+
         pinpoint.setOffsets(PinpointConstants.X_POD_OFFSET_MM, PinpointConstants.Y_POD_OFFSET_MM, DistanceUnit.MM)
         pinpoint.setEncoderResolution(PinpointConstants.ENCODER_RESOLUTION)
         pinpoint.setEncoderDirections(PinpointConstants.X_ENCODER_DIRECTION, PinpointConstants.Y_ENCODER_DIRECTION)

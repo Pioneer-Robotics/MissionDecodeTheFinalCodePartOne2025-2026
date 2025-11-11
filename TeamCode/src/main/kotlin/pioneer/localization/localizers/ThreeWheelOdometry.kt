@@ -1,6 +1,7 @@
 package pioneer.localization.localizers
 
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.hardware.MockHardwareMap
 import pioneer.helpers.Pose
 import pioneer.localization.Localizer
 import kotlin.math.cos
@@ -10,23 +11,32 @@ import kotlin.math.sin
  * Three-wheel odometry localizer using two parallel and one perpendicular tracking wheel.
  */
 class ThreeWheelOdometry(
-    hardwareMap: HardwareMap,
-    startPose: Pose = Pose(),
-    leftName: String = "odoLeft",
-    rightName: String = "odoRight",
-    centerName: String = "odoCenter",
-    ticksPerRev: Double = 2000.0,
-    wheelDiameterCM: Double = 4.8,
+    private val hardwareMap: HardwareMap = MockHardwareMap(),
+    private val startPose: Pose = Pose(),
+    private val leftName: String = "odoLeft",
+    private val rightName: String = "odoRight",
+    private val centerName: String = "odoCenter",
+    private val ticksPerRev: Double = 2000.0,
+    private val wheelDiameterCM: Double = 4.8,
     val trackWidthCM: Double = 26.5,
     val forwardOffsetCM: Double = 15.1,
 ) : Localizer {
+
+    override val name = "ThreeWheelOdometryLocalizer"
+
     override var pose: Pose = startPose
     override var prevPose: Pose = startPose.copy()
 
     // Odometry instances
-    private val odoLeft = Odometry(hardwareMap, leftName, ticksPerRev, wheelDiameterCM)
-    private val odoRight = Odometry(hardwareMap, rightName, ticksPerRev, wheelDiameterCM)
-    private val odoCenter = Odometry(hardwareMap, centerName, ticksPerRev, wheelDiameterCM)
+    private lateinit var odoLeft: Odometry
+    private lateinit var odoRight: Odometry
+    private lateinit var odoCenter: Odometry
+
+    override fun init() {
+        odoLeft = Odometry(hardwareMap, leftName, ticksPerRev, wheelDiameterCM)
+        odoRight = Odometry(hardwareMap, rightName, ticksPerRev, wheelDiameterCM)
+        odoCenter = Odometry(hardwareMap, centerName, ticksPerRev, wheelDiameterCM)
+    }
 
     // Previous encoder values
     private var prevLeftTicks = 0

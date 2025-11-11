@@ -7,7 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 /**
  * MockHardware is a mock implementation of an FTC HardwareMap for testing purposes.
  */
-class MockHardware : HardwareMap(null, null) {
+class MockHardwareMap : HardwareMap(null, null) {
     init {
         // Add mock DcMotors
         dcMotor.put("leftMotor", MockDcMotor())
