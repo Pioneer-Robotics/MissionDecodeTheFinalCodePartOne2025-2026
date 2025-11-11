@@ -96,9 +96,17 @@ object Camera {
     private const val PITCH_DEG = 0.0
     private const val ROLL_DEG = 0.0
 
+    //Lens Intrinsics
+    const val fx = 955.23
+    const val fy = 962.92
+    const val cx = 330.05
+    const val cy = 186.05
+    val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
+
     val POSITION_CM: Position
         get() = Position(DistanceUnit.CM, X_OFFSET_CM, Y_OFFSET_CM, Z_OFFSET_CM, 0)
 
     val ORIENTATION_RAD: YawPitchRollAngles
         get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
 }
+

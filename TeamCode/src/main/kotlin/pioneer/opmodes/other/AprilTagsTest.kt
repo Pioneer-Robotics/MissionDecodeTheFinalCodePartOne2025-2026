@@ -14,6 +14,19 @@ class AprilTagsTest : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
         addAprilTagTelemetryData()
     }
 
+    private fun fieldPosition() {
+        val detections = bot.aprilTagProcessor.detections
+        //TODO: Avg position if given multiple tags?
+        for (detection in detections) {
+            var tagPosition = listOf(detection.metadata.fieldPosition[0], detection.metadata.fieldPosition[1], detection.metadata.fieldPosition[2])
+            var fieldPositionWithTag = listOf((tagPosition[0]+detection.ftcPose.x).toFloat(), (tagPosition[1]+detection.ftcPose.y).toFloat(), (tagPosition[1]+detection.ftcPose.z).toFloat())
+
+            telemetry.addLine("--Field Position From Tag (x, y, z): (%.2f, %.2f, %.2f)".format(fieldPositionWithTag[0], fieldPositionWithTag[1], fieldPositionWithTag[2]))
+            telemetry.addLine("--Bot Position (x, y): (%.2f, %.2f)".format(bot.localizer.pose.x, bot.localizer.pose.y))
+
+        }
+    }
+    @Deprecated("ts sucks just use the library")
     private fun calculateAprilTag() {
         val detections = bot.aprilTagProcessor.detections
         for (detection in detections) {
@@ -64,4 +77,5 @@ class AprilTagsTest : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
             }
         }
     }
+
 }

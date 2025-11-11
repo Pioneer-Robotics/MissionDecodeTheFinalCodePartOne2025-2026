@@ -4,9 +4,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraIntrinsics
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import pioneer.constants.Camera
+import kotlin.jvm.internal.Intrinsics
+
 
 class AprilTag(
     position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0, 0),
@@ -26,11 +30,13 @@ class AprilTag(
             .Builder()
             .setTagLibrary(library)
             .setCameraPose(position, orientation)
+            .setLensIntrinsics(Camera.fx, Camera.fy, Camera.cx, Camera.cy)
             .setOutputUnits(distanceUnit, angleUnit)
             .setDrawTagID(draw)
             .setDrawTagOutline(draw)
             .setDrawAxes(draw)
             .setDrawCubeProjection(draw)
             .build()
-    // TODO: Camera calibration, f and c
+
+
 }
