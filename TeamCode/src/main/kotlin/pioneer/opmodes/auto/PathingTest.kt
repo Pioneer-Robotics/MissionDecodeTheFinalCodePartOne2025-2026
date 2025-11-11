@@ -1,6 +1,7 @@
 package pioneer.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import pioneer.Bot
 import pioneer.BotType
 import pioneer.helpers.DashboardPlotter
 import pioneer.helpers.Pose
@@ -9,7 +10,7 @@ import pioneer.pathing.paths.HermitePath
 import kotlin.math.hypot
 
 @Autonomous(name = "Pathing Test", group = "Testing")
-class PathingTest : BaseOpMode(BotType.MECANUM_BOT) {
+class PathingTest : BaseOpMode() {
     enum class State {
         INIT,
         RUNNING,
@@ -19,6 +20,7 @@ class PathingTest : BaseOpMode(BotType.MECANUM_BOT) {
     private var state: State = State.INIT
 
     override fun onInit() {
+        bot = Bot.fromType(BotType.MECANUM_BOT, hardwareMap)
         telemetryPacket.put("Target Velocity", 0.0)
         telemetryPacket.put("Current Velocity", 0.0)
         DashboardPlotter.scale = 2.5
@@ -40,10 +42,10 @@ class PathingTest : BaseOpMode(BotType.MECANUM_BOT) {
                 if (bot.follower.done) state = State.DONE
                 // Telemetry updates
                 telemetryPacket.put("Target Velocity", bot.follower.targetState!!.v)
-                telemetryPacket.put("Current Velocity", hypot(bot.localizer.pose.vx, bot.localizer.pose.vy))
+                telemetryPacket.put("Current Velocity", hypot(bot.pinpoint!!.pose.vx, bot.pinpoint!!.pose.vy))
                 // Field view
                 DashboardPlotter.plotGrid(telemetryPacket)
-                DashboardPlotter.plotBotPosition(telemetryPacket, bot.localizer.pose)
+                DashboardPlotter.plotBotPosition(telemetryPacket, bot.pinpoint!!.pose)
                 DashboardPlotter.plotPath(telemetryPacket, bot.follower.path!!)
                 DashboardPlotter.plotPoint(
                     telemetryPacket,

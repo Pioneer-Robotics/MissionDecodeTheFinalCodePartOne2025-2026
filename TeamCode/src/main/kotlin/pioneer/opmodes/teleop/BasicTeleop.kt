@@ -19,7 +19,7 @@ class BasicTeleop : BaseOpMode() {
 
     private fun drive() {
         val direction = Pose(gamepad1.left_stick_x.toDouble(), -gamepad1.left_stick_y.toDouble())
-        bot.mecanumBase.setDrivePower(
+        bot.mecanumBase?.setDrivePower(
             Pose(
                 vx = direction.x,
                 vy = direction.y,

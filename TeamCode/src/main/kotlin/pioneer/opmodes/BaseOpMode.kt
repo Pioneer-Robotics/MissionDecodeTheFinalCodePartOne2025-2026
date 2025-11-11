@@ -3,17 +3,13 @@ package pioneer.opmodes
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
-import pioneer.BotType
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 
 // Base OpMode class to be extended by all user-defined OpModes
-abstract class BaseOpMode(
-    private val botType: BotType = BotType.BASIC_MECANUM_BOT,
-) : OpMode() {
-    // Bot instance
+abstract class BaseOpMode : OpMode() {
+    // Bot instance to be defined in subclasses
     protected lateinit var bot: Bot
-        private set // Prevent external modification
 
     // Telemetry packet for dashboard
     protected var telemetryPacket = TelemetryPacket()
@@ -29,31 +25,30 @@ abstract class BaseOpMode(
         get() = chrono.dt
 
     final override fun init() {
-        bot = Bot(botType, hardwareMap)
         onInit() // Call user-defined init method
+        bot.initAll() // Initialize bot hardware
+        if (!::bot.isInitialized) {
+            throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
+        }
         updateTelemetry()
     }
 
     final override fun loop() {
         // Update bot systems
-        if (bot.botType.supportsLocalizer) {
-            bot.localizer.update(dt)
-        }
+        bot.pinpoint?.update(dt)
 
         // Call user-defined loop logic
         onLoop()
 
         // Update path follower
-        if (bot.botType.supportsLocalizer) {
-            bot.follower.update(dt)
-        }
+        bot.follower.update(dt)
 
         // Automatically handle telemetry updates
         updateTelemetry()
     }
 
     final override fun stop() {
-        bot.mecanumBase.stop() // Ensure motors are stopped
+        bot.mecanumBase?.stop() // Ensure motors are stopped
         FileLogger.flush() // Flush any logged data
         onStop() // Call user-defined stop method
     }

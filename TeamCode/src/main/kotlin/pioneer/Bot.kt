@@ -1,82 +1,90 @@
 package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
-import pioneer.constants.Drive
-import pioneer.hardware.AprilTag
 import pioneer.hardware.BatteryMonitor
 import pioneer.hardware.Camera
 import pioneer.hardware.Flywheel
+import pioneer.hardware.HardwareComponent
 import pioneer.hardware.LaunchServos
 import pioneer.hardware.MecanumBase
-import pioneer.hardware.MockHardware
-import pioneer.localization.Localizer
-import pioneer.localization.localizers.LocalizerMock
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
-import pioneer.constants.Camera as CameraConstants
 
-enum class BotType(
-    val supportsLocalizer: Boolean,
-) {
-    BASIC_MECANUM_BOT(false),
-    MECANUM_BOT(true),
-    GOBILDA_STARTER_BOT(true),
+enum class BotType {
+    MECANUM_BOT,
+    GOBILDA_STARTER_BOT,
+    CUSTOM,
 }
 
-class Bot(
-    val botType: BotType,
-    hardwareMap: HardwareMap,
+class Bot private constructor(
+    val type: BotType,
+    private val hardwareComponents: Map<Class<out HardwareComponent>, HardwareComponent>,
 ) {
-    // Basic hardware components
-    var mecanumBase: MecanumBase = MecanumBase(MockHardware())
-    var localizer: Localizer = LocalizerMock()
-    var batteryMonitor: BatteryMonitor = BatteryMonitor(MockHardware())
+    // Type-safe access
+    internal inline fun <reified T : HardwareComponent> get(): T? {
+        return hardwareComponents[T::class.java] as? T
+    }
 
-    // GoBilda starter bot specific components
-    var flywheel: Flywheel = Flywheel(MockHardware())
-    var launchServos: LaunchServos = LaunchServos(MockHardware())
+    // Check if a component is present
+    internal inline fun <reified T : HardwareComponent> has(): Boolean {
+        return hardwareComponents.containsKey(T::class.java)
+    }
 
-    // Other hardware components
-    var aprilTagProcessor: AprilTagProcessor = AprilTag().processor
-    var camera: Camera = Camera(MockHardware())
+    fun initAll() {
+        hardwareComponents.values.forEach { it.init() }
+    }
 
-    // Path follower
-    var follower = Follower(this)
+    // Property-style access for known components
+    val mecanumBase get() = get<MecanumBase>()
+    val pinpoint get() = get<Pinpoint>()
+    val launchServos get() = get<LaunchServos>()
+    val flywheel get() = get<Flywheel>()
+    val camera get() = get<Camera>()
+    val batteryMonitor get() = get<BatteryMonitor>()
 
-    init {
-        when (botType) {
-            BotType.BASIC_MECANUM_BOT -> {
-                // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBase(hardwareMap)
-                batteryMonitor = BatteryMonitor(hardwareMap)
+    // Follower is lazily initialized (only if accessed)
+    // and will error if localizer or mecanumBase is missing
+    val follower: Follower by lazy {
+        Follower(
+            localizer = get<Pinpoint>()!!,
+            mecanumBase = get<MecanumBase>()!!,
+        )
+    }
+
+    // Companion for builder and fromType
+    companion object {
+        fun builder() = Builder()
+        fun fromType(type: BotType, hardwareMap: HardwareMap) : Bot {
+            return when (type) {
+                BotType.MECANUM_BOT -> builder()
+                    .add(MecanumBase(hardwareMap))
+                    .add(Pinpoint(hardwareMap))
+                    .add(BatteryMonitor(hardwareMap))
+                    .build()
+                BotType.GOBILDA_STARTER_BOT -> builder()
+                    .add(MecanumBase(hardwareMap))
+                    .add(Pinpoint(hardwareMap))
+                    .add(LaunchServos(hardwareMap))
+                    .add(Flywheel(hardwareMap))
+                    .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                    .add(BatteryMonitor(hardwareMap))
+                    .build()
+                BotType.CUSTOM -> throw IllegalArgumentException("Use Bot.builder() to create a custom bot")
             }
+        }
+    }
 
-            BotType.MECANUM_BOT -> {
-                // Initialize hardware components for Basic Mecanum Bot
-                mecanumBase = MecanumBase(hardwareMap, Drive.MOTOR_CONFIG)
-                localizer = Pinpoint(hardwareMap)
-                batteryMonitor = BatteryMonitor(hardwareMap)
-            }
+    class Builder {
+        private val components = mutableMapOf<Class<out HardwareComponent>, HardwareComponent>()
 
-            BotType.GOBILDA_STARTER_BOT -> {
-                // Initialize hardware components for GoBilda Starter Bot
-                mecanumBase = MecanumBase(hardwareMap)
-                localizer = Pinpoint(hardwareMap)
-                batteryMonitor = BatteryMonitor(hardwareMap)
-                flywheel = Flywheel(hardwareMap)
-                launchServos = LaunchServos(hardwareMap)
-                aprilTagProcessor =
-                    AprilTag(
-                        CameraConstants.POSITION_CM,
-                        CameraConstants.ORIENTATION_RAD,
-                    ).processor
-                camera =
-                    Camera(
-                        hardwareMap,
-                        processors = arrayOf(aprilTagProcessor),
-                    )
-            }
+        fun <T : HardwareComponent> add(component: T): Builder {
+            // TODO: Possibly allow interfaces such as Localizer vs Pinpoint
+            components[component::class.java] = component
+            return this
+        }
+
+        fun build(): Bot {
+            return Bot(BotType.CUSTOM, components.toMap())
         }
     }
 }
