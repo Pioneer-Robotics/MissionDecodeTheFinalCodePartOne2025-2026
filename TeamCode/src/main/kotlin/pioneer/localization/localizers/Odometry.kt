@@ -3,13 +3,14 @@ package pioneer.localization.localizers
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.hardware.MockHardwareMap
 import kotlin.math.PI
 
 /**
  * Represents an Odometry system for a single encoder.
  */
 class Odometry(
-    hardwareMap: HardwareMap,
+    hardwareMap: HardwareMap = MockHardwareMap(),
     private val name: String,
     private val ticksPerRev: Double,
     private val wheelDiameterCM: Double,
