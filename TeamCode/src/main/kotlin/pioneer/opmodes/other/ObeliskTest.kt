@@ -1,16 +1,21 @@
 package pioneer.opmodes.other
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import pioneer.BotType
+import pioneer.Bot
+import pioneer.hardware.Camera
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
 import pioneer.opmodes.BaseOpMode
 
 @TeleOp(name = "Obelisk Test")
-class ObeliskTest : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
+class ObeliskTest : BaseOpMode() {
     private var alliance = AllianceColor.BLUE
 
+    private val processor = Camera.createAprilTagProcessor()
+
     override fun onInit() {
+        bot = Bot.builder().build()
+
         telemetry.addData("Instructions", "D-pad Up=Blue, Down=Red")
         telemetry.addData("Alliance", alliance)
         telemetry.update()
@@ -30,7 +35,7 @@ class ObeliskTest : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
     }
 
     private fun displayAllDetections() {
-        val detections = bot.aprilTagProcessor.detections
+        val detections = processor.detections
         telemetry.addData("Tags Detected", detections.size)
 
         if (detections.isEmpty()) {
@@ -57,7 +62,7 @@ class ObeliskTest : BaseOpMode(BotType.GOBILDA_STARTER_BOT) {
     }
 
     private fun findMotif() {
-        val detections = bot.aprilTagProcessor.detections
+        val detections = processor.detections
         val motif = Obelisk.detectMotif(detections, alliance)
 
         if (motif != null && motif.isValid()) {

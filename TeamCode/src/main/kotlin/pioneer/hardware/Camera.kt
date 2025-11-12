@@ -13,12 +13,13 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.constants.HardwareNames
+import pioneer.constants.Camera as CameraConstants
 import kotlin.jvm.java
 
 class Camera(
     private val hardwareMap: HardwareMap,
-    private val name: String = HardwareNames.WEBCAM,
-    private val processors: Array<VisionProcessor> = emptyArray(),
+    private val cameraName: String = HardwareNames.WEBCAM,
+    val processors: Array<VisionProcessor> = emptyArray(),
 ) : HardwareComponent {
 
     override val name = "Camera"
@@ -29,7 +30,7 @@ class Camera(
        portal =
         VisionPortal
             .Builder()
-            .setCamera(hardwareMap.get(WebcamName::class.java, name))
+            .setCamera(hardwareMap.get(WebcamName::class.java, cameraName))
             .setCameraResolution(Size(640, 480))
             .enableLiveView(true)
             .apply {
@@ -40,7 +41,7 @@ class Camera(
     }
 
     // Helper function to get a specific processor by type
-    inline fun <reified T : VisionProcessor> getProcessor(): T? = processors.filterIsInstance<T>().firstOrNull()
+    private inline fun <reified T : VisionProcessor> getProcessor(): T? = processors.filterIsInstance<T>().firstOrNull()
 
     fun close() {
         portal.close()
@@ -53,32 +54,27 @@ class Camera(
             distanceUnit: DistanceUnit = DistanceUnit.CM,
             angleUnit: AngleUnit = AngleUnit.RADIANS,
             draw: Boolean = false,
-        ): VisionProcessor {
-            fun createAprilTagProcessor(
-                position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0, 0),
-                orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0),
-            ): VisionProcessor {
-                private val library: AprilTagLibrary =
-                    AprilTagLibrary
-                        .Builder()
-                        .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
-                        .build()
+        ): AprilTagProcessor {
+            val library: AprilTagLibrary =
+                AprilTagLibrary
+                    .Builder()
+                    .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
+                    .build()
 
-                override val processor: AprilTagProcessor =
-                    AprilTagProcessor
-                        .Builder()
-                        .setTagLibrary(library)
-                        .setCameraPose(position, orientation)
-                        .setLensIntrinsics(Camera.fx, Camera.fy, Camera.cx, Camera.cy)
-                        .setOutputUnits(distanceUnit, angleUnit)
-                        .setDrawTagID(draw)
-                        .setDrawTagOutline(draw)
-                        .setDrawAxes(draw)
-                        .setDrawCubeProjection(draw)
-                        .build()
+            val processor: AprilTagProcessor =
+                AprilTagProcessor
+                    .Builder()
+                    .setTagLibrary(library)
+                    .setCameraPose(position, orientation)
+                    .setLensIntrinsics(CameraConstants.fx, CameraConstants.fy, CameraConstants.cx, CameraConstants.cy)
+                    .setOutputUnits(distanceUnit, angleUnit)
+                    .setDrawTagID(draw)
+                    .setDrawTagOutline(draw)
+                    .setDrawAxes(draw)
+                    .setDrawCubeProjection(draw)
+                    .build()
 
-                return processor
-            }
+            return processor
         }
     }
 }

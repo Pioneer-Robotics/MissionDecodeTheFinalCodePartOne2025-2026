@@ -3,8 +3,11 @@ package pioneer.opmodes
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
+import pioneer.hardware.MecanumBase
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
+import pioneer.localization.Localizer
+import pioneer.localization.localizers.Pinpoint
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode : OpMode() {
@@ -41,7 +44,9 @@ abstract class BaseOpMode : OpMode() {
         onLoop()
 
         // Update path follower
-        bot.follower.update(dt)
+        if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
+            bot.follower.update(dt)
+        }
 
         // Automatically handle telemetry updates
         updateTelemetry()

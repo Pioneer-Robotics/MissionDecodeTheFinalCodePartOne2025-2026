@@ -137,6 +137,7 @@ object Camera {
     const val fy = 962.92
     const val cx = 330.05
     const val cy = 186.05
+
     val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
 
     val POSITION_CM: Position
