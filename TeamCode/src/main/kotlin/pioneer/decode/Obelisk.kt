@@ -24,6 +24,7 @@ class Obelisk {
                 when (alliance) {
                     AllianceColor.BLUE -> validTags.maxByOrNull { it.ftcPose.x }?.id
                     AllianceColor.RED -> validTags.minByOrNull { it.ftcPose.x }?.id
+                    AllianceColor.NONE -> null
                 }
             return motifTagId?.let { Motif(it) }
         }
