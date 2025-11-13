@@ -5,7 +5,7 @@ import com.acmerobotics.dashboard.FtcDashboard
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
-import pioneer.BotType
+import pioneer.hardware.MecanumBase
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.general.Period
@@ -15,13 +15,11 @@ import pioneer.helpers.OpModeDataTransfer.OMDT
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode(
-    private val botType: BotType = BotType.BASIC_MECANUM_BOT,
     private val period: Period = Period.NONE,
     private val allianceColor: AllianceColor = AllianceColor.NONE
 ) : OpMode() {
     // Bot instance
     protected lateinit var bot: Bot
-        private set // Prevent external modification
 
     // Telemetry packet for dashboard
     protected var telemetryPacket = TelemetryPacket()
@@ -36,8 +34,11 @@ abstract class BaseOpMode(
         get() = chrono.dt
 
     final override fun init() {
-        bot = Bot(botType, hardwareMap)
         onInit() // Call user-defined init method
+        bot.initAll() // Initialize bot hardware
+        if (!::bot.isInitialized) {
+            throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
+        }
         updateTelemetry()
 
         // TODO: Finish loading OpModeDataTransfer
@@ -59,15 +60,13 @@ abstract class BaseOpMode(
 
     final override fun loop() {
         // Update bot systems
-        if (bot.botType.supportsLocalizer) {
-            bot.localizer.update(dt)
-        }
+        bot.pinpoint?.update(dt)
 
         // Call user-defined loop logic
         onLoop()
 
         // Update path follower
-        if (bot.botType.supportsLocalizer) {
+        if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
             bot.follower.update(dt)
         }
 
@@ -76,7 +75,7 @@ abstract class BaseOpMode(
     }
 
     final override fun stop() {
-        bot.mecanumBase.stop() // Ensure motors are stopped
+        bot.mecanumBase?.stop() // Ensure motors are stopped
         FileLogger.flush() // Flush any logged data
         onStop() // Call user-defined stop method
         
