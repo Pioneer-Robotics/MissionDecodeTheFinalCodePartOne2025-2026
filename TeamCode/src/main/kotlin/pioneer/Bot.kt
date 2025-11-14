@@ -7,6 +7,7 @@ import pioneer.hardware.Flywheel
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.LaunchServos
 import pioneer.hardware.MecanumBase
+import pioneer.hardware.Spindexer
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
 
@@ -37,6 +38,7 @@ class Bot private constructor(
     val flywheel get() = get<Flywheel>()
     val camera get() = get<Camera>()
     val batteryMonitor get() = get<BatteryMonitor>()
+    val spindexer get() = get<Spindexer>()
 
     // Follower is lazily initialized (only if accessed)
     // and will error if localizer or mecanumBase is missing

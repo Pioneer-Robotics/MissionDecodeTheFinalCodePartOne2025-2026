@@ -164,5 +164,4 @@ class SpinDexer(private val maxSize: Int? = null, private val initialItems: List
         }
         return "SpinDexer[${items.joinToString(", ")}]"
     }
-
 }
