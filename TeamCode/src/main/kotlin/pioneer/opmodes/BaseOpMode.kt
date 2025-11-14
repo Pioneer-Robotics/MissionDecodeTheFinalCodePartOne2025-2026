@@ -6,12 +6,12 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.hardware.MecanumBase
+import pioneer.localization.localizers.Pinpoint
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.general.Period
 import pioneer.general.AllianceColor
 import pioneer.helpers.OpModeDataTransfer
-import pioneer.helpers.OpModeDataTransfer.OMDT
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode(
@@ -20,7 +20,7 @@ abstract class BaseOpMode(
 ) : OpMode() {
     // Bot instance
     protected lateinit var bot: Bot
-
+    
     // Telemetry packet for dashboard
     protected var telemetryPacket = TelemetryPacket()
 
@@ -34,28 +34,30 @@ abstract class BaseOpMode(
         get() = chrono.dt
 
     final override fun init() {
-        onInit() // Call user-defined init method
-        bot.initAll() // Initialize bot hardware
-        if (!::bot.isInitialized) {
-            throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
-        }
-        updateTelemetry()
-
-        // TODO: Finish loading OpModeDataTransfer
+        // Auto-load bot in TELEOP period
         if (period == Period.TELEOP) {
             OpModeDataTransfer.loadOrNull()?.let { omdt ->
-                omdt.pose?.let { pose ->
-                    if (bot.botType.supportsLocalizer) {
-                    bot.localizer.pose = pose
-                    }
-                }
-                omdt.data["alliance"]?.let { alliance ->
-                    if (alliance is AllianceColor) {
-                    // Handle alliance color if needed
-                    }
+                // Reinitialize bot from saved object
+                omdt.bot?.let { savedBot ->
+                    bot = savedBot
+                    bot.initAll() // Re-initialize hardware
                 }
             }
         }
+        
+        // If bot wasn't loaded from OMDT, call user init
+        if (!::bot.isInitialized) {
+            onInit() // Call user-defined init method
+            if (!::bot.isInitialized) {
+                throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
+            }
+            bot.initAll() // Initialize bot hardware
+        } else {
+            // Bot was loaded, but still call onInit for any additional setup
+            onInit()
+        }
+        
+        updateTelemetry()
     }
 
     final override fun loop() {
@@ -79,18 +81,18 @@ abstract class BaseOpMode(
         FileLogger.flush() // Flush any logged data
         onStop() // Call user-defined stop method
         
-        if (period == Period.AUTO) {
-            // Save end pose to OpModeDataTransfer
-            val omdt = OMDT().apply { 
-                data["alliance"] = allianceColor
-                if (bot.botType.supportsLocalizer) {
-                    data["pose"] = bot.localizer.pose
-                }
+        // Auto-save data in AUTO period, clear in TELEOP
+        when (period) {
+            Period.AUTO -> {
+                val omdt = OpModeDataTransfer.OMDT(
+                    bot = bot,
+                )
+                OpModeDataTransfer.save(omdt)
             }
-            OpModeDataTransfer.save(omdt)
-        }
-        else if (period == Period.TELEOP) {
-            OpModeDataTransfer.clear()
+            Period.TELEOP -> {
+                OpModeDataTransfer.clear()
+            }
+            else -> { /* No data transfer for NONE */ }
         }
     }
 
