@@ -7,6 +7,7 @@ import pioneer.hardware.Flywheel
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.LaunchServos
 import pioneer.hardware.MecanumBase
+import pioneer.hardware.Turret
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
 
@@ -35,6 +36,7 @@ class Bot private constructor(
     val pinpoint get() = get<Pinpoint>()
     val launchServos get() = get<LaunchServos>()
     val flywheel get() = get<Flywheel>()
+    val turret get() = get<Turret>()
     val camera get() = get<Camera>()
     val batteryMonitor get() = get<BatteryMonitor>()
 

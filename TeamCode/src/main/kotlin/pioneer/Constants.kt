@@ -19,6 +19,7 @@ object HardwareNames {
 
     // Other motors
     const val FLYWHEEL = "flywheel"
+    const val TURRET = "turret"
 
     // Odometry
     const val ODO_LEFT = "odoLeft"
@@ -147,3 +148,6 @@ object Camera {
         get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
 }
 
+object OtherConst {
+    const val TURRET_TICKS_PER_REV = 538 * 3
+}
