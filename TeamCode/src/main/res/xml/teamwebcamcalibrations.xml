@@ -157,15 +157,23 @@
     </Camera> -->
 
     <!-- Logitech HD Webcam C270, Calibrated by Michael Gross, 2025.11.08 using OpenCV & Chessboard -->
-    <Camera vid="Logitech" pid="0x0825">
+    <!--<Camera vid="Logitech" pid="0x0825">
         <Calibration
         size="640 480"
         focalLength="955.23f, 962.92f"
         principalPoint="330.05f, 186.05f"
         distortionCoefficients="0.0573, 2.0205, -0.0331, 0.0021, -14.6155, 0, 0, 0"
         />
-    </Camera>
+    </Camera> -->
 
+    <Camera vid="Logitech" pid="0x0825">
+        <Calibration
+            size="1280 720"
+            focalLength="1910.46, 1444.38"
+            principalPoint="660.10, 279.08"
+            distortionCoefficients="0.0573, 2.0205, -0.0331, 0.0021, -14.6155, 0, 0, 0"
+            />
+    </Camera>
 
     <!-- ======================================================================================= -->
 

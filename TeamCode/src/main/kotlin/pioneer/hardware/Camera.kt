@@ -31,7 +31,8 @@ class Camera(
         VisionPortal
             .Builder()
             .setCamera(hardwareMap.get(WebcamName::class.java, cameraName))
-            .setCameraResolution(Size(640, 480))
+            .setCameraResolution(Size(1280, 720))
+            .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
             .enableLiveView(true)
             .apply {
                 if (processors.isNotEmpty()) {
@@ -53,7 +54,7 @@ class Camera(
             orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0),
             distanceUnit: DistanceUnit = DistanceUnit.CM,
             angleUnit: AngleUnit = AngleUnit.RADIANS,
-            draw: Boolean = false,
+            draw: Boolean = true,
         ): AprilTagProcessor {
             val library: AprilTagLibrary =
                 AprilTagLibrary
@@ -66,7 +67,7 @@ class Camera(
                     .Builder()
                     .setTagLibrary(library)
                     .setCameraPose(position, orientation)
-                    .setLensIntrinsics(CameraConstants.fx, CameraConstants.fy, CameraConstants.cx, CameraConstants.cy)
+//                    .setLensIntrinsics(CameraConstants.fx, CameraConstants.fy, CameraConstants.cx, CameraConstants.cy)
                     .setOutputUnits(distanceUnit, angleUnit)
                     .setDrawTagID(draw)
                     .setDrawTagOutline(draw)

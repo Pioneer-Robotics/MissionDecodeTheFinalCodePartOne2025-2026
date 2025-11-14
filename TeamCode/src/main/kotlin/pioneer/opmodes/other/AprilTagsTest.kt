@@ -1,6 +1,7 @@
 package pioneer.opmodes.other
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.hardware.Camera
@@ -20,7 +21,6 @@ class AprilTagsTest : BaseOpMode() {
     }
 
     override fun onLoop() {
-        calculateAprilTag()
         addAprilTagTelemetryData()
         fieldPosition()
     }
@@ -29,11 +29,14 @@ class AprilTagsTest : BaseOpMode() {
         val detections = processor.detections
         //TODO: Avg position if given multiple tags?
         for (detection in detections) {
-            val tagPosition = listOf(detection.metadata.fieldPosition[0], detection.metadata.fieldPosition[1], detection.metadata.fieldPosition[2])
-            val fieldPositionWithTag = listOf((tagPosition[0]+detection.ftcPose.x).toFloat(), (tagPosition[1]+detection.ftcPose.y).toFloat(), (tagPosition[1]+detection.ftcPose.z).toFloat())
+            val tagPosition = listOf(detection.metadata.fieldPosition.get(0), detection.metadata.fieldPosition.get(1), detection.metadata.fieldPosition.get(2))
+            val fieldPositionWithTag = listOf((tagPosition[0]+detection.ftcPose.x), (tagPosition[1]+detection.ftcPose.y), (tagPosition[1]+detection.ftcPose.z))
 
             telemetry.addLine("--Field Position From Tag (x, y, z): (%.2f, %.2f, %.2f)".format(fieldPositionWithTag[0], fieldPositionWithTag[1], fieldPositionWithTag[2]))
-            telemetry.addLine("--Bot Position (x, y): (%.2f, %.2f)".format(bot.pinpoint?.pose?.x, bot.pinpoint?.pose?.y))
+            telemetry.addLine("--Tag Position (x, y, z): (%.2f, %.2f, %.2f)".format(tagPosition[0], tagPosition[1], tagPosition[2]))
+            telemetry.addData("Test", detection.metadata.fieldPosition.data[0])
+
+//            telemetry.addLine("--Bot Position (x, y): (%.2f, %.2f)".format(bot.pinpoint?.pose?.x, bot.pinpoint?.pose?.y))
 
         }
     }
@@ -69,20 +72,20 @@ class AprilTagsTest : BaseOpMode() {
                         detection.ftcPose.z,
                     ),
                 )
-                telemetry.addLine(
-                    "--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(
-                        detection.ftcPose.yaw,
-                        detection.ftcPose.pitch,
-                        detection.ftcPose.roll,
-                    ),
-                )
-                telemetry.addLine(
-                    "--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(
-                        detection.ftcPose.range,
-                        detection.ftcPose.bearing,
-                        detection.ftcPose.elevation,
-                    ),
-                )
+//                telemetry.addLine(
+//                    "--Rel (Y, P, R): (%.2f, %.2f, %.2f)".format(
+//                        detection.ftcPose.yaw,
+//                        detection.ftcPose.pitch,
+//                        detection.ftcPose.roll,
+//                    ),
+//                )
+//                telemetry.addLine(
+//                    "--Rel (R, B, E): (%.2f, %.2f, %.2f)".format(
+//                        detection.ftcPose.range,
+//                        detection.ftcPose.bearing,
+//                        detection.ftcPose.elevation,
+//                    ),
+//                )
             } else {
                 telemetry.addLine("No valid AprilTag detections.")
             }
