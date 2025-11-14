@@ -9,6 +9,7 @@ import pioneer.hardware.LaunchServos
 import pioneer.hardware.MecanumBase
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
+import pioneer.vision.AprilTag
 
 enum class BotType {
     MECANUM_BOT,
@@ -68,7 +69,7 @@ class Bot private constructor(
                         .add(Pinpoint(hardwareMap))
                         .add(LaunchServos(hardwareMap))
                         .add(Flywheel(hardwareMap))
-                        .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                        .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
                         .add(BatteryMonitor(hardwareMap))
                         .build()
                 BotType.CUSTOM -> throw IllegalArgumentException("Use Bot.builder() to create a custom bot")

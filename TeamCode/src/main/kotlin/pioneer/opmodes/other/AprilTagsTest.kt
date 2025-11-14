@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
+import pioneer.vision.AprilTag
 import pioneer.hardware.Camera
 import pioneer.localization.localizers.Pinpoint
 import pioneer.opmodes.BaseOpMode
@@ -11,7 +12,7 @@ import kotlin.math.*
 
 @TeleOp(name = "April Tags Test")
 class AprilTagsTest : BaseOpMode() {
-    private val processor : AprilTagProcessor = Camera.createAprilTagProcessor()
+    private val processor : AprilTagProcessor = AprilTag(draw=true).processor
 
     override fun onInit() {
         bot = Bot.builder()
