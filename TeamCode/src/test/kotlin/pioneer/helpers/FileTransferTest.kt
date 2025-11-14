@@ -3,7 +3,6 @@ package pioneer.helpers
 import com.google.gson.Gson
 import org.junit.Test
 import org.junit.Assert.*
-import pioneer.general.AllianceColor
 
 class FileTransferTest {
 
@@ -11,42 +10,41 @@ class FileTransferTest {
 
     @Test
     fun testDataStructureCreation() {
-        // Create test data with all fields
-        val testData = OpModeDataTransfer.OMDT().apply {
-            alliance = AllianceColor.RED
-            pose = Pose(10.5, 20.3, theta = 45.0)
-            data["motifId"] = 21 // Store motif ID in data map
-            data["customValue"] = 42
-        }
+        // Create test data with bot and custom data fields
+        val testData = OpModeDataTransfer.OMDT(
+            bot = null, // Bot can't be easily mocked in unit tests
+            data = mutableMapOf(
+                "customValue" to 42,
+                "motifId" to 21,
+                "samplesScored" to 5
+            )
+        )
         
         // Verify fields
-        assertEquals("Alliance should be RED", AllianceColor.RED, testData.alliance)
-        assertNotNull("Pose should not be null", testData.pose)
-        assertEquals("Pose x should match", 10.5, testData.pose?.x ?: 0.0, 0.001)
-        assertEquals("Pose y should match", 20.3, testData.pose?.y ?: 0.0, 0.001)
-        assertEquals("Pose theta should match", 45.0, testData.pose?.theta ?: 0.0, 0.001)
-        assertEquals("Motif ID should match", 21, testData.data["motifId"])
+        assertNull("Bot should be null in this test", testData.bot)
         assertEquals("Custom value should match", 42, testData.data["customValue"])
+        assertEquals("Motif ID should match", 21, testData.data["motifId"])
+        assertEquals("Samples scored should match", 5, testData.data["samplesScored"])
     }
 
     @Test
     fun testJsonSerialization() {
-        // Create test data
-        val testData = OpModeDataTransfer.OMDT().apply {
-            alliance = AllianceColor.BLUE
-            pose = Pose(10.0, 15.0, theta = 180.0)
-            data["motifId"] = 22 // Store motif ID in data map
-            data["scoredSamples"] = 5
-        }
+        // Create test data without bot (can't serialize hardware)
+        val testData = OpModeDataTransfer.OMDT(
+            bot = null,
+            data = mutableMapOf(
+                "motifId" to 22,
+                "scoredSamples" to 5
+            )
+        )
         
         // Serialize to JSON
         val json = gson.toJson(testData)
         
         // Verify JSON contains expected data
-        assertTrue("JSON should contain alliance", json.contains("alliance"))
-        assertTrue("JSON should contain BLUE", json.contains("BLUE"))
-        assertTrue("JSON should contain pose", json.contains("pose"))
+        assertTrue("JSON should contain data", json.contains("data"))
         assertTrue("JSON should contain motifId", json.contains("motifId"))
+        assertTrue("JSON should contain timestamp", json.contains("timestamp"))
     }
 
     @Test
@@ -54,15 +52,11 @@ class FileTransferTest {
         // Create JSON string manually
         val json = """
             {
+                "bot": null,
                 "timestamp": 1699800000000,
                 "data": {
-                    "alliance": "RED",
-                    "pose": {
-                        "x": 12.5,
-                        "y": 8.3,
-                        "heading": 180.0
-                    },
-                    "obeliskPattern": 2
+                    "customField": "testValue",
+                    "scoreCount": 42
                 }
             }
         """.trimIndent()
@@ -73,18 +67,21 @@ class FileTransferTest {
         // Verify
         assertNotNull("Loaded data should not be null", loaded)
         assertEquals("Timestamp should match", 1699800000000L, loaded.timestamp)
+        assertNull("Bot should be null", loaded.bot)
+        assertEquals("Custom field should match", "testValue", loaded.data["customField"])
     }
 
     @Test
     fun testRoundTripSerialization() {
-        // Create test data with pose and motif ID in data map
-        val motifId = 23
-        val original = OpModeDataTransfer.OMDT().apply {
-            alliance = AllianceColor.RED
-            pose = Pose(25.0, 30.0, theta = 270.0)
-            data["motifId"] = motifId // Store motif ID in data map
-            data["notes"] = "Test auto run"
-        }
+        // Create test data with various fields
+        val original = OpModeDataTransfer.OMDT(
+            bot = null,
+            data = mutableMapOf(
+                "motifId" to 23,
+                "notes" to "Test auto run",
+                "allianceColor" to "RED"
+            )
+        )
         
         // Serialize and deserialize
         val json = gson.toJson(original)
@@ -92,28 +89,25 @@ class FileTransferTest {
         
         // Verify all data survived the round trip
         assertNotNull("Restored data should not be null", restored)
-        assertEquals("Alliance should match", AllianceColor.RED, restored.alliance)
-        assertNotNull("Pose should not be null", restored.pose)
-        assertEquals("Pose x should match", 25.0, restored.pose?.x ?: 0.0, 0.001)
-        assertEquals("Pose y should match", 30.0, restored.pose?.y ?: 0.0, 0.001)
-        assertEquals("Pose theta should match", 270.0, restored.pose?.theta ?: 0.0, 0.001)
-        // Reconstruct Motif from stored ID: val restoredMotif = (restored.data["motifId"] as? Number)?.toInt()?.let { Motif(it) }
-        assertEquals("Motif ID should match", motifId.toDouble(), restored.data["motifId"])
+        assertNull("Bot should be null", restored.bot)
+        assertEquals("Motif ID should match", 23.0, restored.data["motifId"])
         assertEquals("Notes should match", "Test auto run", restored.data["notes"])
+        assertEquals("Alliance color should match", "RED", restored.data["allianceColor"])
     }
 
     @Test
     fun testMultipleDataTypes() {
         // Test various data types in the map
-        val testData = OpModeDataTransfer.OMDT().apply {
-            alliance = AllianceColor.BLUE
-            pose = Pose(0.0, 0.0, theta = 0.0)
-            data["intValue"] = 42
-            data["doubleValue"] = 3.14159
-            data["stringValue"] = "hello"
-            data["boolValue"] = true
-            data["obeliskPattern"] = 1
-        }
+        val testData = OpModeDataTransfer.OMDT(
+            bot = null,
+            data = mutableMapOf(
+                "intValue" to 42,
+                "doubleValue" to 3.14159,
+                "stringValue" to "hello",
+                "boolValue" to true,
+                "obeliskPattern" to 1
+            )
+        )
         
         // Serialize and deserialize
         val json = gson.toJson(testData)
@@ -139,28 +133,46 @@ class FileTransferTest {
     }
 
     @Test
-    fun testPoseWithAllScenarios() {
-        // Test different pose scenarios
-        val scenarios = listOf(
-            Pose(0.0, 0.0, theta = 0.0),              // Origin
-            Pose(-10.0, -10.0, theta = -90.0),        // Negative values
-            Pose(100.5, 200.75, theta = 359.9),       // Large values
-            Pose(1.234567, 2.345678, theta = 3.456)   // High precision
+    fun testBotFieldHandling() {
+        // Test that bot field can be null and handled properly
+        val testData = OpModeDataTransfer.OMDT(
+            bot = null,
+            data = mutableMapOf(
+                "testField" to "testValue"
+            )
         )
         
-        scenarios.forEach { testPose ->
-            val testData = OpModeDataTransfer.OMDT().apply {
-                pose = testPose
-            }
-            
-            val json = gson.toJson(testData)
-            val restored = gson.fromJson(json, OpModeDataTransfer.OMDT::class.java)
-            
-            // Verify pose survived serialization
-            assertNotNull("Restored pose should not be null", restored.pose)
-            assertEquals("Pose x should match", testPose.x, restored.pose?.x ?: 0.0, 0.001)
-            assertEquals("Pose y should match", testPose.y, restored.pose?.y ?: 0.0, 0.001)
-            assertEquals("Pose theta should match", testPose.theta, restored.pose?.theta ?: 0.0, 0.001)
-        }
+        // Serialize and deserialize
+        val json = gson.toJson(testData)
+        val restored = gson.fromJson(json, OpModeDataTransfer.OMDT::class.java)
+        
+        // Verify
+        assertNotNull("Restored data should not be null", restored)
+        assertNull("Bot should still be null", restored.bot)
+        assertEquals("Test field should survive", "testValue", restored.data["testField"])
+    }
+
+    @Test
+    fun testDataMapMutability() {
+        // Test that data map is mutable and can be modified
+        val testData = OpModeDataTransfer.OMDT()
+        
+        // Add items to map
+        testData.data["key1"] = "value1"
+        testData.data["key2"] = 123
+        testData.data["key3"] = true
+        
+        // Verify items were added
+        assertEquals("Key1 should match", "value1", testData.data["key1"])
+        assertEquals("Key2 should match", 123.0, testData.data["key2"])
+        assertEquals("Key3 should match", true, testData.data["key3"])
+        
+        // Serialize and check
+        val json = gson.toJson(testData)
+        val restored = gson.fromJson(json, OpModeDataTransfer.OMDT::class.java)
+        
+        assertEquals("Key1 should survive", "value1", restored.data["key1"])
+        assertEquals("Key2 should survive", 123.0, restored.data["key2"])
+        assertEquals("Key3 should survive", true, restored.data["key3"])
     }
 }

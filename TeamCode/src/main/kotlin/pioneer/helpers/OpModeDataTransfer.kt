@@ -3,14 +3,13 @@ package pioneer.helpers
 import com.google.gson.Gson
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.io.File
+import pioneer.Bot
 
-import pioneer.general.AllianceColor
 
 object OpModeDataTransfer {
     data class OMDT(
-        val timestamp: Long = System.currentTimeMillis(),
-        var alliance: AllianceColor? = null,
-        var pose: Pose? = null,
+        val bot: Bot? = null,
+        var timestamp: Long = System.currentTimeMillis(),
         val data: MutableMap<String, Any?> = mutableMapOf()
     )
 
