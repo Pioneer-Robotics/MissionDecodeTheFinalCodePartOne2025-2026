@@ -44,8 +44,8 @@ class Bot private constructor(
     // and will error if localizer or mecanumBase is missing
     val follower: Follower by lazy {
         Follower(
-            localizer = get<Pinpoint>()!!,
-            mecanumBase = get<MecanumBase>()!!,
+            localizer = pinpoint!!,
+            mecanumBase = mecanumBase!!,
         )
     }
 

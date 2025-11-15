@@ -92,10 +92,10 @@ object Pinpoint {
 @Config
 object Follower {
     /** The threshold in cm to consider the target reached. */
-    const val POSITION_THRESHOLD = 0.5
+    const val POSITION_TOLERANCE = 0.5
 
     /** The threshold in radians to consider the target heading reached. */
-    const val ROTATION_THRESHOLD = 0.01
+    const val ROTATION_TOLERANCE = 0.02
 
     /** The maximum drive velocity in cm per second. */
     const val MAX_DRIVE_VELOCITY = 100.0
@@ -119,6 +119,13 @@ object Follower {
     @JvmField var Y_KI = 0.0
 
     @JvmField var Y_KD = 0.0
+
+    // Theta PID coefficients for heading interpolation
+    @JvmField var THETA_KP = 4.0
+
+    @JvmField var THETA_KI = 0.0
+
+    @JvmField var THETA_KD = 0.5
 }
 
 object Camera {

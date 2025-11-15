@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.constants.Drive
 import pioneer.constants.HardwareNames
+import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import kotlin.math.abs
 import kotlin.math.sign
@@ -68,7 +69,7 @@ class MecanumBase(
         val ffY = calculateFeedforward(pose.vy, pose.ay, Drive.kV.y, Drive.kA.y, Drive.kS.y)
         val ffTheta = calculateFeedforward(pose.omega, pose.alpha, Drive.kV.theta, Drive.kA.theta, Drive.kS.theta)
 
-        val motorPowers = calculateMotorPowers(Pose(ffX, ffY, ffTheta))
+        val motorPowers = calculateMotorPowers(Pose(vx=ffX, vy=ffY, omega=ffTheta))
         motors.values.forEachIndexed { index, motor ->
             motor.power = motorPowers[index].coerceIn(-1.0, 1.0)
         }

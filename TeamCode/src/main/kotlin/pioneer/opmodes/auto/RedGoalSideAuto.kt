@@ -40,6 +40,7 @@ class RedGoalSideAuto : BaseOpMode() {
 
     override fun onInit() {
         // TODO: Change when we get new bot
+        // TODO: Move pinpoint reset into a state function
         bot = Bot.builder()
             .add(MecanumBase(hardwareMap))
             .add(Pinpoint(hardwareMap))
@@ -89,6 +90,7 @@ class RedGoalSideAuto : BaseOpMode() {
                 CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(70.0, -30.0))
                 CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(70.0, -90.0))
             }
+            bot.follower.start()
             state = State.GOTO_COLLECT
         }
     }
@@ -101,6 +103,7 @@ class RedGoalSideAuto : BaseOpMode() {
                 CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(130.0, -30.0))
                 CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(130.0, -90.0))
             }
+            bot.follower.start()
             state = State.COLLECT
         }
     }

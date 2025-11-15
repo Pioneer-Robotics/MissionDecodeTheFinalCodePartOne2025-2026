@@ -17,7 +17,7 @@ class Follower(
     private val localizer: Localizer,
     private val mecanumBase: MecanumBase,
 ) {
-    var motionProfile: MotionProfile? = null
+    private var motionProfile: MotionProfile? = null
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID =
         PIDController(
@@ -30,6 +30,13 @@ class Follower(
             kp = FollowerConstants.Y_KP,
             ki = FollowerConstants.Y_KI,
             kd = FollowerConstants.Y_KD,
+        )
+
+    private var thetaPID =
+        PIDController(
+            kp = FollowerConstants.THETA_KP,
+            ki = FollowerConstants.THETA_KI,
+            kd = FollowerConstants.THETA_KD,
         )
 
     var path: Path? = null
@@ -45,7 +52,11 @@ class Follower(
                 FileLogger.error("Follower", "No path or motion profile set")
                 return false
             }
-            return elapsedTime.seconds() > motionProfile!!.duration()
+            val targetPose = path!!.endPose
+            val withinPositionTolerance = localizer.pose.distanceTo(targetPose) < FollowerConstants.POSITION_TOLERANCE
+            val withinThetaTolerance = abs(localizer.pose.theta - targetPose.theta) < FollowerConstants.ROTATION_TOLERANCE
+            val isTimeUp = elapsedTime.seconds() > motionProfile!!.duration()
+            return withinThetaTolerance && isTimeUp // && withinPositionTolerance
             // Maybe add position or velocity tolerance
         }
 
@@ -92,7 +103,7 @@ class Follower(
                 vy = tangent.y * targetState.v,
                 ax = targetState.a * tangent.x + targetState.v.pow(2) * curvature * -tangent.y,
                 ay = targetState.a * tangent.y + targetState.v.pow(2) * curvature * tangent.x,
-                theta = localizer.pose.theta,
+                theta = pathTargetPose.theta,
             )
 
         // Calculate the position error and convert to robot-centric coordinates
@@ -100,11 +111,13 @@ class Follower(
             Pose(
                 x = targetPose.x - localizer.pose.x,
                 y = targetPose.y - localizer.pose.y,
+                theta = targetPose.theta - localizer.pose.theta
             )
 
         // Calculate the PID outputs
         val xCorrection = xPID.update(positionError.x, dt)
         val yCorrection = yPID.update(positionError.y, dt)
+        val thetaCorrection = thetaPID.update(positionError.theta, dt)
 
         // Apply corrections to velocity directly
         // Rotate to convert to robot-centric coordinates
@@ -113,6 +126,7 @@ class Follower(
                 .copy(
                     vx = targetPose.vx + xCorrection,
                     vy = targetPose.vy + yCorrection,
+                    omega = targetPose.omega + thetaCorrection
                 ).rotate(-localizer.pose.theta)
 
         FileLogger.debug("Follower", "Target pose: $targetPose")
