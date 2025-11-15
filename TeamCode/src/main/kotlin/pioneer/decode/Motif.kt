@@ -3,18 +3,14 @@ package pioneer.decode
 class Motif(
     val aprilTagId: Int,
 ) {
-    private val artifacts: List<Artifact>?
-    private var currentIndex: Int = 0
-
-    init {
-        artifacts =
-            when (aprilTagId) {
-                21 -> listOf(GreenArtifact(), PurpleArtifact(), PurpleArtifact())
-                22 -> listOf(PurpleArtifact(), GreenArtifact(), PurpleArtifact())
-                23 -> listOf(PurpleArtifact(), PurpleArtifact(), GreenArtifact())
-                else -> null
-            }
+    private val artifacts: List<Artifact>? = when (aprilTagId) {
+        21 -> listOf(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+        22 -> listOf(Artifact.PURPLE, Artifact.GREEN, Artifact.PURPLE)
+        23 -> listOf(Artifact.PURPLE, Artifact.PURPLE, Artifact.GREEN)
+        else -> null
     }
+
+    private var currentIndex: Int = 0
 
     // Returns the next artifact in the motif's sequence, cycling back to the start if needed
     fun getNextArtifact(): Artifact? {
