@@ -1,16 +1,17 @@
 package pioneer.localization
 
+import pioneer.hardware.HardwareComponent
 import pioneer.helpers.Pose
 
-interface Localizer {
+interface Localizer : HardwareComponent {
     /** Current pose of the robot */
     var pose: Pose
 
     /** Previous pose for numerical differentiation */
     var prevPose: Pose
 
-    var encoderXTicks: Int
-    var encoderYTicks: Int
+    val encoderXTicks: Int
+    val encoderYTicks: Int
 
     /**
      * Updates the pose of the robot based on sensor data
