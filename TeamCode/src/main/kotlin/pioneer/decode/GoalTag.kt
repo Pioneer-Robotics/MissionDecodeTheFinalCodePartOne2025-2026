@@ -71,32 +71,40 @@ object RedGoal : GoalTag(24, AllianceColor.RED)
  * Identifies and retrieves goal tag metadata based on tag ID.
  * @property tagId The ID of the goal AprilTag to process.
  */
-class GoalTagProcessor(
-    private val tagId: Int,
-) {
+class GoalTagProcessor {
     companion object {
         private val validTags = setOf(20, 24)
 
         fun isValidGoalTag(aprilTagId: Int): Boolean = aprilTagId in validTags
-
-        fun detectGoal(
+        
+        // Detects the goal tag based on alliance color and returns the corresponding GoalTag object.
+        fun getGoalTag(
             detections: List<AprilTagDetection>,
             alliance: AllianceColor,
-        ): GoalTagProcessor? {
-            val goalTagId =
-                when (alliance) {
-                    AllianceColor.BLUE -> 20
-                    AllianceColor.RED -> 24
-                    AllianceColor.NEUTRAL -> return null
+        ): GoalTag? {
+            val validDetections = detections.filter { it.ftcPose != null && isValidGoalTag(it.id) }
+            return when (alliance) {
+                AllianceColor.BLUE -> {
+                    validDetections
+                        .maxByOrNull { it.ftcPose.x }
+                        ?.takeIf { it.id == 20 }
+                        ?.let { BlueGoal }
                 }
 
-            return if (detections.any { it.id == goalTagId && it.ftcPose != null }) {
-                GoalTagProcessor(goalTagId)
-            } else {
-                null
+                AllianceColor.RED -> {
+                    validDetections
+                        .minByOrNull { it.ftcPose.x }
+                        ?.takeIf { it.id == 24 }
+                        ?.let { RedGoal }
+                }
+
+                AllianceColor.NEUTRAL -> {
+                    null
+                }
             }
         }
 
+        // Computes the robot's field pose based on detected goal tags.
         fun getRobotFieldPose(detections: List<AprilTagDetection>): Pose? {
             val tag =
                 detections.firstNotNullOfOrNull { detection ->
