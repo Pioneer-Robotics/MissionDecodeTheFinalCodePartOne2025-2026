@@ -43,24 +43,19 @@ object MathUtils {
         return (inch * 2.54)
     }
 
-    fun quarternionToEuler(q: Quaternion): YawPitchRollAngles {
+    fun quaternionToEuler(q: Quaternion): YawPitchRollAngles {
         val qw = q.w.toDouble()
         val qx = q.x.toDouble()
         val qy = q.y.toDouble()
         val qz = q.z.toDouble()
 
-        return YawPitchRollAngles(
-            AngleUnit.RADIANS, //Angle Unit
-            atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz)), // Yaw
-            atan2(
-                sqrt(1 + 2 * (qw * qy - qx * qz)),
-                sqrt(1 - 2 * (qw * qy - qx * qz))
-            ) - PI / 2, //Pitch
-            atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy)), //Roll
-            0 //Acquisition Time
+        val yaw = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz))
+        val pitch = atan2(
+            sqrt(1 + 2 * (qw * qy - qx * qz)),
+            sqrt(1 - 2 * (qw * qy - qx * qz))
+        ) - PI / 2
+        val roll = atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy))
 
-        )
-        //Roll
-
+        return YawPitchRollAngles(AngleUnit.RADIANS, yaw, pitch, roll, 0)
     }
 }
