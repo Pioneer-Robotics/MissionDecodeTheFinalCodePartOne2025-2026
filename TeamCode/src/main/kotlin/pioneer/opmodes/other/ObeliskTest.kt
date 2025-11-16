@@ -2,9 +2,9 @@ package pioneer.opmodes.other
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
-import pioneer.hardware.Camera
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
+import pioneer.hardware.Camera
 import pioneer.opmodes.BaseOpMode
 
 @TeleOp(name = "Obelisk Test")
