@@ -4,8 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
+import pioneer.decode.AprilTagMeta
+import pioneer.decode.AprilTagProcess
+import pioneer.decode.BlueGoalTag
 import pioneer.vision.AprilTag
 import pioneer.hardware.Camera
+import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.*
@@ -16,7 +20,7 @@ class AprilTagsTest : BaseOpMode() {
 
     override fun onInit() {
         bot = Bot.builder()
-            .add(Pinpoint(hardwareMap))
+//            .add(Pinpoint(hardwareMap))
             .add(Camera(hardwareMap, processors = arrayOf(processor)))
             .build()
     }
@@ -29,14 +33,17 @@ class AprilTagsTest : BaseOpMode() {
     private fun fieldPosition() {
         val detections = processor.detections
         //TODO: Avg position if given multiple tags?
+
         for (detection in detections) {
-            val tagPosition = listOf(detection.metadata.fieldPosition.get(0), detection.metadata.fieldPosition.get(1), detection.metadata.fieldPosition.get(2))
-            val fieldPositionWithTag = listOf((tagPosition[0]+detection.ftcPose.x), (tagPosition[1]+detection.ftcPose.y), (tagPosition[1]+detection.ftcPose.z))
 
-            telemetry.addLine("--Field Position From Tag (x, y, z): (%.2f, %.2f, %.2f)".format(fieldPositionWithTag[0], fieldPositionWithTag[1], fieldPositionWithTag[2]))
-            telemetry.addLine("--Tag Position (x, y, z): (%.2f, %.2f, %.2f)".format(tagPosition[0], tagPosition[1], tagPosition[2]))
-            telemetry.addData("Test", detection.metadata.fieldPosition.data[0])
+            val tagMetaData = AprilTagProcess(detection.id).getTag()
 
+            val tagPosition = tagMetaData?.pose
+
+            val fieldPositionWithTag = listOf((tagPosition!!.x+detection.ftcPose.x), (tagPosition!!.y+detection.ftcPose.y))
+
+            telemetry.addLine("--Field Position From Tag (x, y): (%.2f, %.2f, %.2f)".format(fieldPositionWithTag[0], fieldPositionWithTag[1]))
+            telemetry.addLine("--Tag Position (x, y): (%.2f, %.2f, %.2f)".format(tagPosition?.x, tagPosition?.y))
 //            telemetry.addLine("--Bot Position (x, y): (%.2f, %.2f)".format(bot.pinpoint?.pose?.x, bot.pinpoint?.pose?.y))
 
         }

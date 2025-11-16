@@ -1,6 +1,11 @@
 package pioneer.helpers
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Quaternion
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import kotlin.math.PI
+import kotlin.math.sqrt
+import kotlin.math.atan2
 
 object MathUtils {
     /**
@@ -32,5 +37,30 @@ object MathUtils {
 
         val step = (end - start) / (num - 1)
         return List(num) { i -> start + i * step }
+    }
+
+    fun inToCM(inch: Double): Double {
+        return (inch * 2.54)
+    }
+
+    fun quarternionToEuler(q: Quaternion): YawPitchRollAngles {
+        val qw = q.w.toDouble()
+        val qx = q.x.toDouble()
+        val qy = q.y.toDouble()
+        val qz = q.z.toDouble()
+
+        return YawPitchRollAngles(
+            AngleUnit.RADIANS, //Angle Unit
+            atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz)), // Yaw
+            atan2(
+                sqrt(1 + 2 * (qw * qy - qx * qz)),
+                sqrt(1 - 2 * (qw * qy - qx * qz))
+            ) - PI / 2, //Pitch
+            atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy)), //Roll
+            0 //Acquisition Time
+
+        )
+        //Roll
+
     }
 }
