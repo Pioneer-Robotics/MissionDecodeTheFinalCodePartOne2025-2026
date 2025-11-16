@@ -2,13 +2,12 @@ package pioneer.vision
 
 import org.firstinspires.ftc.vision.opencv.ImageRegion
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor
-import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor.Swatch
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor.Result
-
+import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor.Swatch
 
 /**
  * The PredominantColorProcessor acts like a "Color Sensor", allowing you to define a Region of Interest (ROI)
- * of the camera stream inside of which the dominant color is found. Additionally, the detected color is matched 
+ * of the camera stream inside of which the dominant color is found. Additionally, the detected color is matched
  * to one of the Swatches specified by the user as a "best guess" at the general shade of the color.
  */
 class PredominantColor(

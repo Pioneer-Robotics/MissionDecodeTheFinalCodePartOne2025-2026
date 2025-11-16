@@ -11,23 +11,21 @@ import org.firstinspires.ftc.vision.opencv.ColorRange
 import org.firstinspires.ftc.vision.opencv.ImageRegion
 
 class ColorBlob(
-    targetColor: ColorRange? = null,  // null = detects ALL blobs
+    targetColor: ColorRange? = null, // null = detects ALL blobs
     draw: Boolean = false,
 ) : Processor {
     override val processor: ColorBlobLocatorProcessor =
         ColorBlobLocatorProcessor
             .Builder()
-            .apply { targetColor?.let { setTargetColorRange(it) } }  // Only set if provided
+            .apply { targetColor?.let { setTargetColorRange(it) } } // Only set if provided
             .setContourMode(ContourMode.EXTERNAL_ONLY)
-            
-            .setBlurSize(10)         // Smooth the transitions between different colors in image
-            .setDilateSize(15)       // Expand blobs to fill any divots on the edges
-            .setErodeSize(15)        // Shrink blobs back to original size
+            .setBlurSize(10) // Smooth the transitions between different colors in image
+            .setDilateSize(15) // Expand blobs to fill any divots on the edges
+            .setErodeSize(15) // Shrink blobs back to original size
             .setMorphOperationType(MorphOperationType.CLOSING)
-
             .setRoi(ImageRegion.asUnityCenterCoordinates(-0.9, 0.9, 0.9, -0.9)) // Eliminate detection near edges
             .setDrawContours(draw)
-            .setBoxFitColor(0)       // Disable the drawing of rectangles
+            .setBoxFitColor(0) // Disable the drawing of rectangles
             .setCircleFitColor(Color.rgb(255, 255, 0)) // Draw a circle
             .build()
 

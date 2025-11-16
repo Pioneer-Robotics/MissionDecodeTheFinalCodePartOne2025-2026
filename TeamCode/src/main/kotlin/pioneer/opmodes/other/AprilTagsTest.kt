@@ -10,13 +10,15 @@ import kotlin.math.*
 
 @TeleOp(name = "April Tags Test")
 class AprilTagsTest : BaseOpMode() {
-    private val processor : AprilTagProcessor = Camera.createAprilTagProcessor()
+    private val processor: AprilTagProcessor = Camera.createAprilTagProcessor()
 
     override fun onInit() {
-        bot = Bot.builder()
-            .add(Pinpoint(hardwareMap))
-            .add(Camera(hardwareMap, processors = arrayOf(processor)))
-            .build()
+        bot =
+            Bot
+                .builder()
+                .add(Pinpoint(hardwareMap))
+                .add(Camera(hardwareMap, processors = arrayOf(processor)))
+                .build()
     }
 
     override fun onLoop() {
@@ -27,16 +29,31 @@ class AprilTagsTest : BaseOpMode() {
 
     private fun fieldPosition() {
         val detections = processor.detections
-        //TODO: Avg position if given multiple tags?
+        // TODO: Avg position if given multiple tags?
         for (detection in detections) {
-            val tagPosition = listOf(detection.metadata.fieldPosition[0], detection.metadata.fieldPosition[1], detection.metadata.fieldPosition[2])
-            val fieldPositionWithTag = listOf((tagPosition[0]+detection.ftcPose.x).toFloat(), (tagPosition[1]+detection.ftcPose.y).toFloat(), (tagPosition[1]+detection.ftcPose.z).toFloat())
+            val tagPosition =
+                listOf(detection.metadata.fieldPosition[0], detection.metadata.fieldPosition[1], detection.metadata.fieldPosition[2])
+            val fieldPositionWithTag =
+                listOf(
+                    (tagPosition[0] + detection.ftcPose.x).toFloat(),
+                    (tagPosition[1] + detection.ftcPose.y).toFloat(),
+                    (
+                        tagPosition[1] +
+                            detection.ftcPose.z
+                    ).toFloat(),
+                )
 
-            telemetry.addLine("--Field Position From Tag (x, y, z): (%.2f, %.2f, %.2f)".format(fieldPositionWithTag[0], fieldPositionWithTag[1], fieldPositionWithTag[2]))
+            telemetry.addLine(
+                "--Field Position From Tag (x, y, z): (%.2f, %.2f, %.2f)".format(
+                    fieldPositionWithTag[0],
+                    fieldPositionWithTag[1],
+                    fieldPositionWithTag[2],
+                ),
+            )
             telemetry.addLine("--Bot Position (x, y): (%.2f, %.2f)".format(bot.pinpoint?.pose?.x, bot.pinpoint?.pose?.y))
-
         }
     }
+
     @Deprecated("ts sucks just use the library")
     private fun calculateAprilTag() {
         val detections = processor.detections
@@ -88,5 +105,4 @@ class AprilTagsTest : BaseOpMode() {
             }
         }
     }
-
 }

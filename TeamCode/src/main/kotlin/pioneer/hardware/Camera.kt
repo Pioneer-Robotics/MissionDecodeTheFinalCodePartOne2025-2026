@@ -13,31 +13,30 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.constants.HardwareNames
-import pioneer.constants.Camera as CameraConstants
 import kotlin.jvm.java
+import pioneer.constants.Camera as CameraConstants
 
 class Camera(
     private val hardwareMap: HardwareMap,
     private val cameraName: String = HardwareNames.WEBCAM,
     val processors: Array<VisionProcessor> = emptyArray(),
 ) : HardwareComponent {
-
     override val name = "Camera"
 
     private lateinit var portal: VisionPortal
 
     override fun init() {
-       portal =
-        VisionPortal
-            .Builder()
-            .setCamera(hardwareMap.get(WebcamName::class.java, cameraName))
-            .setCameraResolution(Size(640, 480))
-            .enableLiveView(true)
-            .apply {
-                if (processors.isNotEmpty()) {
-                    addProcessors(*processors)
-                }
-            }.build()
+        portal =
+            VisionPortal
+                .Builder()
+                .setCamera(hardwareMap.get(WebcamName::class.java, cameraName))
+                .setCameraResolution(Size(640, 480))
+                .enableLiveView(true)
+                .apply {
+                    if (processors.isNotEmpty()) {
+                        addProcessors(*processors)
+                    }
+                }.build()
     }
 
     // Helper function to get a specific processor by type
