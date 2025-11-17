@@ -72,65 +72,63 @@ object RedGoal : GoalTag(24, AllianceColor.RED)
  * @property tagId The ID of the goal AprilTag to process.
  */
 class GoalTagProcessor {
-    companion object {
-        private val validTags = setOf(20, 24)
+    private val validTags = setOf(20, 24)
 
-        fun isValidGoalTag(aprilTagId: Int): Boolean = aprilTagId in validTags
-        
-        // Detects the goal tag based on alliance color and returns the corresponding GoalTag object.
-        fun getGoalTag(
-            detections: List<AprilTagDetection>,
-            alliance: AllianceColor,
-        ): GoalTag? {
-            val validDetections = detections.filter { it.ftcPose != null && isValidGoalTag(it.id) }
-            return when (alliance) {
-                AllianceColor.BLUE -> {
-                    validDetections
-                        .maxByOrNull { it.ftcPose.x }
-                        ?.takeIf { it.id == 20 }
-                        ?.let { BlueGoal }
-                }
+    fun isValidGoalTag(aprilTagId: Int): Boolean = aprilTagId in validTags
+    
+    // Detects the goal tag based on alliance color and returns the corresponding GoalTag object.
+    fun getGoalTag(
+        detections: List<AprilTagDetection>,
+        alliance: AllianceColor,
+    ): GoalTag? {
+        val validDetections = detections.filter { it.ftcPose != null && isValidGoalTag(it.id) }
+        return when (alliance) {
+            AllianceColor.BLUE -> {
+                validDetections
+                    .maxByOrNull { it.ftcPose.x }
+                    ?.takeIf { it.id == 20 }
+                    ?.let { BlueGoal }
+            }
 
-                AllianceColor.RED -> {
-                    validDetections
-                        .minByOrNull { it.ftcPose.x }
-                        ?.takeIf { it.id == 24 }
-                        ?.let { RedGoal }
-                }
+            AllianceColor.RED -> {
+                validDetections
+                    .minByOrNull { it.ftcPose.x }
+                    ?.takeIf { it.id == 24 }
+                    ?.let { RedGoal }
+            }
 
-                AllianceColor.NEUTRAL -> {
-                    null
-                }
+            AllianceColor.NEUTRAL -> {
+                null
             }
         }
+    }
 
-        // Computes the robot's field pose based on detected goal tags.
-        fun getRobotFieldPose(detections: List<AprilTagDetection>): Pose? {
-            val tag =
-                detections.firstNotNullOfOrNull { detection ->
-                    when (detection.id) {
-                        20 -> BlueGoal
-                        24 -> RedGoal
-                        else -> null
-                    }
+    // Computes the robot's field pose based on detected goal tags.
+    fun getRobotFieldPose(detections: List<AprilTagDetection>): Pose? {
+        val tag =
+            detections.firstNotNullOfOrNull { detection ->
+                when (detection.id) {
+                    20 -> BlueGoal
+                    24 -> RedGoal
+                    else -> null
                 }
+            }
 
-            return tag?.pose?.let { tagPose ->
-                detections.firstNotNullOfOrNull { detection ->
-                    when (detection.id) {
-                        20, 24 -> {
-                            detection.ftcPose?.let { ftcPose ->
-                                Pose(
-                                    x = tagPose.x + MathUtils.inToCM(ftcPose.x.toDouble()),
-                                    y = tagPose.y + MathUtils.inToCM(ftcPose.y.toDouble()),
-                                    theta = tagPose.theta + ftcPose.yaw,
-                                )
-                            }
+        return tag?.pose?.let { tagPose ->
+            detections.firstNotNullOfOrNull { detection ->
+                when (detection.id) {
+                    20, 24 -> {
+                        detection.ftcPose?.let { ftcPose ->
+                            Pose(
+                                x = tagPose.x + MathUtils.inToCM(ftcPose.x.toDouble()),
+                                y = tagPose.y + MathUtils.inToCM(ftcPose.y.toDouble()),
+                                theta = tagPose.theta + ftcPose.yaw,
+                            )
                         }
+                    }
 
-                        else -> {
-                            null
-                        }
+                    else -> {
+                        null
                     }
                 }
             }
