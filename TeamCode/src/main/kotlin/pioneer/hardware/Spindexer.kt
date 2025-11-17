@@ -49,18 +49,31 @@ class Spindexer(
     }
 
     fun moveToNextOpenIntake(): Boolean {
-        val emptyIndex = artifacts.indexOfFirst { it == null }
-        if (emptyIndex == -1) return false
-        motorState = intakePositions[emptyIndex]
-        return true
+        artifacts.indexOfFirst { it == null }.takeIf { it != -1 }?.let {
+            motorState = intakePositions[it]
+            return true
+        }
+        return false
     }
 
-    private fun getArtifact(sensor: RevColorSensorV3): Artifact? {
-        return null
+    private fun detectArtifact(sensor: RevColorSensorV3): Artifact? {
+        val (red, blue, green, _) = listOf(sensor.red(), sensor.blue(), sensor.green(), sensor.alpha())
+
+        return when {
+            red > 200 && blue > 200 -> Artifact.PURPLE
+            green > 200 -> Artifact.GREEN
+            else -> null
+        }
     }
 
-    private fun getArtifactIntake() = getArtifact(intakeSensor)
-    private fun getArtifactOutake() = getArtifact(outakeSensor)
+    private fun currentSensor(): RevColorSensorV3 =
+        if (motorState in intakePositions) intakeSensor else outakeSensor
+
+    private fun scanArtifact(enableLight: Boolean = false): Artifact? {
+        val sensor = currentSensor()
+        sensor.enableLed(enableLight)
+        return detectArtifact(sensor).also { sensor.enableLed(false) }
+    }
 
     fun update() {
         val targetPositionTicks = (28 * 5 * 4 * motorState.radians / (2 * PI)).toInt()
