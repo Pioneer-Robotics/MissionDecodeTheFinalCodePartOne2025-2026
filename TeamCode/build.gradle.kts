@@ -13,13 +13,13 @@
 
 // ktlint configuration - plugins block must come before apply statements
 plugins {
-    id "org.jlleitschuh.gradle.ktlint" version "13.1.0"
-    id 'org.jetbrains.kotlin.android' apply false
+    id("com.android.application")
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    id("org.jetbrains.kotlin.android")
 }
 
 // Include common definitions from above.
-apply from: '../build.common.gradle'
-apply plugin: 'kotlin-android'
+apply { from("../build.common.gradle") }
 
 ktlint {
     android = true
@@ -29,45 +29,34 @@ ktlint {
     filter {
         exclude("**/build/**")
     }
-    
-    reporters {
-        reporter "plain"
-        reporter "checkstyle"
-        reporter "sarif"
-    }
-}
-
-// Skip ktlint check tasks during regular builds
-gradle.taskGraph.whenReady { graph ->
-    graph.allTasks.findAll { it.name.contains("ktlint") && it.name.contains("Check") }.each { task ->
-        task.enabled = false
-    }
 }
 
 android {
-    namespace = 'pioneer'
+    namespace = "pioneer"
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = "1.8"
     }
 
     packagingOptions {
-        jniLibs.useLegacyPackaging true
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 }
 
 dependencies {
-    implementation project(':FtcRobotController')
-    implementation libs.ftc.inspection
-    implementation libs.ftc.blocks
-    implementation libs.ftc.robotcore
-    implementation libs.ftc.robotserver
-    implementation libs.ftc.onbotjava
-    implementation libs.ftc.hardware
-    implementation libs.ftc.common
-    implementation libs.ftc.vision
-    implementation libs.androidx.appcompat
-    implementation libs.acmerobotics.dashboard
-    testImplementation libs.junit
+    implementation(project(":FtcRobotController"))
+    implementation(libs.ftc.inspection)
+    implementation(libs.ftc.blocks)
+    implementation(libs.ftc.robotcore)
+    implementation(libs.ftc.robotserver)
+    implementation(libs.ftc.onbotjava)
+    implementation(libs.ftc.hardware)
+    implementation(libs.ftc.common)
+    implementation(libs.ftc.vision)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.acmerobotics.dashboard)
+    testImplementation(libs.junit)
 }
 
 //kotlin {

@@ -85,3 +85,6 @@ lint/tmp/
 
 # Others
 .venv
+
+# Kotlin compiler temp files
+.kotlin/
