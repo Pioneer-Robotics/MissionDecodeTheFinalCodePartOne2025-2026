@@ -73,6 +73,12 @@ class Spindexer(
     val isFull: Boolean
         get() = !artifacts.contains(null)
 
+    val motorCurrentTicks: Int // Avoid confusing with MotorPosition enum (not called motorPosition)
+        get() = motor.currentPosition
+
+    val motorTargetTicks: Int
+        get() = motor.targetPosition
+
     override fun init() {
         motor = hardwareMap.get(DcMotorEx::class.java, motorName)
         intakeSensor = hardwareMap.get(RevColorSensorV3::class.java, intakeSensorName)

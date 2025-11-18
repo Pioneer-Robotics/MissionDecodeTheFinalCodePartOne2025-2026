@@ -34,7 +34,7 @@ class SpindexerTest : BaseOpMode() {
         bot.spindexer!!.update()
 
         telemetry.addData("Spindexer Position", bot.spindexer!!.motorState.toString())
-        telemetry.addData("Motor Ticks", bot.spindexer!!.motor.currentPosition)
-        telemetry.addData("Target Ticks", bot.spindexer!!.motor.targetPosition)
+        telemetry.addData("Motor Ticks", bot.spindexer!!.motorCurrentTicks)
+        telemetry.addData("Target Ticks", bot.spindexer!!.motorTargetTicks)
     }
 }
