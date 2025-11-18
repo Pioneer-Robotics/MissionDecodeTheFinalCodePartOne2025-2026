@@ -155,6 +155,6 @@ object Camera {
         get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
 }
 
-object OtherConst {
-    const val TURRET_TICKS_PER_REV = 538 * 3
+object Turret {
+    const val TICKS_PER_REV = 538 * 3
 }
