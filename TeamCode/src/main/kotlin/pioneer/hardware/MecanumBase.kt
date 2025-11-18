@@ -14,7 +14,6 @@ class MecanumBase(
     private val hardwareMap: HardwareMap,
     private val motorConfig: Map<String, DcMotorSimple.Direction> = Drive.MOTOR_CONFIG,
 ) : HardwareComponent {
-    override val name = "MecanumBase"
 
     private lateinit var motors: Map<String, DcMotorEx>
 

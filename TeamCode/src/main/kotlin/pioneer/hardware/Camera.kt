@@ -22,8 +22,6 @@ class Camera(
     val processors: Array<VisionProcessor> = emptyArray(),
 ) : HardwareComponent {
 
-    override val name = "Camera"
-
     private lateinit var portal: VisionPortal
 
     override fun init() {

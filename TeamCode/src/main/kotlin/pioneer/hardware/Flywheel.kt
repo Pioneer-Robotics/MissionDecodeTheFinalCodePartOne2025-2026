@@ -10,7 +10,6 @@ class Flywheel(
     private val hardwareMap: HardwareMap,
     private val motorName: String = HardwareNames.FLYWHEEL,
 ) : HardwareComponent {
-    override val name = "Flywheel"
 
     private lateinit var flywheel: DcMotorEx
 

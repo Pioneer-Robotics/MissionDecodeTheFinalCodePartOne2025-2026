@@ -10,7 +10,6 @@ class LaunchServos(
     private val leftName: String = HardwareNames.LAUNCH_SERVO_L,
     private val rightName: String = HardwareNames.LAUNCH_SERVO_R,
 ) : HardwareComponent {
-    override val name = "LaunchServos"
 
     private lateinit var servo1: CRServo
     private lateinit var servo2: CRServo
