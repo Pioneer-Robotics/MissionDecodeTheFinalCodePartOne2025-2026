@@ -3,7 +3,7 @@ package pioneer.opmodes.other
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
-import pioneer.decode.BlueGoal
+import pioneer.decode.GoalTag
 import pioneer.decode.GoalTagProcessor
 import pioneer.vision.AprilTag
 import pioneer.hardware.Camera
@@ -32,13 +32,13 @@ class AprilTagsTest : BaseOpMode() {
         //TODO: Avg position if given multiple tags?
 //        val goalTagProcessorInstant = GoalTagProcessor()
 
-        val tagInfo = GoalTagProcessor().getRobotFieldPose(detections)
+        val tagInfo = GoalTagProcessor.getRobotFieldPose(detections)
 
 //        val tagInfo = goalTagProcessorInstant.getRobotFieldPose()
 
         telemetry.addLine("--Field Position From Tag (x, y): (%.2f, %.2f)".format(tagInfo?.x, tagInfo?.y))
         telemetry.addData("Pose from Tag", tagInfo.toString())
-        telemetry.addData("Tag Metadata", BlueGoal.pose)
+        telemetry.addData("Tag Metadata", GoalTag.BLUE.pose)
 
 //        telemetry.addLine("--Tag Position (x, y): (%.2f, %.2f, %.2f)".format(tagInfo?.x, tagPosition?.y))
 //            telemetry.addLine("--Bot Position (x, y): (%.2f, %.2f)".format(bot.pinpoint?.pose?.x, bot.pinpoint?.pose?.y))

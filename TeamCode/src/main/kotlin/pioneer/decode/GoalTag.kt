@@ -11,26 +11,13 @@ import pioneer.helpers.Pose
 private val tagLibrary by lazy { AprilTagGameDatabase.getDecodeTagLibrary() }
 
 /**
- * Interface representing metadata for a Decode season goal AprilTag.
+ * Enum representing metadata for Decode season goal AprilTags.
  */
-interface GoalTagMetadata {
-    val name: String
-    val id: Int
-    val alliance: AllianceColor
-    val pose: Pose
-    val height: Double
-    val shootingOffset: Pose
-}
+enum class GoalTag(val id: Int, val alliance: AllianceColor) {
+    BLUE(20, AllianceColor.BLUE),
+    RED(24, AllianceColor.RED);
 
-/**
- * Abstract base class for FTC Decode season goal AprilTags.
- * Automatically fetches tag data from the AprilTag game database.
- */
-sealed class GoalTag(
-    override val id: Int,
-    override val alliance: AllianceColor,
-) : GoalTagMetadata {
-    override val name: String
+    val tagName: String // Retrieves the tag-specific name
         get() = tagLibrary.lookupTag(id).name
 
     private val position: VectorF by lazy {
@@ -41,7 +28,7 @@ sealed class GoalTag(
         tagLibrary.lookupTag(id).fieldOrientation
     }
 
-    override val pose: Pose by lazy {
+    val pose: Pose by lazy {
         Pose(
             x = MathUtils.inToCM(position[1].toDouble()),
             y = MathUtils.inToCM(-position[0].toDouble()),
@@ -49,33 +36,23 @@ sealed class GoalTag(
         )
     }
 
-    override val height: Double
+    val height: Double
         get() = position[2].toDouble()
 
-    override val shootingOffset: Pose
+    val shootingOffset: Pose
         get() = Pose(y = 46.45 / 2) // Half the goal depth (46.45 cm)
+
 }
-
-/**
- * Blue alliance goal tag.
- */
-object BlueGoal : GoalTag(20, AllianceColor.BLUE)
-
-/**
- * Red alliance goal tag.
- */
-object RedGoal : GoalTag(24, AllianceColor.RED)
 
 /**
  * Processor for FTC Decode season goal AprilTags.
  * Identifies and retrieves goal tag metadata based on tag ID.
- * @property tagId The ID of the goal AprilTag to process.
  */
-class GoalTagProcessor {
-    private val validTags = setOf(20, 24)
+object GoalTagProcessor {
+    private val validTags = GoalTag.values().map { it.id }.toSet()
 
     fun isValidGoalTag(aprilTagId: Int): Boolean = aprilTagId in validTags
-    
+
     // Detects the goal tag based on alliance color and returns the corresponding GoalTag object.
     fun getGoalTag(
         detections: List<AprilTagDetection>,
@@ -86,15 +63,15 @@ class GoalTagProcessor {
             AllianceColor.BLUE -> {
                 validDetections
                     .maxByOrNull { it.ftcPose.x }
-                    ?.takeIf { it.id == 20 }
-                    ?.let { BlueGoal }
+                    ?.takeIf { it.id == GoalTag.BLUE.id }
+                    ?.let { GoalTag.BLUE }
             }
 
             AllianceColor.RED -> {
                 validDetections
                     .minByOrNull { it.ftcPose.x }
-                    ?.takeIf { it.id == 24 }
-                    ?.let { RedGoal }
+                    ?.takeIf { it.id == GoalTag.RED.id }
+                    ?.let { GoalTag.RED }
             }
 
             AllianceColor.NEUTRAL -> {
@@ -107,17 +84,13 @@ class GoalTagProcessor {
     fun getRobotFieldPose(detections: List<AprilTagDetection>): Pose? {
         val tag =
             detections.firstNotNullOfOrNull { detection ->
-                when (detection.id) {
-                    20 -> BlueGoal
-                    24 -> RedGoal
-                    else -> null
-                }
+                GoalTag.values().firstOrNull { it.id == detection.id }
             }
 
         return tag?.pose?.let { tagPose ->
             detections.firstNotNullOfOrNull { detection ->
                 when (detection.id) {
-                    20, 24 -> {
+                    GoalTag.BLUE.id, GoalTag.RED.id -> {
                         detection.ftcPose?.let { ftcPose ->
                             Pose(
                                 x = tagPose.x + MathUtils.inToCM(ftcPose.x.toDouble()),
