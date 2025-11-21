@@ -20,7 +20,6 @@ class RedGoalSideAuto : BaseOpMode() {
 
     // Main state for auto
     enum class State {
-        INIT,
         GOTO_SHOOT,
         SHOOT,
         GOTO_COLLECT,
@@ -35,7 +34,7 @@ class RedGoalSideAuto : BaseOpMode() {
         AUDIENCE,
     }
 
-    var state = State.INIT
+    var state = State.GOTO_SHOOT
     var collectState = CollectState.GOAL
 
     /* ------------------
@@ -49,12 +48,11 @@ class RedGoalSideAuto : BaseOpMode() {
             .add(MecanumBase(hardwareMap))
             .add(Pinpoint(hardwareMap))
             .build()
-        bot.pinpoint!!.reset(Pose(130.0,137.0))
+        bot.pinpoint!!.reset(P.START_GOAL)
     }
 
     override fun onLoop() {
         when (state) {
-            State.INIT->state_init()
             State.GOTO_SHOOT -> state_goto_shoot()
             State.SHOOT -> state_shoot()
             State.GOTO_COLLECT -> state_goto_collect()
@@ -74,51 +72,59 @@ class RedGoalSideAuto : BaseOpMode() {
        - STATE FUNCTIONS -
        ------------------- */
 
-    private fun state_init() {
-        bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(60.0, 60.0))
-        bot.follower.start()
-        state = State.GOTO_SHOOT
-    }
-
     private fun state_goto_shoot() {
-        if (bot.follower.done) {
+        if (bot.follower.path == null) { // Starting path
+            bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_CLOSE)
+            bot.follower.start()
+        }
+        if (bot.follower.done) { // Ending path
             state = State.SHOOT
+            bot.follower.path = null
         }
     }
 
     private fun state_shoot() { 
         // TODO: Shoot
         if (true) {
-            when (collectState) {
-                CollectState.GOAL -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(70.0, 30.0))
-                CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(70.0, -30.0))
-                CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(70.0, -90.0))
-            }
-            bot.follower.start()
             state = State.GOTO_COLLECT
         }
     }
 
     private fun state_goto_collect() {
-        if (bot.follower.done) {
-            // TODO: add speed scalar to motion profile
+        if (bot.follower.path == null) { // Starting path
             when (collectState) {
-                CollectState.GOAL -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(130.0, 30.0))
-                CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(130.0, -30.0))
-                CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(130.0, -90.0))
+                CollectState.GOAL -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL)
+                CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID)
+                CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE)
             }
             bot.follower.start()
+        }
+
+        if (bot.follower.done) { // Ending path
+            // TODO: add speed scalar to motion profile
+            bot.follower.path = null
             state = State.COLLECT
         }
     }
 
     private fun state_collect() {
         // TODO: collect
-        if (bot.follower.done) {
-            state = State.INIT
+        if (bot.follower.path == null) { // Starting path
+            when (collectState) {
+                CollectState.GOAL -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL)
+                CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID)
+                CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE)
+            }
+            bot.follower.start()
+        }
+
+        if (bot.follower.done) { // Ending path
+            state = State.GOTO_SHOOT
+            bot.follower.path = null
             when (collectState) {
                 CollectState.GOAL -> collectState = CollectState.MID
                 CollectState.MID -> collectState = CollectState.AUDIENCE
+                // TODO: Move so that audience artifacts are shot
                 CollectState.AUDIENCE -> state = State.STOP
             }
         }
