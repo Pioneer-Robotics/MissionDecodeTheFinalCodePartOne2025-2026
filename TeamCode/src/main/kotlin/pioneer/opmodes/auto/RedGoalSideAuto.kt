@@ -7,6 +7,8 @@ import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
+import pioneer.decode.Points
+import pioneer.general.AllianceColor
 
 class RedGoalSideAuto : BaseOpMode() {
 
@@ -84,7 +86,7 @@ class RedGoalSideAuto : BaseOpMode() {
         }
     }
 
-    private fun state_shoot() {
+    private fun state_shoot() { 
         // TODO: Shoot
         if (true) {
             when (collectState) {
