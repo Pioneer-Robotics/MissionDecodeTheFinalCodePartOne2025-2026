@@ -10,6 +10,8 @@ import pioneer.pathing.paths.LinearPath
 
 class RedGoalSideAuto : BaseOpMode() {
 
+
+    val P = Points(AllianceColor.RED)
     /* ----------------
        -    ENUMS     -
        ---------------- */
