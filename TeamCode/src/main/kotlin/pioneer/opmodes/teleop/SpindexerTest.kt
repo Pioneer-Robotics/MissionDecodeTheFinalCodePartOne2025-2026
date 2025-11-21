@@ -27,7 +27,7 @@ class SpindexerTest : BaseOpMode() {
     }
 
     override fun onLoop() {
-        if (gamepad1.dpad_down) bot.spindexer!!.gotoNext()
+        if (gamepad1.dpad_down) bot.spindexer!!.moveToNext()
         if (gamepad1.cross) bot.spindexer!!.moveToOutakeStart()
 
         bot.spindexer!!.update()
