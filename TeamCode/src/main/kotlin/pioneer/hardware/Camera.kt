@@ -12,13 +12,12 @@ import org.firstinspires.ftc.vision.VisionProcessor
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
-import pioneer.constants.HardwareNames
-import pioneer.constants.Camera as CameraConstants
+import pioneer.Constants
 import kotlin.jvm.java
 
 class Camera(
     private val hardwareMap: HardwareMap,
-    private val cameraName: String = HardwareNames.WEBCAM,
+    private val cameraName: String = Constants.HardwareNames.WEBCAM,
     val processors: Array<VisionProcessor> = emptyArray(),
 ) : HardwareComponent {
 
@@ -64,7 +63,7 @@ class Camera(
                     .Builder()
                     .setTagLibrary(library)
                     .setCameraPose(position, orientation)
-                    .setLensIntrinsics(CameraConstants.fx, CameraConstants.fy, CameraConstants.cx, CameraConstants.cy)
+                    .setLensIntrinsics(Constants.Camera.fx, Constants.Camera.fy, Constants.Camera.cx, Constants.Camera.cy)
                     .setOutputUnits(distanceUnit, angleUnit)
                     .setDrawTagID(draw)
                     .setDrawTagOutline(draw)

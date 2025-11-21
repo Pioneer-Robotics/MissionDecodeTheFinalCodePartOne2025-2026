@@ -11,7 +11,7 @@ import pioneer.pathing.motionprofile.MotionProfileGenerator
 import pioneer.pathing.motionprofile.MotionState
 import pioneer.pathing.paths.Path
 import kotlin.math.*
-import pioneer.constants.Follower as FollowerConstants
+import pioneer.Constants
 
 class Follower(
     private val localizer: Localizer,
@@ -21,15 +21,15 @@ class Follower(
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID =
         PIDController(
-            kp = FollowerConstants.X_KP,
-            ki = FollowerConstants.X_KI,
-            kd = FollowerConstants.X_KD,
+            kp = Constants.Follower.X_KP,
+            ki = Constants.Follower.X_KI,
+            kd = Constants.Follower.X_KD,
         )
     private var yPID =
         PIDController(
-            kp = FollowerConstants.Y_KP,
-            ki = FollowerConstants.Y_KI,
-            kd = FollowerConstants.Y_KD,
+            kp = Constants.Follower.Y_KP,
+            ki = Constants.Follower.Y_KI,
+            kd = Constants.Follower.Y_KD,
         )
 
     var path: Path? = null
@@ -146,16 +146,16 @@ class Follower(
                 // Velocity constraint based on path curvature
                 val t = s / totalDistance
                 val k = path!!.getCurvature(t)
-                val curveMaxVelocity = sqrt(FollowerConstants.MAX_CENTRIPETAL_ACCELERATION / abs(k))
+                val curveMaxVelocity = sqrt(Constants.Follower.MAX_CENTRIPETAL_ACCELERATION / abs(k))
                 if (curveMaxVelocity.isNaN()) {
-                    FollowerConstants.MAX_DRIVE_VELOCITY
+                    Constants.Follower.MAX_DRIVE_VELOCITY
                 } else {
-                    min(FollowerConstants.MAX_DRIVE_VELOCITY, curveMaxVelocity)
+                    min(Constants.Follower.MAX_DRIVE_VELOCITY, curveMaxVelocity)
                 }
             }
             val accelerationConstraint = { s: Double ->
                 // Constant acceleration constraint
-                FollowerConstants.MAX_DRIVE_ACCELERATION
+                Constants.Follower.MAX_DRIVE_ACCELERATION
             }
             motionProfile =
                 MotionProfileGenerator.generateMotionProfile(

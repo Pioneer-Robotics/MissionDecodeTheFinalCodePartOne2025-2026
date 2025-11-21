@@ -1,4 +1,4 @@
-package pioneer.constants
+package pioneer
 
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
@@ -10,140 +10,147 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import pioneer.helpers.Pose
 import kotlin.math.PI
 
-object HardwareNames {
-    // Drive motors
-    const val DRIVE_LEFT_FRONT = "driveLF"
-    const val DRIVE_LEFT_BACK = "driveLB"
-    const val DRIVE_RIGHT_FRONT = "driveRF"
-    const val DRIVE_RIGHT_BACK = "driveRB"
+object Constants {
+    object HardwareNames {
+        // Drive motors
+        const val DRIVE_LEFT_FRONT = "driveLF"
+        const val DRIVE_LEFT_BACK = "driveLB"
+        const val DRIVE_RIGHT_FRONT = "driveRF"
+        const val DRIVE_RIGHT_BACK = "driveRB"
 
-    // Other motors
-    const val FLYWHEEL = "flywheel"
+        // Other motors
+        const val FLYWHEEL = "flywheel"
 
-    // Odometry
-    const val ODO_LEFT = "odoLeft"
-    const val ODO_RIGHT = "odoRight"
-    const val ODO_CENTER = "odoCenter"
+        // Odometry
+        const val ODO_LEFT = "odoLeft"
+        const val ODO_RIGHT = "odoRight"
+        const val ODO_CENTER = "odoCenter"
 
-    // Pinpoint
-    const val PINPOINT = "pinpoint"
+        // Pinpoint
+        const val PINPOINT = "pinpoint"
 
-    // Servos
-    const val LAUNCH_SERVO_L = "launchServoL"
-    const val LAUNCH_SERVO_R = "launchServoR"
+        // Servos
+        const val LAUNCH_SERVO_L = "launchServoL"
+        const val LAUNCH_SERVO_R = "launchServoR"
 
-    // Other
-    const val WEBCAM = "Webcam 1"
+        // Other
+        const val WEBCAM = "Webcam 1"
+    }
+
+    // -------- Odometry (3-wheel) --------
+    object Odometry {
+        // geometry (cm)
+        const val TRACK_WIDTH_CM = 26.5
+        const val FORWARD_OFFSET_CM = 15.1
+        const val WHEEL_DIAMETER_CM = 4.8
+
+        // encoder
+        const val TICKS_PER_REV = 2000.0
+        const val TICKS_TO_CM = (WHEEL_DIAMETER_CM * PI) / TICKS_PER_REV
+    }
+
+    // -------- Drivebase (mecanum) --------
+    object Drive {
+        // geometry (cm)
+        const val TRACK_WIDTH_CM = 0.0
+        const val WHEEL_BASE_CM = 0.0
+
+        // limits
+        const val MAX_MOTOR_VELOCITY_TPS = 2500.0
+        const val MAX_FWD_VEL_CMPS = 150.0
+        const val MAX_STRAFE_VEL_CMPS = 125.0
+        const val DEFAULT_POWER = 0.7
+
+        // Feedforward gains using Pose(x,y,theta)
+        val kV = Pose(x = 0.006, y = 0.0052, theta = 0.025)
+        val kA = Pose(x = 0.0025, y = 0.0001, theta = 0.0)
+        val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
+
+        val MOTOR_CONFIG =
+            mapOf(
+                HardwareNames.DRIVE_LEFT_FRONT to DcMotorSimple.Direction.REVERSE,
+                HardwareNames.DRIVE_LEFT_BACK to DcMotorSimple.Direction.REVERSE,
+                HardwareNames.DRIVE_RIGHT_FRONT to DcMotorSimple.Direction.FORWARD,
+                HardwareNames.DRIVE_RIGHT_BACK to DcMotorSimple.Direction.FORWARD,
+            )
+    }
+
+    // -------- Pinpoint (odometry pods) --------
+    object Pinpoint {
+        // offsets from tracking point (mm): +forward, +left
+        const val Y_POD_OFFSET_MM = -107.0
+        const val X_POD_OFFSET_MM = 125.0
+
+        // encoder configuration. Y should increase left, X should increase forward
+        val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
+        val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
+
+        val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
+    }
+
+    // -------- Follower (path following) --------
+    @Config
+    object Follower {
+        /** The threshold in cm to consider the target reached. */
+        const val POSITION_THRESHOLD = 0.5
+
+        /** The threshold in radians to consider the target heading reached. */
+        const val ROTATION_THRESHOLD = 0.01
+
+        /** The maximum drive velocity in cm per second. */
+        const val MAX_DRIVE_VELOCITY = 100.0
+
+        /** The maximum drive acceleration in cm per second squared. */
+        const val MAX_DRIVE_ACCELERATION = 50.0
+
+        /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
+        const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
+
+        // X-axis PID coefficients for the trajectory follower
+        @JvmField var X_KP = 0.0
+
+        @JvmField var X_KI = 0.0
+
+        @JvmField var X_KD = 0.0
+
+        // Y-axis PID coefficients for the trajectory follower
+        @JvmField var Y_KP = 0.0
+
+        @JvmField var Y_KI = 0.0
+
+        @JvmField var Y_KD = 0.0
+    }
+
+    object Camera {
+        // Camera position constants (cm)
+        private const val X_OFFSET_CM = 0.0
+        private const val Y_OFFSET_CM = 0.0
+        private const val Z_OFFSET_CM = 0.0
+
+        // Camera orientation constants (degrees)
+        private const val DEG_TO_RAD = PI / 180.0
+        private const val YAW_DEG = 0.0
+        private const val PITCH_DEG = 0.0
+        private const val ROLL_DEG = 0.0
+
+        //Lens Intrinsics
+        const val fx = 955.23
+        const val fy = 962.92
+        const val cx = 330.05
+        const val cy = 186.05
+
+        val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
+
+        val POSITION_CM: Position
+            get() = Position(DistanceUnit.CM, X_OFFSET_CM, Y_OFFSET_CM, Z_OFFSET_CM, 0)
+
+        val ORIENTATION_RAD: YawPitchRollAngles
+            get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
+    }
+
+    object Other {
+        // Spindexer
+        // Number of consecutive frames required to confirm sensor state change
+        const val REQUIRED_CONFIRM_FRAMES_SPINDEXER = 10
+    }
 }
-
-// -------- Odometry (3-wheel) --------
-object Odometry {
-    // geometry (cm)
-    const val TRACK_WIDTH_CM = 26.5
-    const val FORWARD_OFFSET_CM = 15.1
-    const val WHEEL_DIAMETER_CM = 4.8
-
-    // encoder
-    const val TICKS_PER_REV = 2000.0
-    const val TICKS_TO_CM = (WHEEL_DIAMETER_CM * PI) / TICKS_PER_REV
-}
-
-// -------- Drivebase (mecanum) --------
-object Drive {
-    // geometry (cm)
-    const val TRACK_WIDTH_CM = 0.0
-    const val WHEEL_BASE_CM = 0.0
-
-    // limits
-    const val MAX_MOTOR_VELOCITY_TPS = 2500.0
-    const val MAX_FWD_VEL_CMPS = 150.0
-    const val MAX_STRAFE_VEL_CMPS = 125.0
-    const val DEFAULT_POWER = 0.7
-
-    // Feedforward gains using Pose(x,y,theta)
-    val kV = Pose(x = 0.006, y = 0.0052, theta = 0.025)
-    val kA = Pose(x = 0.0025, y = 0.0001, theta = 0.0)
-    val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
-
-    val MOTOR_CONFIG =
-        mapOf(
-            HardwareNames.DRIVE_LEFT_FRONT to DcMotorSimple.Direction.REVERSE,
-            HardwareNames.DRIVE_LEFT_BACK to DcMotorSimple.Direction.REVERSE,
-            HardwareNames.DRIVE_RIGHT_FRONT to DcMotorSimple.Direction.FORWARD,
-            HardwareNames.DRIVE_RIGHT_BACK to DcMotorSimple.Direction.FORWARD,
-        )
-}
-
-// -------- Pinpoint (odometry pods) --------
-object Pinpoint {
-    // offsets from tracking point (mm): +forward, +left
-    const val Y_POD_OFFSET_MM = -107.0
-    const val X_POD_OFFSET_MM = 125.0
-
-    // encoder configuration. Y should increase left, X should increase forward
-    val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
-    val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
-
-    val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
-}
-
-// -------- Follower (path following) --------
-@Config
-object Follower {
-    /** The threshold in cm to consider the target reached. */
-    const val POSITION_THRESHOLD = 0.5
-
-    /** The threshold in radians to consider the target heading reached. */
-    const val ROTATION_THRESHOLD = 0.01
-
-    /** The maximum drive velocity in cm per second. */
-    const val MAX_DRIVE_VELOCITY = 100.0
-
-    /** The maximum drive acceleration in cm per second squared. */
-    const val MAX_DRIVE_ACCELERATION = 50.0
-
-    /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
-    const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
-
-    // X-axis PID coefficients for the trajectory follower
-    @JvmField var X_KP = 0.0
-
-    @JvmField var X_KI = 0.0
-
-    @JvmField var X_KD = 0.0
-
-    // Y-axis PID coefficients for the trajectory follower
-    @JvmField var Y_KP = 0.0
-
-    @JvmField var Y_KI = 0.0
-
-    @JvmField var Y_KD = 0.0
-}
-
-object Camera {
-    // Camera position constants (cm)
-    private const val X_OFFSET_CM = 0.0
-    private const val Y_OFFSET_CM = 0.0
-    private const val Z_OFFSET_CM = 0.0
-
-    // Camera orientation constants (degrees)
-    private const val DEG_TO_RAD = PI / 180.0
-    private const val YAW_DEG = 0.0
-    private const val PITCH_DEG = 0.0
-    private const val ROLL_DEG = 0.0
-
-    //Lens Intrinsics
-    const val fx = 955.23
-    const val fy = 962.92
-    const val cx = 330.05
-    const val cy = 186.05
-
-    val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
-
-    val POSITION_CM: Position
-        get() = Position(DistanceUnit.CM, X_OFFSET_CM, Y_OFFSET_CM, Z_OFFSET_CM, 0)
-
-    val ORIENTATION_RAD: YawPitchRollAngles
-        get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
-}
-

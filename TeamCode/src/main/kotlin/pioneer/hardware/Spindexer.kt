@@ -3,6 +3,7 @@ package pioneer.hardware
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.Constants
 import pioneer.decode.Artifact
 import kotlin.math.PI
 import kotlin.math.abs
@@ -42,12 +43,8 @@ class Spindexer(
     private val outakeSensorName: String,
     private val _artifacts: Array<Artifact?> = Array(3) { null },
 ) : HardwareComponent {
-    // Indirect reference to internal artifacts array to prevent modification
-    val artifacts: Array<Artifact?>
-        get() = _artifacts
 
-    private val ticksPerRadian = (28 * 5 * 4 / (2 * PI)).toInt()
-
+    // Motor positions in radians
     enum class MotorPosition(val radians: Double) {
         INTAKE_1(0 * PI / 3),
         OUTAKE_1(1 * PI / 3),
@@ -57,20 +54,19 @@ class Spindexer(
         OUTAKE_3(5 * PI / 3);
     }
 
-    private val intakePositions =
-        listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
-    private val outakePositions =
-        listOf(MotorPosition.OUTAKE_1, MotorPosition.OUTAKE_2, MotorPosition.OUTAKE_3)
+    // Indirect reference to internal artifacts array to prevent modification
+    val artifacts: Array<Artifact?>
+        get() = _artifacts
 
-    private lateinit var motor: DcMotorEx
-    private lateinit var intakeSensor: RevColorSensor
-    private lateinit var outakeSensor: RevColorSensor
-
+    // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1
+        private set
 
+    // Getter to check if motor has reached target position
     val reachedTarget: Boolean
         get() = abs(motor.currentPosition - motor.targetPosition) <= 5
 
+    // Getters for artifact storage status
     val isFull: Boolean
         get() = !artifacts.contains(null)
 
@@ -80,11 +76,26 @@ class Spindexer(
     val numStoredArtifacts: Int
         get() = artifacts.count { it != null }
 
+    // Motor position accessors
     val motorCurrentTicks: Int
         get() = motor.currentPosition
 
     val motorTargetTicks: Int
         get() = motor.targetPosition
+
+
+    private val ticksPerRadian = (28 * 5 * 4 / (2 * PI)).toInt()
+
+    private var intakeConfirmCount = 0
+
+    private val intakePositions =
+        listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
+    private val outakePositions =
+        listOf(MotorPosition.OUTAKE_1, MotorPosition.OUTAKE_2, MotorPosition.OUTAKE_3)
+
+    private lateinit var motor: DcMotorEx
+    private lateinit var intakeSensor: RevColorSensor
+    private lateinit var outakeSensor: RevColorSensor
 
     /**
      * Returns the current sensor based on the motor position.
@@ -259,8 +270,21 @@ class Spindexer(
     /**
      * Scans and stores the artifact at the current motor position.
      */
-    private fun scanAndStoreArtifact() : Boolean {
-        storeArtifact(scanArtifact() ?: return false)
-        return true
+    private fun scanAndStoreArtifact(): Boolean {
+        val artifact = scanArtifact()
+
+        if (artifact != null) {
+            intakeConfirmCount++
+
+            if (intakeConfirmCount >= Constants.Other.REQUIRED_CONFIRM_FRAMES_SPINDEXER) {
+                storeArtifact(artifact)
+                intakeConfirmCount = 0
+                return true
+            }
+        } else {
+            intakeConfirmCount = 0
+        }
+
+        return false
     }
 }

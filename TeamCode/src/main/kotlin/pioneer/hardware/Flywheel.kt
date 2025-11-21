@@ -4,11 +4,11 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.constants.HardwareNames
+import pioneer.Constants
 
 class Flywheel(
     private val hardwareMap: HardwareMap,
-    private val motorName: String = HardwareNames.FLYWHEEL,
+    private val motorName: String = Constants.HardwareNames.FLYWHEEL,
 ) : HardwareComponent {
 
     private lateinit var flywheel: DcMotorEx
