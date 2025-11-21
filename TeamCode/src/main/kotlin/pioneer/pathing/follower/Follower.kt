@@ -46,53 +46,51 @@ class Follower(
             reset()
         }
 
-    val done: Boolean
-        get() {
-            if (motionProfile == null || path == null) {
-                FileLogger.error("Follower", "No path or motion profile set")
-                return false
-            }
-            val targetPose = path!!.endPose
-            val withinPositionTolerance = localizer.pose.distanceTo(targetPose) < FollowerConstants.POSITION_TOLERANCE
-            val withinThetaTolerance = abs(localizer.pose.theta - targetPose.theta) < FollowerConstants.ROTATION_TOLERANCE
-            val isTimeUp = elapsedTime.seconds() > motionProfile!!.duration()
-            return withinThetaTolerance && isTimeUp // && withinPositionTolerance
-            // Maybe add position or velocity tolerance
-        }
+    val done: Boolean get() {
+        // Ensure path and motion profile are set
+        val path = this.path ?: return false
+        val motionProfile = this.motionProfile ?: return false
+
+        val targetPose = path.endPose
+        val withinPositionTolerance = localizer.pose.distanceTo(targetPose) < FollowerConstants.POSITION_TOLERANCE
+        val withinThetaTolerance = abs(localizer.pose.theta - targetPose.theta) < FollowerConstants.ROTATION_TOLERANCE
+        val isTimeUp = elapsedTime.seconds() > motionProfile.duration()
+        return withinThetaTolerance && isTimeUp // Could add position tolerance here
+    }
 
     val targetState: MotionState?
         get() {
-            if (motionProfile == null) {
-                FileLogger.error("Follower", "Motion profile is not set")
-                return null
+            val motionProfile = this.motionProfile ?: return run {
+                FileLogger.error("Follower", "No motion profile set")
+                null
             }
             // Get the current time in seconds since the follower started
             val t = elapsedTime.seconds()
-            return motionProfile!![t]
+            return motionProfile[t]
         }
 
     fun update(dt: Double) {
-        if (motionProfile == null || path == null) {
-//            FileLogger.error("Follower", "No path or motion profile set")
-            return
-        }
-        // Get the time since the follower started
-        val t = elapsedTime.seconds().coerceAtMost(motionProfile!!.duration())
-        // Get the target state from the motion profile
-        val targetState = motionProfile!![t]
+        // Ensure motion profile and path are set
+        val motionProfile = this.motionProfile ?: return
+        val path = this.path ?: return
 
-        FileLogger.debug("Follower", "Target Velocity: " + targetState.v)
-        FileLogger.debug("Follower", "Target Acceleration " + targetState.a)
+        // Get the time since the follower started
+        val t = elapsedTime.seconds().coerceAtMost(motionProfile.duration())
+        // Get the target state from the motion profile
+        val targetState = motionProfile[t]
+
+//        FileLogger.debug("Follower", "Target Velocity: " + targetState.v)
+//        FileLogger.debug("Follower", "Target Acceleration " + targetState.a)
 
         // Calculate the parameter t for the path based on the target state
-        val pathT = path!!.getTFromLength(targetState.x)
+        val pathT = path.getTFromLength(targetState.x)
 
         // Get the target point, first derivative (tangent), and second derivative (acceleration) from the path
-        val pathTargetPose = path!!.getPose(pathT)
+        val pathTargetPose = path.getPose(pathT)
         val tangent =
             Pose(pathTargetPose.vx, pathTargetPose.vy) /
                 sqrt(pathTargetPose.vx * pathTargetPose.vx + pathTargetPose.vy * pathTargetPose.vy)
-        val curvature = path!!.getCurvature(pathT)
+        val curvature = path.getCurvature(pathT)
 
         // Calculate 2D target velocity and acceleration based on path derivatives
         val targetPose =
@@ -129,11 +127,8 @@ class Follower(
                     omega = targetPose.omega + thetaCorrection
                 ).rotate(-localizer.pose.theta)
 
-        FileLogger.debug("Follower", "Target pose: $targetPose")
-        FileLogger.debug("Follower", "Corrected pose: $correctedPose")
-
-        // TODO: Heading interpolation
-        // TODO: Add heading error correction
+//        FileLogger.debug("Follower", "Target pose: $targetPose")
+//        FileLogger.debug("Follower", "Corrected pose: $correctedPose")
 
         mecanumBase.setDriveVA(correctedPose)
     }
@@ -151,35 +146,35 @@ class Follower(
         calculateMotionProfile()
     }
 
-    private fun calculateMotionProfile() {
-        if (path != null) {
-            val totalDistance = path!!.getLength()
-            val startState = MotionState(0.0, 0.0, 0.0)
-            val endState = MotionState(totalDistance, 0.0, 0.0)
-            val velocityConstraint = { s: Double ->
-                // Velocity constraint based on path curvature
-                val t = s / totalDistance
-                val k = path!!.getCurvature(t)
-                val curveMaxVelocity = sqrt(FollowerConstants.MAX_CENTRIPETAL_ACCELERATION / abs(k))
-                if (curveMaxVelocity.isNaN()) {
-                    FollowerConstants.MAX_DRIVE_VELOCITY
-                } else {
-                    min(FollowerConstants.MAX_DRIVE_VELOCITY, curveMaxVelocity)
-                }
-            }
-            val accelerationConstraint = { s: Double ->
-                // Constant acceleration constraint
-                FollowerConstants.MAX_DRIVE_ACCELERATION
-            }
-            motionProfile =
-                MotionProfileGenerator.generateMotionProfile(
-                    startState,
-                    endState,
-                    velocityConstraint,
-                    accelerationConstraint,
-                )
+    private fun calculateVelocityConstraint(s: Double, path: Path): Double {
+        val t = s / path.getLength()
+        val k = path.getCurvature(t)
+        val curveMaxVelocity = sqrt(FollowerConstants.MAX_CENTRIPETAL_ACCELERATION / abs(k))
+        return if (curveMaxVelocity.isNaN()) {
+            FollowerConstants.MAX_DRIVE_VELOCITY
         } else {
-            motionProfile = null
+            min(FollowerConstants.MAX_DRIVE_VELOCITY, curveMaxVelocity)
         }
+    }
+
+    private fun calculateMotionProfile() {
+        val path = this.path ?: return run { motionProfile = null }
+        val totalDistance = path.getLength()
+        val startState = MotionState(0.0, 0.0, 0.0)
+        val endState = MotionState(totalDistance, 0.0, 0.0)
+        val velocityConstraint = { s: Double ->
+            calculateVelocityConstraint(s, path)
+        }
+        val accelerationConstraint = { s: Double ->
+            // Constant acceleration constraint
+            FollowerConstants.MAX_DRIVE_ACCELERATION
+        }
+        motionProfile =
+            MotionProfileGenerator.generateMotionProfile(
+                startState,
+                endState,
+                velocityConstraint,
+                accelerationConstraint,
+            )
     }
 }
