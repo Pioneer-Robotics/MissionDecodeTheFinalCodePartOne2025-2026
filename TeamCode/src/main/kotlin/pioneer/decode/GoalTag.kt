@@ -122,7 +122,7 @@ class GoalTagProcessor {
                             Pose(
                                 x = tagPose.x + MathUtils.inToCM(ftcPose.x.toDouble()),
                                 y = tagPose.y + MathUtils.inToCM(ftcPose.y.toDouble()),
-                                theta = tagPose.theta + ftcPose.yaw,
+                                theta = tagPose.theta + ftcPose.bearing,
                             )
                         }
                     }
