@@ -2,11 +2,8 @@ package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import pioneer.decode.Artifact
 import pioneer.decode.Motif
 import kotlin.math.PI
@@ -70,13 +67,19 @@ class Spindexer(
         listOf(MotorPosition.OUTAKE_1, MotorPosition.OUTAKE_2, MotorPosition.OUTAKE_3)
 
     private lateinit var motor: DcMotorEx
-    private lateinit var intakeSensor: NormalizedColorSensor
-    private lateinit var outakeSensor: NormalizedColorSensor
+    private lateinit var intakeSensor: RevColorSensor
+    private lateinit var outakeSensor: RevColorSensor
 
     var motorState: MotorPosition = MotorPosition.INTAKE_1
 
     val isFull: Boolean
         get() = !artifacts.contains(null)
+
+    val isEmpty: Boolean
+        get() = artifacts.all { it == null }
+
+    val numStoredArtifacts: Int
+        get() = artifacts.count { it != null }
 
     val motorCurrentTicks: Int
         get() = motor.currentPosition
@@ -87,7 +90,7 @@ class Spindexer(
     /**
      * Returns the current sensor based on the motor position.
      */
-    private val currentSensor: NormalizedColorSensor
+    private val currentSensor: RevColorSensor
         get() = if (motorState in intakePositions) intakeSensor else outakeSensor
 
     /**
@@ -104,8 +107,8 @@ class Spindexer(
 
     override fun init() {
         motor = hardwareMap.get(DcMotorEx::class.java, motorName)
-        intakeSensor = hardwareMap.get(NormalizedColorSensor::class.java, intakeSensorName)
-        outakeSensor = hardwareMap.get(NormalizedColorSensor::class.java, outakeSensorName)
+        intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
+        outakeSensor = RevColorSensor(hardwareMap, outakeSensorName).apply { init() }
 
         intakeSensor.gain = 1.0f
         outakeSensor.gain = 1.0f
@@ -114,7 +117,12 @@ class Spindexer(
     }
 
     /**
-     * Checks if the artifacts match the motif starting from a given index with an offset.
+     * Determines if the artifacts in the spindexer match the motif pattern, starting from a given index.
+     * The comparison accounts for a circular pattern and allows an optional offset in the motif.
+     *
+     * @param startIndex The index in the artifacts array to start the comparison.
+     * @param offset An optional offset to apply to the motif pattern during comparison.
+     * @return True if the artifacts match the motif pattern, false otherwise.
      */
     private fun matchesPattern(startIndex: Int, offset: Int): Boolean {
         for (i in motif.indices) {
@@ -146,16 +154,11 @@ class Spindexer(
     /**
      * Detects the artifact based on color and distance readings from the sensor.
      */
-    private fun detectArtifact(sensor: NormalizedColorSensor): Artifact? {
-        val (red, blue, green) = listOf(
-            sensor.normalizedColors.red * 255,
-            sensor.normalizedColors.blue * 255,
-            sensor.normalizedColors.green * 255,
-        )
-        val distance = (sensor as DistanceSensor).getDistance(DistanceUnit.CM)
+    private fun detectArtifact(sensor: RevColorSensor): Artifact? {
+        val (red, green, blue) = sensor.getNormalizedRGB()
+        val distance = sensor.getDistance()
 
-        telemetry.addData("Distance", distance)
-        telemetry.addData("RGB", "$red, $blue, $green")
+        telemetry.addData("Sensor: ", currentSensor.toString())
 
         return when {
             distance > 7.0 -> null
@@ -174,23 +177,28 @@ class Spindexer(
     }
 
     /**
-     * Finds the starting index in artifacts that matches the motif pattern with an optional offset.
+     * Finds the starting index in the artifacts array that matches the motif pattern, considering an optional offset.
+     * If no match is found, returns the index of the first non-null artifact or 0 if all are null.
+     *
+     * @param offset An optional offset to apply to the motif pattern during comparison.
+     * @return The starting index of the matching pattern, or the first non-null artifact index, or 0.
      */
     private fun findStartingPatternIndex(offset: Int = 0): Int? {
+        // If motif is empty (No discovered pattern), return first non-null artifact index
         if (motif.isEmpty()) {
             return artifacts.indexOfFirst { it != null }.takeIf { it != -1 }
         }
 
-        for (startIndex in artifacts.indices) {
-            if (matchesPattern(startIndex, offset)) {
-                return startIndex
-            }
+        // Check each index for a matching pattern, considering the circular nature            
+        artifacts.indices.forEach { startIndex ->
+            if (matchesPattern(startIndex, offset)) return startIndex
         }
+
         return artifacts.indexOfFirst { it != null }.takeIf { it != -1 } ?: 0
     }
 
     /**
-     * Aligns the spindexer to the starting position of the motif pattern.
+     * Switches the motor state between intake and outake mode at the current position index.
      */
     fun switchMode() {
         val index = positionIndex ?: return
@@ -202,20 +210,50 @@ class Spindexer(
         }
     }
 
+    // If in intake position, go to next null intake pos
+    // If in outake position, go to next non-null outake pos
+    // return true if moved, false otherwise
+    fun moveToNext(): Boolean {
+        val index = positionIndex ?: return false
+
+        val positions = if (motorState in intakePositions) intakePositions else outakePositions
+        val condition: (Int) -> Boolean = if (motorState in intakePositions) {
+            { artifacts[it] == null }
+        } else {
+            { artifacts[it] != null }
+        }
+
+        val nextIndex = (index + 1 until positions.size).firstOrNull(condition)
+            ?: (0 until index).firstOrNull(condition)
+            ?: return false
+
+        motorState = positions[nextIndex]
+        return true
+    }
+
+    private fun runMotorToState(power: Double = 0.2, toleranceTicks: Int = 1) {
+        val targetTicks = (motorState.radians * ticksPerRadian).toInt()
+        val currentTicks = motor.currentPosition
+        val tickDifference = abs(targetTicks - currentTicks)
+
+        motor.apply {
+            if (tickDifference > toleranceTicks) {
+                targetPosition = targetTicks
+                mode = DcMotor.RunMode.RUN_TO_POSITION
+                this.power = power
+            } else {
+                this.power = 0.0
+                mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            }
+        }
+    }
+
     /**
      * Updates the motor position to match the desired motor state.
      * Checks for new artifacts if in an intake position.
      */
     fun update() {
-        val targetPositionTicks = (motorState.radians * ticksPerRadian).toInt()
-        if (abs(targetPositionTicks - motor.currentPosition) > 1) {
-            motor.targetPosition = targetPositionTicks
-            motor.mode = DcMotor.RunMode.RUN_TO_POSITION
-            motor.power = 0.2
-        } else {
-            motor.power = 0.0
-            motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        }
+        runMotorToState()
         if (motorState in intakePositions) {
             telemetry.addLine("Checking for artifact")
             if (scanAndStoreArtifact()) {
@@ -226,31 +264,14 @@ class Spindexer(
     }
 
     /**
-     * Moves the motor to the next open intake position if available.
-     * @return true if moved to the next open intake, false otherwise.
-     */
-    fun moveToNextOpenIntake(): Boolean {
-        artifacts.indexOfFirst { it == null }.takeIf { it != -1 }?.let {
-            motorState = intakePositions[it]
-            return true
-        }
-        return false
-    }
-
-    /**
      * Moves to the next outake position based on the stored artifacts and motif.
      * @return true if moved to the next outake, false otherwise.
      */
     fun moveToOutakeStart(): Boolean {
-        val startIndex: Int = findStartingPatternIndex() ?: return false
-        motorState = outakePositions[startIndex]
-        return true
-    }
-
-    fun moveToOutakeNext(): Boolean {
-        val index = positionIndex ?: return false
-        val nextIndex = (index + 1) % outakePositions.size
-        motorState = outakePositions[nextIndex]
-        return true
+        findStartingPatternIndex()?.let {
+            motorState = outakePositions[it]
+            return true
+        }
+        return false
     }
 }
