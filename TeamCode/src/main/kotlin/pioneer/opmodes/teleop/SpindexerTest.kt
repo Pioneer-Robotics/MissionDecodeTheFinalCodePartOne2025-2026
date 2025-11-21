@@ -20,21 +20,21 @@ class SpindexerTest : BaseOpMode() {
                 hardwareMap = hardwareMap,
                 motorName = "spindexerMotor",
                 intakeSensorName = "intakeSensor",
-                outakeSensorName = "outakeSensor"
+                outakeSensorName = "outakeSensor",
+                telemetry = telemetry
             ))
             .build()
     }
 
     override fun onLoop() {
-        moveSpindexerToggle.toggle(gamepad1.circle)
-        if (moveSpindexerToggle.justChanged) {
-            bot.spindexer!!.motorState = bot.spindexer!!.motorState.next()
-        }
+        if (gamepad1.dpad_down) bot.spindexer!!.moveToNextOpenIntake()
+        if (gamepad1.cross) bot.spindexer!!.moveToOutakeStart()
+        if (gamepad1.circle) bot.spindexer!!.moveToOutakeNext()
 
         bot.spindexer!!.update()
 
         telemetry.addData("Spindexer Position", bot.spindexer!!.motorState.toString())
-        telemetry.addData("Motor Ticks", bot.spindexer!!.motorCurrentTicks)
-        telemetry.addData("Target Ticks", bot.spindexer!!.motorTargetTicks)
+        telemetry.addData("Motif", bot.spindexer!!.motif.toString())
+        telemetry.addData("Artifacts", bot.spindexer!!.artifacts.contentDeepToString())
     }
 }
