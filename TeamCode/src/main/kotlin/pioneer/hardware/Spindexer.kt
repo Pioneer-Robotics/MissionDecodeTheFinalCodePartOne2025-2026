@@ -61,19 +61,10 @@ class Spindexer(
 
     // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1
-        private set(value) {
-            reachedTargetTimer.reset()
-            field = value
-        }
 
     // Getter to check if motor has reached target position
-//    val reachedTarget: Boolean
-//        get() = abs(motor.currentPosition - motor.targetPosition) <= 5
-
-    // TEMPORARY: reachedTarget using a timer for testing without motor
-    val reachedTargetTimer = ElapsedTime()
     val reachedTarget: Boolean
-        get() = reachedTargetTimer.seconds() > 1.5
+        get() = abs(motor.currentPosition - motor.targetPosition) <= 5
 
     // Getters for artifact storage status
     val isFull: Boolean

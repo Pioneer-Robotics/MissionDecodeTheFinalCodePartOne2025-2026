@@ -28,15 +28,17 @@ class RevColorSensor(
 
     var gain: Float
         get() = sensor.gain
-        set(value) { sensor.gain = value }
+        set(value) {
+            sensor.gain = value
+        }
 
     val normalizedRGBA: NormalizedRGBA
         get() {
             val colors = sensor.normalizedColors
             return NormalizedRGBA(
-                red   = colors.red * 255,
+                red = colors.red * 255,
                 green = colors.green * 255,
-                blue  = colors.blue * 255,
+                blue = colors.blue * 255,
                 alpha = colors.alpha * 255
             )
         }
@@ -71,6 +73,14 @@ class RevColorSensor(
         val (r, g, b) = normalizedRGBA
         val (h, s, v) = normalizedHSV
         val d = distance
-        return "R: %.1f G: %.1f B: %.1f H: %.1f S: %.1f V: %.1f D: %.1f cm".format(r, g, b, h, s, v, d)
+        return "R: %.1f G: %.1f B: %.1f H: %.1f S: %.1f V: %.1f D: %.1f cm".format(
+            r,
+            g,
+            b,
+            h,
+            s,
+            v,
+            d
+        )
     }
 }
