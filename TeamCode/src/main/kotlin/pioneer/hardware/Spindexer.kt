@@ -7,6 +7,7 @@ import pioneer.Constants
 import pioneer.decode.Artifact
 import kotlin.math.PI
 import kotlin.math.abs
+import com.qualcomm.robotcore.util.ElapsedTime
 
 
 
@@ -60,11 +61,19 @@ class Spindexer(
 
     // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1
-        private set
+        private set(value) {
+            reachedTargetTimer.reset()
+            field = value
+        }
 
     // Getter to check if motor has reached target position
+//    val reachedTarget: Boolean
+//        get() = abs(motor.currentPosition - motor.targetPosition) <= 5
+
+    // TEMPORARY: reachedTarget using a timer for testing without motor
+    val reachedTargetTimer = ElapsedTime()
     val reachedTarget: Boolean
-        get() = abs(motor.currentPosition - motor.targetPosition) <= 5
+        get() = reachedTargetTimer.seconds() > 1.5
 
     // Getters for artifact storage status
     val isFull: Boolean
@@ -83,10 +92,16 @@ class Spindexer(
     val motorTargetTicks: Int
         get() = motor.targetPosition
 
+    val currentScannedArtifact: Artifact?
+        get() = scanArtifact()
 
     private val ticksPerRadian = (28 * 5 * 4 / (2 * PI)).toInt()
 
-    private var intakeConfirmCount = 0
+    private val artifactVisibleTimer = ElapsedTime()
+    private val artifactLostTimer = ElapsedTime()
+
+    private var artifactSeen = false
+    private var artifactWasSeenRecently = false
 
     private val intakePositions =
         listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
@@ -255,12 +270,12 @@ class Spindexer(
      * Detects the artifact based on color and distance readings from the sensor.
      */
     private fun detectArtifact(sensor: RevColorSensor): Artifact? {
-        val (red, blue, green, alpha) = listOf(sensor.r, sensor.b, sensor.g, sensor.a)
+        val (red, blue, green, _) = listOf(sensor.r, sensor.b, sensor.g, sensor.a)
         val distance = sensor.distance
 
         // Determine artifact based on color thresholds
         return when {
-            distance > 6.0 || alpha > 200 -> null
+            distance > 6.0 -> null
             red > 40 && blue > 50 && green < blue -> Artifact.PURPLE
             green > 50 -> Artifact.GREEN
             else -> null
@@ -274,15 +289,43 @@ class Spindexer(
         val artifact = scanArtifact()
 
         if (artifact != null) {
-            intakeConfirmCount++
 
-            if (intakeConfirmCount >= Constants.Other.REQUIRED_CONFIRM_FRAMES_SPINDEXER) {
+            // If this is the first time we see it, start the visible timer
+            if (!artifactSeen) {
+                artifactVisibleTimer.reset()
+                artifactSeen = true
+            }
+
+            // Reset the lost timer because we see it
+            artifactLostTimer.reset()
+            artifactWasSeenRecently = true
+
+            // If visible long enough, confirm intake
+            if (artifactVisibleTimer.milliseconds() >= Constants.Spindexer.CONFIRM_INTAKE_MS) {
                 storeArtifact(artifact)
-                intakeConfirmCount = 0
+
+                // Reset state
+                artifactSeen = false
+                artifactWasSeenRecently = false
+
                 return true
             }
+
         } else {
-            intakeConfirmCount = 0
+            // Artifact disappeared
+
+            if (artifactWasSeenRecently) {
+                // Start loss timer if not already running
+                if (artifactLostTimer.milliseconds() == 0.0) {
+                    artifactLostTimer.reset()
+                }
+
+                // Only reset if it's gone too long
+                if (artifactLostTimer.milliseconds() > Constants.Spindexer.CONFIRM_LOSS_MS) {
+                    artifactSeen = false
+                    artifactWasSeenRecently = false
+                }
+            }
         }
 
         return false

@@ -148,9 +148,11 @@ object Constants {
             get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
     }
 
-    object Other {
-        // Spindexer
-        // Number of consecutive frames required to confirm sensor state change
-        const val REQUIRED_CONFIRM_FRAMES_SPINDEXER = 10
+    object Spindexer {
+        // TODO: Tune these values when we test on the real hardware
+        // Time required to confirm an artifact has been intaken (ms)
+        const val CONFIRM_INTAKE_MS = 1000
+        // Max time the artifact can disappear without resetting confirmation (ms)
+        const val CONFIRM_LOSS_MS = 50
     }
 }

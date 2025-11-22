@@ -29,7 +29,7 @@ class ColorSensorGain : OpMode() {
         val distance = (sensor as DistanceSensor).getDistance(DistanceUnit.CM)
 
         val artifact: Artifact? = when {
-            distance > 6.0 || alpha > 200 -> null
+            distance > 6.0 -> null
             red > 40 && blue > 50 && green < blue -> Artifact.PURPLE
             green > 50 -> Artifact.GREEN
             else -> null

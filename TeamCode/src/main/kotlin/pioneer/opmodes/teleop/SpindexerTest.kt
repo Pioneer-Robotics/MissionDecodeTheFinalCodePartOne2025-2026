@@ -35,5 +35,7 @@ class SpindexerTest : BaseOpMode() {
 
         telemetry.addData("Spindexer Position", bot.spindexer!!.motorState.toString())
         telemetry.addData("Artifacts", bot.spindexer!!.artifacts.contentDeepToString())
+        telemetry.addData("Current Scanned Artifact", bot.spindexer!!.currentScannedArtifact)
+        telemetry.addData("Reached Target", bot.spindexer!!.reachedTarget)
     }
 }
