@@ -32,6 +32,7 @@ class RedGoalSideAuto : BaseOpMode() {
         GOAL,
         MID,
         AUDIENCE,
+        DONE
     }
 
     var state = State.GOTO_SHOOT
@@ -96,6 +97,7 @@ class RedGoalSideAuto : BaseOpMode() {
                 CollectState.GOAL -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL)
                 CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID)
                 CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE)
+                CollectState.DONE -> state = State.STOP
             }
             bot.follower.start()
         }
@@ -114,6 +116,7 @@ class RedGoalSideAuto : BaseOpMode() {
                 CollectState.GOAL -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL)
                 CollectState.MID -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID)
                 CollectState.AUDIENCE -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE)
+                CollectState.DONE -> {}
             }
             bot.follower.start()
         }
@@ -124,8 +127,8 @@ class RedGoalSideAuto : BaseOpMode() {
             when (collectState) {
                 CollectState.GOAL -> collectState = CollectState.MID
                 CollectState.MID -> collectState = CollectState.AUDIENCE
-                // TODO: Move so that audience artifacts are shot
-                CollectState.AUDIENCE -> state = State.STOP
+                CollectState.AUDIENCE -> collectState = CollectState.DONE
+                CollectState.DONE -> {}
             }
         }
     }
