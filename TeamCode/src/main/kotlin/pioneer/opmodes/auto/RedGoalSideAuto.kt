@@ -12,11 +12,18 @@ import pioneer.general.AllianceColor
 
 class RedGoalSideAuto : BaseOpMode() {
 
-
     val P = Points(AllianceColor.RED)
     /* ----------------
        -    ENUMS     -
        ---------------- */
+
+    // Allows you to do some or all of the auto
+    enum class AutoOptions {
+        PRELOAD_ONLY,
+        FIRST_ROW,
+        SECOND_ROW,
+        ALL
+    }
 
     // Main state for auto
     enum class State {
@@ -35,6 +42,7 @@ class RedGoalSideAuto : BaseOpMode() {
         DONE
     }
 
+    var autoType = AutoOptions.ALL
     var state = State.GOTO_SHOOT
     var collectState = CollectState.GOAL
 
@@ -88,6 +96,26 @@ class RedGoalSideAuto : BaseOpMode() {
         // TODO: Shoot
         if (true) {
             state = State.GOTO_COLLECT
+
+            // Breakpoint for the different auto options
+            when (autoType) {
+                AutoOptions.PRELOAD_ONLY -> {
+                    if (collectState == CollectState.GOAL) {
+                        state = State.STOP
+                    }
+                }
+                AutoOptions.FIRST_ROW -> {
+                    if (collectState == CollectState.MID) {
+                        state = State.STOP
+                    }
+                }
+                AutoOptions.SECOND_ROW -> {
+                    if (collectState == CollectState.AUDIENCE) {
+                        state = State.STOP
+                    }
+                }
+                AutoOptions.ALL -> {}
+            }
         }
     }
 
