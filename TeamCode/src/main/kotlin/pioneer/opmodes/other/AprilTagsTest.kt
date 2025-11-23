@@ -47,18 +47,26 @@ class AprilTagsTest : BaseOpMode() {
 //    @Deprecated("ts sucks just use the library")
     private fun calculateAprilTag() {
         val detections = processor.detections
-        for (detection in detections) {
+        val tagInfo = GoalTagProcessor.getRobotFieldPose(detections)
+
+    for (detection in detections) {
             if (detection?.ftcPose != null) {
-                val rho = detection.ftcPose.range
-                val phi = detection.ftcPose.elevation
-                val theta = detection.ftcPose.bearing
+                val tgRelPose = detection.ftcPose
+                //Untested, but potential ways to calculate
+                val rangeShadow = cos(tgRelPose.elevation) * tgRelPose.range
+                //Method 1: Angle origin is on camera
+                //yaw+theta gives robot theta, then - bearing?
+                val insideAngle1 = (tgRelPose.yaw + tagInfo!!.theta) - tgRelPose.bearing //Not sure about signs(+/-) here
+                val dX1 = rangeShadow * sin(insideAngle1)
+                val dY1 = rangeShadow * cos(insideAngle1)
+                //Method 2: Angle origin is on AprilTag
+                val insideAngle2 = (PI/4) - tgRelPose.yaw - tgRelPose.bearing
+                val dX2 = rangeShadow * cos(insideAngle2)
+                val dy2 = rangeShadow * sin(insideAngle2)
 
-                val height = sin(phi) * rho
-                val hypotenuseXY = cos(phi) * rho
-                val dX = sin(theta) * hypotenuseXY
-                val dY = cos(theta) * hypotenuseXY
+                telemetry.addLine("--Calculated Rel M1(x, y): (%.2f, %.2f)".format(dX1, dY1))
+                telemetry.addLine("--Calculated Rel M2(x, y): (%.2f, %.2f)".format(dX2, dy2))
 
-                telemetry.addLine("--Calculated Rel (x, y, z): (%.2f, %.2f,%.2f)".format(dX, dY, height))
             }
         }
     }
@@ -69,13 +77,13 @@ class AprilTagsTest : BaseOpMode() {
             // Check if tag or its properties are null to avoid null pointer exceptions
             if (detection?.ftcPose != null) {
                 telemetry.addData("Detection", detection.id)
-                telemetry.addLine(
-                    "--Rel (x, y, z, yaw): (%.2f, %.2f, %.2f)".format(
-                        detection.ftcPose.x,
-                        detection.ftcPose.y,
-                        detection.ftcPose.z,
-                    ),
-                )
+//                telemetry.addLine(
+//                    "--Rel FTC(x, y, z, yaw): (%.2f, %.2f, %.2f)".format(
+//                        detection.ftcPose.x,
+//                        detection.ftcPose.y,
+//                        detection.ftcPose.z,
+//                    ),
+//                )
 //                telemetry.addLine(
 //                    "--Rel Rob Pose (x, y, z): (%.2f, %.2f, %.2f)".format(
 //                        detection.robotPose.position.x,
