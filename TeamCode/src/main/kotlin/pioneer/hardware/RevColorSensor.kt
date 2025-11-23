@@ -61,9 +61,9 @@ class RevColorSensor(
     val g get() = normalizedRGBA.green
     val b get() = normalizedRGBA.blue
     val a get() = normalizedRGBA.alpha
-    val h get() = normalizedHSV.hue
-    val s get() = normalizedHSV.saturation
-    val v get() = normalizedHSV.value
+    val hue get() = normalizedHSV.hue
+    val saturation get() = normalizedHSV.saturation
+    val value get() = normalizedHSV.value
 
     override fun init() {
         sensor = hardwareMap.get(NormalizedColorSensor::class.java, sensorName)

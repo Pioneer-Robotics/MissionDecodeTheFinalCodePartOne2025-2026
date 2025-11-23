@@ -3,12 +3,13 @@ package pioneer.hardware
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.Constants
 import pioneer.decode.Artifact
 import kotlin.math.PI
 import kotlin.math.abs
 import com.qualcomm.robotcore.util.ElapsedTime
-
+import pioneer.helpers.FileLogger
 
 
 /*
@@ -129,10 +130,21 @@ class Spindexer(
         intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
         outakeSensor = RevColorSensor(hardwareMap, outakeSensorName).apply { init() }
 
-        intakeSensor.gain = 3.5f
-        outakeSensor.gain = 3.5f
+        intakeSensor.gain = 20.0f
+        outakeSensor.gain = 20.0f
 
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        FileLogger.info("Spindexer", motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString())
+        motor.setPIDFCoefficients(
+            DcMotor.RunMode.RUN_USING_ENCODER,
+                PIDFCoefficients(
+                    10.0,
+                    0.0,
+                    1.0,
+                    0.0
+                )
+            )
     }
 
     /**
@@ -261,14 +273,11 @@ class Spindexer(
      * Detects the artifact based on color and distance readings from the sensor.
      */
     private fun detectArtifact(sensor: RevColorSensor): Artifact? {
-        val (red, blue, green, _) = listOf(sensor.r, sensor.b, sensor.g, sensor.a)
-        val distance = sensor.distance
-
-        // Determine artifact based on color thresholds
+        // Determine artifact based on hue thresholds
         return when {
-            distance > 6.0 -> null
-            red > 40 && blue > 50 && green < blue -> Artifact.PURPLE
-            green > 50 -> Artifact.GREEN
+            sensor.distance > 15.0 -> null
+            sensor.hue < 170 && sensor.hue > 150 -> Artifact.GREEN
+            sensor.hue < 240 && sensor.hue > 170 -> Artifact.PURPLE
             else -> null
         }
     }

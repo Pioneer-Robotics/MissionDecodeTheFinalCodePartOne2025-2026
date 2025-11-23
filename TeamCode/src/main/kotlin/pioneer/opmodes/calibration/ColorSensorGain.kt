@@ -7,31 +7,25 @@ import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import pioneer.decode.Artifact
+import pioneer.hardware.RevColorSensor
 
 @TeleOp(name = "Color Sensor Gain Calibration")
 class ColorSensorGain : OpMode() {
-    private lateinit var sensor: NormalizedColorSensor
+    private lateinit var sensor: RevColorSensor
     private val formatter = DecimalFormat("###.##")
     private var gain: Float = 3.0f
 
     override fun init() {
-        sensor = hardwareMap.get(NormalizedColorSensor::class.java, "intakeSensor")
+        sensor = RevColorSensor(hardwareMap, "intakeSensor").apply { init() }
     }
 
     override fun loop() {
-        val (red, green, blue, alpha) = listOf(
-            sensor.normalizedColors.red * 255,
-            sensor.normalizedColors.green * 255,
-            sensor.normalizedColors.blue * 255,
-            sensor.normalizedColors.alpha * 255,
-        )
-
-        val distance = (sensor as DistanceSensor).getDistance(DistanceUnit.CM)
-
         val artifact: Artifact? = when {
-            distance > 6.0 -> null
-            red > 40 && blue > 50 && green < blue -> Artifact.PURPLE
-            green > 50 -> Artifact.GREEN
+            // Purple 165-240
+            // Green 150-163
+            sensor.distance > 15.0 -> null
+            sensor.hue < 175 && sensor.hue > 150 -> Artifact.GREEN
+            sensor.hue < 240 && sensor.hue > 175 -> Artifact.PURPLE
             else -> null
         }
 
@@ -41,13 +35,7 @@ class ColorSensorGain : OpMode() {
 
         telemetry.addData("Gain", gain)
         telemetry.addData("Detected Artifact", artifact)
-        telemetry.addData("RGBA",
-            "r: ${formatter.format(red)}, " +
-                    "g: ${formatter.format(green)}, " +
-                    "b: ${formatter.format(blue)}, " +
-                    "a: ${formatter.format(alpha)}"
-        )
-        telemetry.addData("Distance", distance)
+        telemetry.addData("Sensor Data", sensor.toString())
         telemetry.update()
     }
 }
