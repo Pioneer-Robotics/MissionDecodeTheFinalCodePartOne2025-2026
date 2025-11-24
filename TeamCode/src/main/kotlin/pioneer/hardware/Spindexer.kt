@@ -246,10 +246,11 @@ class Spindexer(
     private fun switchMode() {
         val index = positionIndex ?: return
 
+        // Switch motor state to nearest opposite position
         motorState = if (motorState in intakePositions) {
-            outtakePositions[index]
+            outtakePositions[(index - 1).mod(outtakePositions.size)]
         } else {
-            intakePositions[index]
+            intakePositions[(index + 1).mod(intakePositions.size)]
         }
     }
 
