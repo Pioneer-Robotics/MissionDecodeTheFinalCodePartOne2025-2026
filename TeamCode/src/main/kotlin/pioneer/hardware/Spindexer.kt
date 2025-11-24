@@ -30,9 +30,9 @@ OUTTAKE:
 
         |
         |
-   2    *    1
+   3    *    2
       /   \
-     /  3  \
+     /  1  \
     /       \
 
 */
@@ -69,13 +69,13 @@ class Spindexer(
 
     // Getters for artifact storage status
     val isFull: Boolean
-        get() = !artifacts.contains(null)
+        get() = !_artifacts.contains(null)
 
     val isEmpty: Boolean
-        get() = artifacts.all { it == null }
+        get() = _artifacts.all { it == null }
 
     val numStoredArtifacts: Int
-        get() = artifacts.count { it != null }
+        get() = _artifacts.count { it != null }
 
     // Motor position accessors
     val motorCurrentTicks: Int
@@ -179,7 +179,7 @@ class Spindexer(
         // Already at desired outtake position
         if (motorState in outtakePositions) {
             val currentIndex = outtakePositions.indexOf(motorState)
-            if (artifact != null && artifacts[currentIndex] == artifact) return true
+            if (artifact != null && _artifacts[currentIndex] == artifact) return true
         }
 
         // If no artifact specified, move to next outtake in sequence
@@ -235,9 +235,9 @@ class Spindexer(
 
     private fun findOuttakeIndex(target: Artifact?): Int {
         return target?.let {
-            artifacts.indexOfFirst { it == target }
+            _artifacts.indexOfFirst { it == target }
                 .takeIf { it != -1 }
-        } ?: artifacts.indexOfFirst { it != null }
+        } ?: _artifacts.indexOfFirst { it != null }
     }
 
     /**
@@ -258,7 +258,7 @@ class Spindexer(
      */
     private fun storeArtifact(artifact: Artifact?) {
         val index = positionIndex ?: return
-        artifacts[index] = artifact
+        _artifacts[index] = artifact
     }
 
     /**
