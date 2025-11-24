@@ -18,7 +18,8 @@ class SpindexerTest : BaseOpMode() {
         bot = Bot.Builder()
             .add(Spindexer(
                 hardwareMap = hardwareMap,
-                motorName = "spindexerMotor",
+                servo1Name = "spindexerServo1",
+                servo2Name = "spindexerServo2",
                 intakeSensorName = "intakeSensor",
                 outtakeSensorName = "outtakeSensor",
             ))
