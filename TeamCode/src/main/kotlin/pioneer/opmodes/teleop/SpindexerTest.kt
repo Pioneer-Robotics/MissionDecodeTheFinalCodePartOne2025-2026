@@ -8,8 +8,8 @@ import pioneer.opmodes.BaseOpMode
 
 // Controls:
 // D-Pad Down: Move spindexer to next open intake position
-// Cross: Move spindexer to outake start position
-// Circle: Move spindexer to outake next position
+// Cross: Move spindexer to outtake start position
+// Circle: Move spindexer to outtake next position
 
 @TeleOp(name = "Spindexer Test")
 class SpindexerTest : BaseOpMode() {
@@ -20,15 +20,15 @@ class SpindexerTest : BaseOpMode() {
                 hardwareMap = hardwareMap,
                 motorName = "spindexerMotor",
                 intakeSensorName = "intakeSensor",
-                outakeSensorName = "outakeSensor",
+                outtakeSensorName = "outtakeSensor",
             ))
             .build()
     }
 
     override fun onLoop() {
         if (gamepad1.dpad_down) bot.spindexer!!.moveToNextOpenIntake()
-        if (gamepad1.left_bumper) bot.spindexer!!.moveToNextOutake(Artifact.GREEN)
-        if (gamepad1.right_bumper) bot.spindexer!!.moveToNextOutake(Artifact.PURPLE)
+        if (gamepad1.left_bumper) bot.spindexer!!.moveToNextOuttake(Artifact.GREEN)
+        if (gamepad1.right_bumper) bot.spindexer!!.moveToNextOuttake(Artifact.PURPLE)
         if (gamepad1.circle) bot.spindexer!!.consumeCurrentArtifact()
 
         bot.spindexer!!.update()

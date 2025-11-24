@@ -26,7 +26,7 @@ INTAKE (INITIALIZED SPINDEXER POSITION):
         |
         |
 
-OUTAKE:
+OUTTAKE:
 
         |
         |
@@ -42,18 +42,18 @@ class Spindexer(
     private val hardwareMap: HardwareMap,
     private val motorName: String,
     private val intakeSensorName: String,
-    private val outakeSensorName: String,
+    private val outtakeSensorName: String,
     private val _artifacts: Array<Artifact?> = Array(3) { null },
 ) : HardwareComponent {
 
     // Motor positions in radians
     enum class MotorPosition(val radians: Double) {
         INTAKE_1(0 * PI / 3),
-        OUTAKE_1(1 * PI / 3),
+        OUTTAKE_1(3 * PI / 3), // Shift down (+2)
         INTAKE_2(2 * PI / 3),
-        OUTAKE_2(3 * PI / 3),
+        OUTTAKE_2(5 * PI / 3), // Shift down (+2)
         INTAKE_3(4 * PI / 3),
-        OUTAKE_3(5 * PI / 3);
+        OUTTAKE_3(1 * PI / 3); // Shift down (+2) (wrapped)
     }
 
     // Indirect reference to internal artifacts array to prevent modification
@@ -97,21 +97,21 @@ class Spindexer(
 
     private val intakePositions =
         listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
-    private val outakePositions =
-        listOf(MotorPosition.OUTAKE_1, MotorPosition.OUTAKE_2, MotorPosition.OUTAKE_3)
+    private val outtakePositions =
+        listOf(MotorPosition.OUTTAKE_1, MotorPosition.OUTTAKE_2, MotorPosition.OUTTAKE_3)
 
     private lateinit var motor: DcMotorEx
     private lateinit var intakeSensor: RevColorSensor
-    private lateinit var outakeSensor: RevColorSensor
+    private lateinit var outtakeSensor: RevColorSensor
 
     /**
      * Returns the current sensor based on the motor position.
      */
     private val currentSensor: RevColorSensor
-        get() = if (motorState in intakePositions) intakeSensor else outakeSensor
+        get() = if (motorState in intakePositions) intakeSensor else outtakeSensor
 
     /**
-     * Returns the index of the current motor position in the intake/outake lists.
+     * Returns the index of the current motor position in the intake/outtake lists.
      */
     private val positionIndex: Int?
         get() {
@@ -120,7 +120,7 @@ class Spindexer(
             // Find index based on current motor state
             return when (motorState) {
                 in intakePositions -> intakePositions.indexOf(motorState)
-                in outakePositions -> outakePositions.indexOf(motorState)
+                in outtakePositions -> outtakePositions.indexOf(motorState)
                 else -> null // Safety check
             }
         }
@@ -128,10 +128,10 @@ class Spindexer(
     override fun init() {
         motor = hardwareMap.get(DcMotorEx::class.java, motorName)
         intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
-        outakeSensor = RevColorSensor(hardwareMap, outakeSensorName).apply { init() }
+        outtakeSensor = RevColorSensor(hardwareMap, outtakeSensorName).apply { init() }
 
         intakeSensor.gain = 20.0f
-        outakeSensor.gain = 20.0f
+        outtakeSensor.gain = 20.0f
 
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -169,33 +169,33 @@ class Spindexer(
     }
 
     /**
-     * Moves the motor to the next outake position in sequence.
-     * @param artifact Optional artifact to prioritize moving to its outake position.
+     * Moves the motor to the next outtake position in sequence.
+     * @param artifact Optional artifact to prioritize moving to its outtake position.
      */
-    fun moveToNextOutake(artifact: Artifact? = null): Boolean {
-        // No artifacts to outake
+    fun moveToNextOuttake(artifact: Artifact? = null): Boolean {
+        // No artifacts to outtake
         if (isEmpty) return false
 
-        // Already at desired outake position
-        if (motorState in outakePositions) {
-            val currentIndex = outakePositions.indexOf(motorState)
+        // Already at desired outtake position
+        if (motorState in outtakePositions) {
+            val currentIndex = outtakePositions.indexOf(motorState)
             if (artifact != null && artifacts[currentIndex] == artifact) return true
         }
 
-        // If no artifact specified, move to next outake in sequence
-        val nextIndex = findOutakeIndex(artifact)
+        // If no artifact specified, move to next outtake in sequence
+        val nextIndex = findOuttakeIndex(artifact)
 
-        motorState = outakePositions[nextIndex]
+        motorState = outtakePositions[nextIndex]
         return true
     }
 
     /**
-     * Consumes (removes and returns) the artifact at the current outake position.
-     * @return the consumed Artifact, or null if none present or not in outake position
+     * Consumes (removes and returns) the artifact at the current outtake position.
+     * @return the consumed Artifact, or null if none present or not in outtake position
      */
     fun consumeCurrentArtifact(): Artifact? {
-        // Only allow consumption from outake positions
-        if (motorState !in outakePositions) return null
+        // Only allow consumption from outtake positions
+        if (motorState !in outtakePositions) return null
         // Get and remove artifact at current position
         val index = positionIndex ?: return null
         val artifact = _artifacts[index]
@@ -233,7 +233,7 @@ class Spindexer(
         }
     }
 
-    private fun findOutakeIndex(target: Artifact?): Int {
+    private fun findOuttakeIndex(target: Artifact?): Int {
         return target?.let {
             artifacts.indexOfFirst { it == target }
                 .takeIf { it != -1 }
@@ -241,13 +241,13 @@ class Spindexer(
     }
 
     /**
-     * Switches the motor state between intake and outake for the current position.
+     * Switches the motor state between intake and outtake for the current position.
      */
     private fun switchMode() {
         val index = positionIndex ?: return
 
         motorState = if (motorState in intakePositions) {
-            outakePositions[index]
+            outtakePositions[index]
         } else {
             intakePositions[index]
         }
