@@ -32,6 +32,7 @@ object HardwareNames {
     // Servos
     const val LAUNCH_SERVO_L = "launchServoL"
     const val LAUNCH_SERVO_R = "launchServoR"
+    const val LAUNCH_SERVO = "launchServo"
 
     // Other
     const val WEBCAM = "Webcam 1"
@@ -157,4 +158,9 @@ object Camera {
 
 object Turret {
     const val TICKS_PER_REV = 538 * 3
+}
+
+object ServoPositions {
+    const val LAUNCHER_REST = 0.0
+    const val LAUNCHER_TRIGGERED = 1.0
 }
