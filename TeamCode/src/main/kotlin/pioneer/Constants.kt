@@ -1,4 +1,4 @@
-package pioneer.constants
+package pioneer
 
 import com.acmerobotics.dashboard.config.Config
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
@@ -20,6 +20,8 @@ object Constants {
 
         // Other motors
         const val FLYWHEEL = "flywheel"
+        const val INTAKE_MOTOR = "intakeMotor"
+        const val TURRET_MOTOR = "turretMotor"
 
         // Odometry
         const val ODO_LEFT = "odoLeft"

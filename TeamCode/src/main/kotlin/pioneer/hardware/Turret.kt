@@ -4,8 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.constants.HardwareNames
-import pioneer.constants.Turret
+import pioneer.Constants
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
 import kotlin.math.PI
@@ -13,7 +12,7 @@ import kotlin.math.atan2
 
 class Turret(
     private val hardwareMap: HardwareMap,
-    private val motorName: String = HardwareNames.TURRET,
+    private val motorName: String = Constants.HardwareNames.TURRET_MOTOR,
     private val motorRange: Pair<Double, Double> = -PI to PI,
 ) : HardwareComponent {
 
@@ -21,7 +20,7 @@ class Turret(
 
     private lateinit var turret: DcMotorEx
 
-    private val ticksPerRadian: Double = Turret.TICKS_PER_REV / (2 * PI)
+    private val ticksPerRadian: Double = Constants.Turret.TICKS_PER_REV / (2 * PI)
 
     init {
         require(motorRange.first < motorRange.second) {

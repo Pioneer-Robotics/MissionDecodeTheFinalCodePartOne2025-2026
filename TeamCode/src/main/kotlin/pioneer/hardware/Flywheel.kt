@@ -13,10 +13,10 @@ class Flywheel(
 
     private lateinit var flywheel: DcMotorEx
 
-    var velocity
-        get() = flywheel.velocity
+    var power
+        get() = flywheel.power
         set(value) {
-            flywheel.velocity = value
+            flywheel.power = value
         }
 
     override fun init() {

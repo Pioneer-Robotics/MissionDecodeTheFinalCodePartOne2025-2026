@@ -4,10 +4,10 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.constants.HardwareNames
+import pioneer.Constants
 
 class Intake(private val hardwareMap: HardwareMap,
-             private val motorName: String = HardwareNames.INTAKE
+             private val motorName: String = Constants.HardwareNames.INTAKE_MOTOR
 ) : HardwareComponent {
 
     override val name = "Flywheel"

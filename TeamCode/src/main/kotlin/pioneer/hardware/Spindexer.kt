@@ -1,10 +1,10 @@
 package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.Constants
 import pioneer.decode.Artifact
 import kotlin.math.abs
 import com.qualcomm.robotcore.util.ElapsedTime
+import pioneer.Constants
 
 
 /*
