@@ -20,6 +20,7 @@ object HardwareNames {
     // Other motors
     const val FLYWHEEL = "flywheel"
     const val TURRET = "turret"
+    const val INTAKE = "intake"
 
     // Odometry
     const val ODO_LEFT = "odoLeft"

@@ -5,6 +5,7 @@ import pioneer.hardware.BatteryMonitor
 import pioneer.hardware.Camera
 import pioneer.hardware.Flywheel
 import pioneer.hardware.HardwareComponent
+import pioneer.hardware.Intake
 import pioneer.hardware.LaunchServos
 import pioneer.hardware.MecanumBase
 import pioneer.hardware.Turret
@@ -14,6 +15,7 @@ import pioneer.pathing.follower.Follower
 enum class BotType {
     MECANUM_BOT,
     GOBILDA_STARTER_BOT,
+    COMP_BOT,
     CUSTOM,
 }
 
@@ -37,6 +39,7 @@ class Bot private constructor(
     val launchServos get() = get<LaunchServos>()
     val flywheel get() = get<Flywheel>()
     val turret get() = get<Turret>()
+    val intake get() = get<Intake>()
     val camera get() = get<Camera>()
     val batteryMonitor get() = get<BatteryMonitor>()
 
@@ -70,6 +73,18 @@ class Bot private constructor(
                         .add(Pinpoint(hardwareMap))
                         .add(LaunchServos(hardwareMap))
                         .add(Flywheel(hardwareMap))
+                        .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                        .add(BatteryMonitor(hardwareMap))
+                        .build()
+                BotType.COMP_BOT ->
+                    builder()
+                        .add(MecanumBase(hardwareMap))
+                        .add(Pinpoint(hardwareMap))
+                        .add(LaunchServos(hardwareMap))
+                        .add(Flywheel(hardwareMap))
+                        .add(Intake(hardwareMap))
+                        .add(Turret(hardwareMap))
+                        // TODO: Add spindexer on branch merge
                         .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
                         .add(BatteryMonitor(hardwareMap))
                         .build()

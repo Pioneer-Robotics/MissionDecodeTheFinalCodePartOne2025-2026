@@ -19,17 +19,17 @@ class Flywheel(
     private lateinit var launchServo: Servo
 
     var velocity
-        get() = flywheel.velocity
+        get() = flywheel.power
         set(value) {
-            flywheel.velocity = value
+            flywheel.power = value
         }
 
     override fun init() {
         flywheel = hardwareMap.get(DcMotorEx::class.java, motorName)
         flywheel.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        flywheel.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        flywheel.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         flywheel.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
-        flywheel.direction = DcMotorSimple.Direction.FORWARD
+        flywheel.direction = DcMotorSimple.Direction.REVERSE
         launchServo = hardwareMap.get(Servo::class.java, launchServoName)
     }
 
