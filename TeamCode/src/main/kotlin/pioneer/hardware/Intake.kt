@@ -32,4 +32,7 @@ class Intake(private val hardwareMap: HardwareMap,
     fun reverse() {
         power = -1.0
     }
+    fun stop() {
+        power = 0.0
+    }
 }

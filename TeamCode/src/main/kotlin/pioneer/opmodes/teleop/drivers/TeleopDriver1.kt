@@ -21,17 +21,13 @@ class TeleopDriver1(
     private var incDrivePower: Toggle = Toggle(false)
     private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
-
-    // Other variables
-    var flywheelSpeed = 0.7
+    private var intakeToggle: Toggle = Toggle(false)
 
     fun update() {
         drive()
         updateDrivePower()
         updateFieldCentric()
-        updateFlywheelSpeed()
-        flywheel()
-        updateLaunchServos()
+        updateIntake()
     }
 
     private fun drive() {
@@ -63,30 +59,16 @@ class TeleopDriver1(
         fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
     }
 
-    private fun updateFlywheelSpeed() {
-        if (flywheelSpeed < 1.0 && gamepad.dpad_right) {
-            flywheelSpeed += 0.25 * chrono.dt / 1000
-        }
-        if (flywheelSpeed > 0.0 && gamepad.dpad_left) {
-            flywheelSpeed -= 0.25 * chrono.dt / 1000
-        }
-        flywheelSpeed.coerceIn(0.0, 1.0)
-    }
-
-    private fun flywheel() {
-        if (gamepad.circle) {
-            bot.flywheel?.velocity = -flywheelSpeed
+    private fun updateIntake() {
+        intakeToggle.toggle(gamepad.circle)
+        if (intakeToggle.state) {
+            if (gamepad.dpad_down) {
+                bot.intake?.reverse()
+            } else {
+                bot.intake?.forward()
+            }
         } else {
-            bot.flywheel?.velocity = 0.0
+            bot.intake?.stop()
         }
-    }
-
-    private fun updateLaunchServos() {
-        if (gamepad.dpad_up) {
-            bot.launchServos?.triggerLaunch()
-        } else if (gamepad.dpad_down) {
-            bot.launchServos?.triggerRetract()
-        }
-        bot.launchServos?.update()
     }
 }

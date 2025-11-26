@@ -18,7 +18,7 @@ class Flywheel(
     private lateinit var flywheel: DcMotorEx
     private lateinit var launchServo: Servo
 
-    var velocity
+    var power
         get() = flywheel.power
         set(value) {
             flywheel.power = value
