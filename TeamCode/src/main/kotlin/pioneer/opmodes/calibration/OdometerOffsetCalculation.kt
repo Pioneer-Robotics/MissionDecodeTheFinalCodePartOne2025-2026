@@ -3,7 +3,7 @@ package pioneer.opmodes.calibration
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.Bot
 import pioneer.BotType
-import pioneer.constants.Odometry
+import pioneer.Constants
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.PI
@@ -31,8 +31,8 @@ class OdometerOffsetCalculation : BaseOpMode() {
             val dXEncoderTicks = initialXEncoderTicks - bot.pinpoint!!.encoderXTicks
             val dYEncoderTicks = initialYEncoderTicks - bot.pinpoint!!.encoderYTicks
 
-            val xOffset = dXEncoderTicks / (3 * Math.PI / 4) * Odometry.TICKS_TO_CM * 10
-            val yOffset = dYEncoderTicks / (3 * Math.PI / 4) * Odometry.TICKS_TO_CM * 10
+            val xOffset = dXEncoderTicks / (3 * Math.PI / 4) * Constants.Odometry.TICKS_TO_CM * 10
+            val yOffset = dYEncoderTicks / (3 * Math.PI / 4) * Constants.Odometry.TICKS_TO_CM * 10
 
             telemetry.addData("X Offset", xOffset)
             telemetry.addData("Y Offset", yOffset)

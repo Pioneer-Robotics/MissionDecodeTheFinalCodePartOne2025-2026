@@ -11,7 +11,7 @@ import pioneer.pathing.motionprofile.MotionProfileGenerator
 import pioneer.pathing.motionprofile.MotionState
 import pioneer.pathing.paths.Path
 import kotlin.math.*
-import pioneer.constants.Follower as FollowerConstants
+import pioneer.Constants
 
 class Follower(
     private val localizer: Localizer,
@@ -21,22 +21,15 @@ class Follower(
     private var elapsedTime: ElapsedTime = ElapsedTime()
     private var xPID =
         PIDController(
-            kp = FollowerConstants.X_KP,
-            ki = FollowerConstants.X_KI,
-            kd = FollowerConstants.X_KD,
+            kp = Constants.Follower.X_KP,
+            ki = Constants.Follower.X_KI,
+            kd = Constants.Follower.X_KD,
         )
     private var yPID =
         PIDController(
-            kp = FollowerConstants.Y_KP,
-            ki = FollowerConstants.Y_KI,
-            kd = FollowerConstants.Y_KD,
-        )
-
-    private var thetaPID =
-        PIDController(
-            kp = FollowerConstants.THETA_KP,
-            ki = FollowerConstants.THETA_KI,
-            kd = FollowerConstants.THETA_KD,
+            kp = Constants.Follower.Y_KP,
+            ki = Constants.Follower.Y_KI,
+            kd = Constants.Follower.Y_KD,
         )
 
     var path: Path? = null

@@ -4,41 +4,26 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.Servo
-import pioneer.constants.HardwareNames
-import pioneer.constants.ServoPositions
+import pioneer.Constants
 
 class Flywheel(
     private val hardwareMap: HardwareMap,
-    private val motorName: String = HardwareNames.FLYWHEEL,
-    private val launchServoName: String = HardwareNames.LAUNCH_SERVO,
+    private val motorName: String = Constants.HardwareNames.FLYWHEEL,
 ) : HardwareComponent {
-    override val name = "Flywheel"
 
     private lateinit var flywheel: DcMotorEx
-    private lateinit var launchServo: Servo
 
-    var power
-        get() = flywheel.power
+    var velocity
+        get() = flywheel.velocity
         set(value) {
-            flywheel.power = value
+            flywheel.velocity = value
         }
 
     override fun init() {
         flywheel = hardwareMap.get(DcMotorEx::class.java, motorName)
         flywheel.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        flywheel.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        flywheel.mode = DcMotor.RunMode.RUN_USING_ENCODER
         flywheel.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
-        flywheel.direction = DcMotorSimple.Direction.REVERSE
-        launchServo = hardwareMap.get(Servo::class.java, launchServoName)
-    }
-
-    fun triggerLaunch() {
-        launchServo.position = ServoPositions.LAUNCHER_TRIGGERED
-        // Return to rest position after a short delay
-        Thread {
-            Thread.sleep(500) // 500 ms delay
-            launchServo.position = ServoPositions.LAUNCHER_REST
-        }
+        flywheel.direction = DcMotorSimple.Direction.FORWARD
     }
 }
