@@ -7,7 +7,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.constants.HardwareNames
 import pioneer.constants.Turret
 import pioneer.helpers.MathUtils
+import pioneer.helpers.Pose
 import kotlin.math.PI
+import kotlin.math.atan2
 
 class Turret(
     private val hardwareMap: HardwareMap,
@@ -64,5 +66,15 @@ class Turret(
             mode = DcMotor.RunMode.RUN_TO_POSITION
             this.power = power
         }
+    }
+
+    fun autoTrack(pose: Pose, target: Pose){
+        //General Angle(From robot 0 to target):
+        val dX = target.x - pose.x
+        val dY = target.y - pose.y
+        val targetTheta = atan2(dX,dY)
+        val turretTheta = targetTheta - pose.theta
+
+        gotoAngle(turretTheta)
     }
 }

@@ -102,6 +102,8 @@ class TeleopDriver2(
     private fun handleAutoTrack() {
         if (autoTrack) {
             // TODO: Track target
+//            bot.turret.autoTrack(bot.pinpoint.pose, )
+            //Need New CV to be merged in for AprilTag position
         }
     }
 
