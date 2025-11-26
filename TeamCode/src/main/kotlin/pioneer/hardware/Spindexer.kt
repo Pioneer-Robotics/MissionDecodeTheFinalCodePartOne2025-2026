@@ -1,10 +1,13 @@
 package pioneer.hardware
 
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.decode.Artifact
 import kotlin.math.abs
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
+import kotlin.math.PI
 
 
 /*
@@ -35,22 +38,20 @@ OUTTAKE:
 
 class Spindexer(
     private val hardwareMap: HardwareMap,
-    private val servo1Name: String,
-    private val servo2Name: String,
+    private val motorName: String,
     private val intakeSensorName: String,
     private val outtakeSensorName: String,
     private val _artifacts: Array<Artifact?> = Array(3) { null },
 ) : HardwareComponent {
 
     // Motor positions in radians
-    val servoRangeDegrees: Int = 340
-    enum class MotorPosition(val degrees: Double) {
-        INTAKE_1(0.0),
-        OUTTAKE_1(180.0), // Shift down (+2)
-        INTAKE_2(120.0),
-        OUTTAKE_2(300.0), // Shift down (+2)
-        INTAKE_3(240.0),
-        OUTTAKE_3(60.0); // Shift down (+2) (wrapped)
+    enum class MotorPosition(val radians: Double) {
+        INTAKE_1(0 * PI / 6),
+        OUTTAKE_1(3 * PI / 6), // Shift down (+2)
+        INTAKE_2(2 * PI / 6),
+        OUTTAKE_2(5 * PI / 6), // Shift down (+2)
+        INTAKE_3(4 * PI / 6),
+        OUTTAKE_3(1 * PI / 6); // Shift down (+2) (wrapped)
     }
 
     // Indirect reference to internal artifacts array to prevent modification
@@ -59,14 +60,10 @@ class Spindexer(
 
     // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1
-        set(value) {
-            servo.position = value.degrees / servoRangeDegrees
-            field = value
-        }
 
     // Getter to check if motor has reached target position
     val reachedTarget: Boolean
-        get() = abs(servo.position - (motorState.degrees / servoRangeDegrees)) < 0.05
+        get() = abs(motor.targetPosition - motor.currentPosition) < 0.05
 
     // Getters for artifact storage status
     val isFull: Boolean
@@ -79,11 +76,11 @@ class Spindexer(
         get() = _artifacts.count { it != null }
 
     // Motor position accessors
-    val currentServoPosition: Double
-        get() = servo.position
+    val currentMotorPosition: Int
+        get() = motor.currentPosition
 
-    val targetServoPosition: Double
-        get() = servo.position
+    val targetMotorPosition: Int
+        get() = motor.targetPosition
 
     val currentScannedArtifact: Artifact?
         get() = scanArtifact()
@@ -101,7 +98,7 @@ class Spindexer(
     private val outtakePositions =
         listOf(MotorPosition.OUTTAKE_1, MotorPosition.OUTTAKE_2, MotorPosition.OUTTAKE_3)
 
-    private lateinit var servo: ServoPair
+    private lateinit var motor: DcMotorEx
     private lateinit var intakeSensor: RevColorSensor
     private lateinit var outtakeSensor: RevColorSensor
 
@@ -127,7 +124,7 @@ class Spindexer(
         }
 
     override fun init() {
-        servo = ServoPair(hardwareMap, servo1Name, servo2Name)
+        motor = hardwareMap.get(DcMotorEx::class.java, motorName)
         intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
         outtakeSensor = RevColorSensor(hardwareMap, outtakeSensorName).apply { init() }
 
@@ -140,6 +137,7 @@ class Spindexer(
      * Checks for new artifacts if in an intake position.
      */
     fun update() {
+        runMotorToState()
         checkForArtifact()
     }
 
@@ -190,6 +188,23 @@ class Spindexer(
         // Automatically move to intake if empty
         if (isEmpty) moveToNextOpenIntake()
         return artifact
+    }
+
+    private fun runMotorToState(power: Double = 0.25, toleranceTicks: Int = 1) {
+        val targetTicks = (motorState.radians * ticksPerRadian).toInt()
+        val currentTicks = motor.currentPosition
+        val tickDifference = abs(targetTicks - currentTicks)
+
+        motor.apply {
+            if (tickDifference > toleranceTicks) {
+                targetPosition = targetTicks
+                mode = DcMotor.RunMode.RUN_TO_POSITION
+                this.power = power
+            } else {
+                this.power = 0.0
+                mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            }
+        }
     }
 
     private fun checkForArtifact() {
