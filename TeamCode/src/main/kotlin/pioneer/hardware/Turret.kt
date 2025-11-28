@@ -68,7 +68,7 @@ class Turret(
     fun autoTrack(pose: Pose, target: Pose){
         //General Angle(From robot 0 to target):
         val targetTheta = pose angleTo target
-        val turretTheta = targetTheta - pose.theta
+        val turretTheta = PI/2 - targetTheta - pose.theta
         gotoAngle(turretTheta)
     }
 }
