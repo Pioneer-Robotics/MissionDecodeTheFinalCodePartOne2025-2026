@@ -2,173 +2,156 @@ import cv2
 import numpy as np
 import glob
 import os
+from tqdm import tqdm
 
-# Settings: Choose either "chessboard" or "charuco"
-pattern_type = "chessboard"  
-# For chessboard, internal corners
-chessboard_size = (9, 6)
+# ============================================================
+# Configuration
+# ============================================================
+TARGET_RESOLUTION = (1280, 720)
+PATTERN_TYPE = "chessboard"  # "chessboard" or "charuco"
+CHESSBOARD_SIZE = (9, 6)
+SQUARE_SIZE_M = 0.025
+IMAGE_FOLDER = "c270_images"
+MIN_IMAGES_FOR_CALIBRATION = 10
 
-# For Charuco Board (if chosen)
-charuco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
-charuco_board = cv2.aruco.CharucoBoard((9, 6), squareLength=0.04, markerLength=0.02, dictionary=charuco_dict)
+CALIB_FLAGS = cv2.CALIB_RATIONAL_MODEL | cv2.CALIB_ZERO_TANGENT_DIST
+CB_FLAGS = cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE
+CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 50, 1e-6)
 
-# Termination criteria for corner refinement
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+CHARUCO_DICT = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
+CHARUCO_BOARD = cv2.aruco.CharucoBoard(
+    CHESSBOARD_SIZE, squareLength=0.04, markerLength=0.02, dictionary=CHARUCO_DICT
+)
 
-# Lists to store detected points
-objpoints = []  # 3D points in real world space
-imgpoints = []  # 2D points in image plane
+OBJP = np.zeros((CHESSBOARD_SIZE[0] * CHESSBOARD_SIZE[1], 3), np.float32)
+OBJP[:, :2] = np.mgrid[0:CHESSBOARD_SIZE[0], 0:CHESSBOARD_SIZE[1]].T.reshape(-1, 2)
+OBJP *= SQUARE_SIZE_M
 
-# Prepare chessboard object points (0,0,0), (1,0,0), ...
-objp = np.zeros((chessboard_size[0]*chessboard_size[1], 3), np.float32)
-objp[:, :2] = np.mgrid[0:chessboard_size[0], 0:chessboard_size[1]].T.reshape(-1, 2)
+assert PATTERN_TYPE in {"chessboard", "charuco"}
 
-# Load calibration images from c270_images folder
-image_folder = 'c270_images'
-print(f"\n=== Camera Calibration from Images ===")
-print(f"Looking for images in '{image_folder}/' folder...")
+print("\n=== Camera Calibration ===")
+print(f"Images: {IMAGE_FOLDER}")
 
-if not os.path.exists(image_folder):
-    print(f"Error: Folder '{image_folder}/' does not exist")
-    print(f"Please create the folder and add calibration images")
-    exit()
+if not os.path.exists(IMAGE_FOLDER):
+    print("Missing image folder")
+    raise SystemExit(1)
 
-# Support multiple image formats
-image_patterns = [
-    os.path.join(image_folder, '*.jpg'),
-    os.path.join(image_folder, '*.jpeg'),
-    os.path.join(image_folder, '*.png'),
-    os.path.join(image_folder, '*.bmp')
-]
+image_patterns = [os.path.join(IMAGE_FOLDER, ext) for ext in ("*.jpg", "*.jpeg", "*.png", "*.bmp")]
+images = [i for pattern in image_patterns for i in glob.glob(pattern)]
 
-images = []
-for pattern in image_patterns:
-    images.extend(glob.glob(pattern))
+if not images:
+    print("No images found")
+    raise SystemExit(1)
 
-if len(images) == 0:
-    print(f"Error: No images found in '{image_folder}/' folder")
-    print("Supported formats: .jpg, .jpeg, .png, .bmp")
-    exit()
+print(f"Found {len(images)} images")
 
-print(f"Found {len(images)} image(s)")
-print(f"Pattern type: {pattern_type}")
-print(f"Chessboard size: {chessboard_size}")
-print()
-
-successful_images = 0
-failed_images = 0
+successful, failed = 0, 0
 img_shape = None
+objpoints, imgpoints = [], []
+charuco_corners_list, charuco_ids_list = [], []
 
-for idx, fname in enumerate(images, 1):
-    print(f"Processing image {idx}/{len(images)}: {os.path.basename(fname)}...", end=' ')
-    
+# ============================================================
+# Image Processing
+# ============================================================
+for fname in tqdm(images, desc="Processing", unit="img"):
     img = cv2.imread(fname)
     if img is None:
-        print("❌ Failed to read")
-        failed_images += 1
+        failed += 1
         continue
-    
+
+    if TARGET_RESOLUTION:
+        w, h = TARGET_RESOLUTION
+        if (img.shape[1], img.shape[0]) != (w, h):
+            img = cv2.resize(img, (w, h), interpolation=cv2.INTER_LINEAR)
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     if img_shape is None:
         img_shape = gray.shape[::-1]
-    
-    pattern_found = False
-    
-    if pattern_type == "chessboard":
-        ret, corners = cv2.findChessboardCorners(gray, chessboard_size, None)
-        if ret:
-            pattern_found = True
-            objpoints.append(objp)
-            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
-            imgpoints.append(corners2)
-            
-            # Optional: Draw and save visualization
-            # cv2.drawChessboardCorners(img, chessboard_size, corners2, ret)
-            # cv2.imwrite(f'detected_{os.path.basename(fname)}', img)
 
-    elif pattern_type == "charuco":
-        corners, ids, rejected = cv2.aruco.detectMarkers(gray, charuco_dict)
-        if len(corners) > 0:
-            ret, charuco_corners, charuco_ids = cv2.aruco.interpolateCornersCharuco(
-                corners, ids, gray, charuco_board)
-            if ret and ret > 4:
-                pattern_found = True
-                imgpoints.append(charuco_corners)
-                objpoints.append(charuco_board.getChessboardCorners())
-                
-                # Optional: Draw and save visualization
-                # cv2.aruco.drawDetectedMarkers(img, corners)
-                # if charuco_corners is not None:
-                #     cv2.aruco.drawDetectedCornersCharuco(img, charuco_corners, charuco_ids)
-                # cv2.imwrite(f'detected_{os.path.basename(fname)}', img)
-    
-    if pattern_found:
-        print("✓ Pattern detected")
-        successful_images += 1
+    found = False
+
+    match PATTERN_TYPE:
+        case "chessboard":
+            ret, corners = cv2.findChessboardCorners(gray, CHESSBOARD_SIZE, CB_FLAGS)
+            if ret:
+                found = True
+                objpoints.append(OBJP.copy())
+                subpix = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), CRITERIA)
+                imgpoints.append(subpix)
+
+        case "charuco":
+            corners, ids, _ = cv2.aruco.detectMarkers(gray, CHARUCO_DICT)
+            if corners and ids is not None:
+                count, ccorners, cids = cv2.aruco.interpolateCornersCharuco(
+                    corners, ids, gray, CHARUCO_BOARD
+                )
+                if count and count > 4:
+                    found = True
+                    charuco_corners_list.append(ccorners)
+                    charuco_ids_list.append(cids)
+
+    if found:
+        successful += 1
     else:
-        print("❌ Pattern not found")
-        failed_images += 1
+        failed += 1
 
-print()
-print(f"Results: {successful_images} successful, {failed_images} failed")
+print(f"Detected: {successful}, Failed: {failed}")
 
-if len(objpoints) < 10:
-    print(f"\n⚠ Warning: Only {len(objpoints)} images with detected patterns.")
-    print("  For good calibration, 10+ images are recommended.")
-    if len(objpoints) < 3:
-        print("  Need at least 3 images to perform calibration.")
-        exit()
+count = len(objpoints) if PATTERN_TYPE == "chessboard" else len(charuco_corners_list)
+if count < MIN_IMAGES_FOR_CALIBRATION:
+    print(f"Too few usable images ({count})")
+    raise SystemExit(1)
 
-if len(objpoints) > 0:
-    print(f"\nPerforming calibration with {len(objpoints)} images...")
-    
-    if pattern_type == "chessboard":
-        # Camera calibration for chessboard
-        ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
-            objpoints, imgpoints, img_shape, None, None)
-    else:
-        # Camera calibration for Charuco
-        ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
-            charucoCorners=imgpoints,
-            charucoIds=[None] * len(imgpoints),
-            board=charuco_board,
-            imageSize=img_shape,
-            cameraMatrix=None,
-            distCoeffs=None)
+# ============================================================
+# Reprojection Error
+# ============================================================
+def reproj_errors(objp, imgp, rvecs, tvecs, K, D):
+    errs = []
+    for o, i, r, t in zip(objp, imgp, rvecs, tvecs):
+        p2, _ = cv2.projectPoints(o, r, t, K, D)
+        errs.append(np.sqrt(np.mean(np.sum((i.reshape(-1, 2) - p2.reshape(-1, 2)) ** 2, axis=1))))
+    return np.array(errs)
 
-    print("\n=== Calibration Results ===")
-    print(f"Calibration RMS error: {ret}")
-    
-    # Quality assessment
-    if ret < 0.5:
-        print("Quality: ✓ Excellent (< 0.5 pixels)")
-    elif ret < 1.0:
-        print("Quality: ✓ Good (< 1.0 pixel)")
-    elif ret < 2.0:
-        print("Quality: ⚠ Acceptable (< 2.0 pixels)")
-    else:
-        print("Quality: ✗ Poor (≥ 2.0 pixels) - Consider recalibrating")
-    
-    print("\nCamera matrix (intrinsics):")
-    print(camera_matrix)
-    print("\nDistortion coefficients:")
-    print(dist_coeffs)
-    
-    # Save calibration results
-    np.savez('camera_calibration_c270.npz', 
-             camera_matrix=camera_matrix, 
-             dist_coeffs=dist_coeffs,
-             rms_error=ret,
-             image_count=len(objpoints))
-    print("\n✓ Calibration data saved to 'camera_calibration_c270.npz'")
-    
-    # Also save as default name for compatibility
-    np.savez('camera_calibration.npz', 
-             camera_matrix=camera_matrix, 
-             dist_coeffs=dist_coeffs,
-             rms_error=ret,
-             image_count=len(objpoints))
-    print("✓ Calibration data also saved to 'camera_calibration.npz'")
+# ============================================================
+# Calibration
+# ============================================================
+match PATTERN_TYPE:
+    case "chessboard":
+        ret, K, D, rvecs, tvecs = cv2.calibrateCamera(
+            objpoints, imgpoints, img_shape, None, None, flags=CALIB_FLAGS, criteria=CRITERIA
+        )
+        errors = reproj_errors(objpoints, imgpoints, rvecs, tvecs, K, D)
 
-else:
-    print("\nNo calibration pattern detected in any images.")
+    case "charuco":
+        ret, K, D, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
+            charuco_corners_list, charuco_ids_list, CHARUCO_BOARD, img_shape,
+            None, None, flags=CALIB_FLAGS, criteria=CRITERIA
+        )
+        objpoints = []
+        imgpoints = []
+        board_pts = CHARUCO_BOARD.getChessboardCorners()
+        for cc, ids in zip(charuco_corners_list, charuco_ids_list):
+            objpoints.append(board_pts[ids.ravel()])
+            imgpoints.append(cc)
+        errors = reproj_errors(objpoints, imgpoints, rvecs, tvecs, K, D)
+
+dist_list = [round(x, 4) for x in D.ravel().tolist()[:8]]
+
+# ============================================================
+# Output
+# ============================================================
+print("\nResults:")
+print(f"RMS: {ret:.6f}")
+print(f"Mean Error: {errors.mean():.4f}")
+print(f"StdDev Error: {errors.std():.4f}")
+print(f"Camera Matrix:\n{K}")
+print(f"Distortion (8): {dist_list}")
+
+print("\n<Camera vid=\"Logitech\" pid=\"0x0825\">")
+print("  <Calibration")
+print(f"    size=\"{img_shape[0]} {img_shape[1]}\"")
+print(f"    focalLength=\"{K[0,0]:.4f}, {K[1,1]:.4f}\"")
+print(f"    principalPoint=\"{K[0,2]:.4f}, {K[1,2]:.4f}\"")
+print(f"    distortionCoefficients=\"{', '.join(f'{v:.4f}' for v in dist_list)}\"")
+print("  />")
+print("</Camera>")
