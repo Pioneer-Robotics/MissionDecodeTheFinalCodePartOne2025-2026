@@ -8,6 +8,10 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients
 import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.Constants
 import pioneer.helpers.FileLogger
+import pioneer.helpers.Pose
+import kotlin.math.cos
+import kotlin.math.sqrt
+import kotlin.math.tan
 
 class Flywheel(
     private val hardwareMap: HardwareMap,
@@ -39,5 +43,16 @@ class Flywheel(
                 0.0,
             )
         )
+    }
+
+    //https://www.desmos.com/calculator/uofqeqqyn1
+    fun estimateVelocity(target: Pose, pose: Pose): Double{
+        val tempTargetHeight = 0 //TODO Replace with GoalTag info when merged with CV branch
+        val heightDiff = tempTargetHeight - Constants.Turret.HEIGHT
+        val groundDistance = pose distanceTo pose
+        val v0 = (groundDistance)/(cos(Constants.Turret.THETA)* sqrt((2.0*(heightDiff - tan(Constants.Turret.THETA)*(groundDistance)))/(-980)))
+
+        val flywheelVelocity = 1.58901*v0 + 17.2812
+        return flywheelVelocity
     }
 }
