@@ -16,8 +16,6 @@ class Turret(
     private val motorRange: Pair<Double, Double> = -PI to PI,
 ) : HardwareComponent {
 
-    override val name = "Turret"
-
     private lateinit var turret: DcMotorEx
 
     private val ticksPerRadian: Double = Constants.Turret.TICKS_PER_REV / (2 * PI)
@@ -69,11 +67,8 @@ class Turret(
 
     fun autoTrack(pose: Pose, target: Pose){
         //General Angle(From robot 0 to target):
-        val dX = target.x - pose.x
-        val dY = target.y - pose.y
-        val targetTheta = atan2(dX,dY)
+        val targetTheta = pose angleTo target
         val turretTheta = targetTheta - pose.theta
-
         gotoAngle(turretTheta)
     }
 }

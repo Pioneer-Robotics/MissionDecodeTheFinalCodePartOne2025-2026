@@ -43,11 +43,11 @@ class TeleopDriver2(
 
     private fun flywheel() {
         if (gamepad.dpad_up) {
-            bot.flywheel?.power = -flywheelSpeed
+            bot.flywheel?.velocity = -flywheelSpeed
             autoTrack = true
         } else {
             autoTrack = false
-            bot.flywheel?.power = 0.0
+            bot.flywheel?.velocity = 0.0
         }
     }
 

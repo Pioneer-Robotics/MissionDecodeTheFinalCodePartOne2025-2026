@@ -5,4 +5,6 @@ interface HardwareComponent {
         get() = this::class.simpleName!!    
 
     fun init()
+
+    fun update() { }
 }

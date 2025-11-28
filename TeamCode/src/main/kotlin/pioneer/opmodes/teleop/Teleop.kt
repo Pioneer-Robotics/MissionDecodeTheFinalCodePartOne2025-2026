@@ -42,7 +42,7 @@ class Teleop : BaseOpMode() {
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy))
         telemetry.addData("Voltage", bot.batteryMonitor?.voltage)
 
-        bot.flywheel?.power?.let { telemetryPacket.put("Flywheel Motor Velocity", -it) }
+        bot.flywheel?.velocity?.let { telemetryPacket.put("Flywheel Motor Velocity", -it) }
         telemetryPacket.put("Flywheel Velocity", -flywheelEncoder.velocity)
         DashboardPlotter.plotBotPosition(telemetryPacket, bot.pinpoint?.pose)
     }

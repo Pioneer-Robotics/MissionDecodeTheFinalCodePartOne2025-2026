@@ -38,7 +38,7 @@ abstract class BaseOpMode : OpMode() {
 
     final override fun loop() {
         // Update bot systems
-        bot.pinpoint?.update(dt)
+        bot.updateAll(dt)
 
         // Call user-defined loop logic
         onLoop()
