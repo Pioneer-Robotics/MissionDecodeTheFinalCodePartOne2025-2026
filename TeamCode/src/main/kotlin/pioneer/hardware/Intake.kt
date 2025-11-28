@@ -10,7 +10,6 @@ class Intake(private val hardwareMap: HardwareMap,
              private val motorName: String = Constants.HardwareNames.INTAKE_MOTOR
 ) : HardwareComponent {
 
-    override val name = "Flywheel"
     private lateinit var intake: DcMotorEx
 
     var power
@@ -20,10 +19,11 @@ class Intake(private val hardwareMap: HardwareMap,
         }
 
     override fun init() {
-        intake = hardwareMap.get(DcMotorEx::class.java, motorName)
-        intake.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        intake.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        intake.direction = DcMotorSimple.Direction.FORWARD
+        intake = hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+            mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+            direction = DcMotorSimple.Direction.FORWARD
+        }
     }
 
     fun forward() {

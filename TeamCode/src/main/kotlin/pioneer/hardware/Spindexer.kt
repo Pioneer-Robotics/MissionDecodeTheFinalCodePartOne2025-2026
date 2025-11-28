@@ -42,7 +42,7 @@ class Spindexer(
     private val _artifacts: Array<Artifact?> = Array(3) { null },
 ) : HardwareComponent {
 
-    // Motor positions in radians
+    // Motor positions
     val servoRangeDegrees: Int = 340
     enum class MotorPosition(val degrees: Double) {
         INTAKE_1(0.0),

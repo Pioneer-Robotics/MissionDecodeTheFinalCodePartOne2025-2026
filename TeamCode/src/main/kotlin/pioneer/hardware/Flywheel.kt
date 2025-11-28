@@ -23,12 +23,13 @@ class Flywheel(
         }
 
     override fun init() {
-        flywheel = hardwareMap.get(DcMotorEx::class.java, motorName)
-        flywheel.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        flywheel.mode = DcMotor.RunMode.RUN_USING_ENCODER
-        flywheel.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
-        flywheel.direction = DcMotorSimple.Direction.FORWARD
-        FileLogger.info("Flywheel", flywheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString())
+        flywheel = hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+            mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            mode = DcMotor.RunMode.RUN_USING_ENCODER
+            zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+            direction = DcMotorSimple.Direction.FORWARD
+        }
+        FileLogger.info(name, flywheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString())
         flywheel.setPIDFCoefficients(
             DcMotor.RunMode.RUN_USING_ENCODER,
             PIDFCoefficients(
