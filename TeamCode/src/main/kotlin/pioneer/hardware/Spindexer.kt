@@ -139,7 +139,7 @@ class Spindexer(
      * Updates the motor position to match the desired motor state.
      * Checks for new artifacts if in an intake position.
      */
-    fun update() {
+    override fun update() {
         checkForArtifact()
     }
 
