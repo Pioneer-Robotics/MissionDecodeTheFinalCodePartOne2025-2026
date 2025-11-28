@@ -3,7 +3,6 @@ package pioneer.opmodes.auto
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.hardware.MecanumBase
-import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
@@ -52,11 +51,7 @@ class RedGoalSideAuto : BaseOpMode() {
 
     override fun onInit() {
         // TODO: Change when we get new bot
-        // TODO: Move pinpoint reset into a state function
-        bot = Bot.builder()
-            .add(MecanumBase(hardwareMap))
-            .add(Pinpoint(hardwareMap))
-            .build()
+        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
         bot.pinpoint!!.reset(P.START_GOAL)
     }
 
@@ -138,7 +133,7 @@ class RedGoalSideAuto : BaseOpMode() {
     }
 
     private fun state_collect() {
-        // TODO: collect
+        bot.intake?.forward()
         if (bot.follower.path == null) { // Starting path
             when (collectState) {
                 CollectState.GOAL -> bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL)
@@ -151,6 +146,7 @@ class RedGoalSideAuto : BaseOpMode() {
 
         if (bot.follower.done) { // Ending path
             state = State.GOTO_SHOOT
+            bot.intake?.stop()
             bot.follower.path = null
             when (collectState) {
                 CollectState.GOAL -> collectState = CollectState.MID
