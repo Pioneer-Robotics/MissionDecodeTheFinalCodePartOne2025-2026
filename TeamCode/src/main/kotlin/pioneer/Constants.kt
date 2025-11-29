@@ -167,6 +167,8 @@ object Constants {
 
     object Turret {
         const val TICKS_PER_REV = 538 * 3
+        const val HEIGHT = 0.0 //TODO MEASURE
+        const val THETA = 0.93
     }
 
     object ServoPositions {
