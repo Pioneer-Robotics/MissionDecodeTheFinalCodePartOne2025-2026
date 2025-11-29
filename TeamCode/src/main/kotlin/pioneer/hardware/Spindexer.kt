@@ -55,7 +55,7 @@ class Spindexer(
 
     // Indirect reference to internal artifacts array to prevent modification
     val artifacts: Array<Artifact?>
-        get() = _artifacts
+        get() = _artifacts.copyOf()
 
     // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1
