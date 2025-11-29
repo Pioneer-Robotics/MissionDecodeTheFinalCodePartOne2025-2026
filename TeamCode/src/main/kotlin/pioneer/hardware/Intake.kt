@@ -10,6 +10,7 @@ class Intake(private val hardwareMap: HardwareMap,
              private val motorName: String = Constants.HardwareNames.INTAKE_MOTOR
 ) : HardwareComponent {
 
+    override val name = "Intake"
     private lateinit var intake: DcMotorEx
 
     var power
@@ -17,6 +18,8 @@ class Intake(private val hardwareMap: HardwareMap,
         set(value) {
             intake.power = value
         }
+
+    var defaultPower: Double = 1.0
 
     override fun init() {
         intake = hardwareMap.get(DcMotorEx::class.java, motorName).apply {
@@ -27,11 +30,12 @@ class Intake(private val hardwareMap: HardwareMap,
     }
 
     fun forward() {
-        power = 1.0
+        power = -defaultPower
     }
     fun reverse() {
-        power = -1.0
+        power = defaultPower
     }
+
     fun stop() {
         power = 0.0
     }

@@ -14,15 +14,11 @@ class Teleop : BaseOpMode() {
     private lateinit var driver1: TeleopDriver1
     private lateinit var driver2: TeleopDriver2
 
-    private lateinit var flywheelEncoder: DcMotorEx
-
     override fun onInit() {
-        bot = Bot.fromType(BotType.GOBILDA_STARTER_BOT, hardwareMap)
+        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
 
         driver1 = TeleopDriver1(gamepad1, bot)
         driver2 = TeleopDriver2(gamepad2, bot)
-
-        flywheelEncoder = hardwareMap.get(DcMotorEx::class.java, "flywheelEncoder")
     }
 
     override fun onLoop() {
@@ -41,9 +37,5 @@ class Teleop : BaseOpMode() {
         telemetry.addData("Pose", bot.pinpoint!!.pose)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy))
         telemetry.addData("Voltage", bot.batteryMonitor?.voltage)
-
-        bot.flywheel?.velocity?.let { telemetryPacket.put("Flywheel Motor Velocity", -it) }
-        telemetryPacket.put("Flywheel Velocity", -flywheelEncoder.velocity)
-        DashboardPlotter.plotBotPosition(telemetryPacket, bot.pinpoint?.pose)
     }
 }

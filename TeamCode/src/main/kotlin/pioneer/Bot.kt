@@ -7,6 +7,7 @@ import pioneer.hardware.Flywheel
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.Intake
 import pioneer.hardware.LaunchServos
+import pioneer.hardware.Launcher
 import pioneer.hardware.MecanumBase
 import pioneer.hardware.Turret
 import pioneer.hardware.Spindexer
@@ -44,6 +45,7 @@ class Bot private constructor(
     val camera get() = get<Camera>()
     val batteryMonitor get() = get<BatteryMonitor>()
     val spindexer get() = get<Spindexer>()
+    val launcher get() = get<Launcher>()
 
     // Follower is lazily initialized (only if accessed)
     // and will error if localizer or mecanumBase is missing
@@ -88,12 +90,12 @@ class Bot private constructor(
                     builder()
                         .add(MecanumBase(hardwareMap))
                         .add(Pinpoint(hardwareMap))
-                        .add(LaunchServos(hardwareMap))
                         .add(Flywheel(hardwareMap))
                         .add(Intake(hardwareMap))
                         .add(Turret(hardwareMap))
-                        // TODO: Add spindexer on branch merge
-                        .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                        .add(Spindexer(hardwareMap))
+                        .add(Launcher(hardwareMap))
+                        //.add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
                         .add(BatteryMonitor(hardwareMap))
                         .build()
                 BotType.CUSTOM -> throw IllegalArgumentException("Use Bot.builder() to create a custom bot")

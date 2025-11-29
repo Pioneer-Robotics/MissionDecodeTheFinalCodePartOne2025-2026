@@ -23,7 +23,7 @@ class Flywheel(
     var velocity
         get() = flywheel.velocity
         set(value) {
-            flywheel.velocity = value
+            flywheel.power = value
         }
 
     override fun init() {

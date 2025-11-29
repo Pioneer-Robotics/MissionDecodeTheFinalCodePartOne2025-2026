@@ -19,9 +19,10 @@ object Constants {
         const val DRIVE_RIGHT_BACK = "driveRB"
 
         // Other motors
-        const val FLYWHEEL = "flywheel"
+        const val FLYWHEEL = "flywheelMotor"
         const val INTAKE_MOTOR = "intakeMotor"
         const val TURRET_MOTOR = "turretMotor"
+        const val SPINDEXER_MOTOR = "spindexerMotor"
 
         // Odometry
         const val ODO_LEFT = "odoLeft"
@@ -32,11 +33,13 @@ object Constants {
         const val PINPOINT = "pinpoint"
 
         // Servos
+        const val LAUNCH_SERVO = "launchServo"
         const val LAUNCH_SERVO_L = "launchServoL"
         const val LAUNCH_SERVO_R = "launchServoR"
 
         // Other
         const val WEBCAM = "Webcam 1"
+        const val INTAKE_SENSOR = "intakeSensor"
     }
 
     // -------- Odometry (3-wheel) --------
@@ -160,7 +163,7 @@ object Constants {
     object Spindexer {
         // TODO: Tune these values when we test on the real hardware
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 1000
+        const val CONFIRM_INTAKE_MS = 250
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 50
     }

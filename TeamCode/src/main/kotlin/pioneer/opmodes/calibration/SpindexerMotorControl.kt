@@ -16,13 +16,7 @@ class SpindexerMotorControl : OpMode() {
     var targetPosition = Spindexer.MotorPosition.INTAKE_1
 
     override fun init() {
-        spindexer = Spindexer(
-            hardwareMap = hardwareMap,
-            servo1Name = "spindexerServo1",
-            servo2Name = "spindexerServo2",
-            intakeSensorName = "intakeSensor",
-            outtakeSensorName = "outtakeSensor",
-        ).apply { init() }
+        spindexer = Spindexer(hardwareMap).apply { init() }
     }
 
     override fun loop() {

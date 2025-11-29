@@ -16,13 +16,7 @@ class SpindexerTest : BaseOpMode() {
 
     override fun onInit() {
         bot = Bot.Builder()
-            .add(Spindexer(
-                hardwareMap = hardwareMap,
-                servo1Name = "spindexerServo1",
-                servo2Name = "spindexerServo2",
-                intakeSensorName = "intakeSensor",
-                outtakeSensorName = "outtakeSensor",
-            ))
+            .add(Spindexer(hardwareMap))
             .build()
     }
 
@@ -34,6 +28,8 @@ class SpindexerTest : BaseOpMode() {
 
         bot.spindexer!!.update()
 
+        telemetry.addData("Current Position", bot.spindexer!!.currentMotorPosition)
+        telemetry.addData("Target Position", bot.spindexer!!.targetMotorPosition)
         telemetry.addData("Spindexer Position", bot.spindexer!!.motorState.toString())
         telemetry.addData("Artifacts", bot.spindexer!!.artifacts.contentDeepToString())
         telemetry.addData("Current Scanned Artifact", bot.spindexer!!.currentScannedArtifact)

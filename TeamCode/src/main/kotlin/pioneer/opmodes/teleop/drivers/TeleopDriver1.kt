@@ -3,7 +3,6 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.Constants
-import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 
@@ -11,8 +10,6 @@ class TeleopDriver1(
     var gamepad: Gamepad,
     val bot: Bot,
 ) {
-    private val chrono = Chrono()
-
     var drivePower = Constants.Drive.DEFAULT_POWER
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
@@ -28,6 +25,7 @@ class TeleopDriver1(
         updateDrivePower()
         updateFieldCentric()
         updateIntake()
+        bot.spindexer?.update()
     }
 
     private fun drive() {
@@ -61,14 +59,14 @@ class TeleopDriver1(
 
     private fun updateIntake() {
         intakeToggle.toggle(gamepad.circle)
-        if (intakeToggle.state) {
-            if (gamepad.dpad_down) {
-                bot.intake?.reverse()
-            } else {
-                bot.intake?.forward()
-            }
+        if (gamepad.dpad_down) {
+            bot.intake?.reverse()
         } else {
-            bot.intake?.stop()
+            if (intakeToggle.state) {
+                bot.intake?.forward()
+            } else {
+                bot.intake?.stop()
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package pioneer.hardware
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.decode.Artifact
 import kotlin.math.abs
 import com.qualcomm.robotcore.util.ElapsedTime
@@ -38,9 +39,8 @@ OUTTAKE:
 
 class Spindexer(
     private val hardwareMap: HardwareMap,
-    private val motorName: String,
-    private val intakeSensorName: String,
-    private val outtakeSensorName: String,
+    private val motorName: String = Constants.HardwareNames.SPINDEXER_MOTOR,
+    private val intakeSensorName: String = Constants.HardwareNames.INTAKE_SENSOR,
     private val _artifacts: Array<Artifact?> = Array(3) { null },
 ) : HardwareComponent {
 
@@ -63,7 +63,7 @@ class Spindexer(
 
     // Getter to check if motor has reached target position
     val reachedTarget: Boolean
-        get() = abs(motor.targetPosition - motor.currentPosition) < 0.05
+        get() = abs(motor.targetPosition - motor.currentPosition) < 5
 
     // Getters for artifact storage status
     val isFull: Boolean
@@ -100,13 +100,6 @@ class Spindexer(
 
     private lateinit var motor: DcMotorEx
     private lateinit var intakeSensor: RevColorSensor
-    private lateinit var outtakeSensor: RevColorSensor
-
-    /**
-     * Returns the current sensor based on the motor position.
-     */
-    private val currentSensor: RevColorSensor
-        get() = if (motorState in intakePositions) intakeSensor else outtakeSensor
 
     /**
      * Returns the index of the current motor position in the intake/outtake lists.
@@ -126,17 +119,23 @@ class Spindexer(
     override fun init() {
         motor = hardwareMap.get(DcMotorEx::class.java, motorName)
         intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
-        outtakeSensor = RevColorSensor(hardwareMap, outtakeSensorName).apply { init() }
+
+        motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        motor.targetPosition = 0
+
+        motor.setPIDFCoefficients(
+            DcMotor.RunMode.RUN_USING_ENCODER,
+            PIDFCoefficients(10.0, 0.0, 5.0, 0.0)
+        )
 
         intakeSensor.gain = 20.0f
-        outtakeSensor.gain = 20.0f
     }
 
     /**
      * Updates the motor position to match the desired motor state.
      * Checks for new artifacts if in an intake position.
      */
-    fun update() {
+    override fun update() {
         runMotorToState()
         checkForArtifact()
     }
@@ -190,7 +189,7 @@ class Spindexer(
         return artifact
     }
 
-    private fun runMotorToState(power: Double = 0.25, toleranceTicks: Int = 1) {
+    private fun runMotorToState(power: Double = 0.65, toleranceTicks: Int = 1) {
         val targetTicks = (motorState.radians * ticksPerRadian).toInt()
         val currentTicks = motor.currentPosition
         val tickDifference = abs(targetTicks - currentTicks)
@@ -252,7 +251,7 @@ class Spindexer(
      */
     private fun scanArtifact(): Artifact? {
         if (!reachedTarget) return null
-        return detectArtifact(currentSensor)
+        return detectArtifact(intakeSensor)
     }
 
     /**
@@ -262,7 +261,7 @@ class Spindexer(
         // Determine artifact based on hue thresholds
         return when {
             sensor.distance > 15.0 -> null
-            sensor.hue < 170 && sensor.hue > 150 -> Artifact.GREEN
+            sensor.hue < 170 && sensor.hue > 140 -> Artifact.GREEN
             sensor.hue < 250 && sensor.hue > 170 -> Artifact.PURPLE
             else -> null
         }
