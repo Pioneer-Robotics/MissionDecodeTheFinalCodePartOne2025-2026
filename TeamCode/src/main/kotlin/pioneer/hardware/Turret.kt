@@ -19,6 +19,12 @@ class Turret(
     private lateinit var turret: DcMotorEx
 
     private val ticksPerRadian: Double = Constants.Turret.TICKS_PER_REV / (2 * PI)
+    enum class Mode {
+        MANUAL,
+        AUTO_TRACK
+    }
+
+    var mode: Mode = Mode.MANUAL
 
     init {
         require(motorRange.first < motorRange.second) {

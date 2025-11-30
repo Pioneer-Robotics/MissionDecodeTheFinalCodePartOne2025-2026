@@ -3,6 +3,7 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.decode.Artifact
+import pioneer.hardware.Turret
 import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import kotlin.math.PI
@@ -17,7 +18,6 @@ class TeleopDriver2(
     private enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
 
     var flywheelSpeed = 0.7 * 1200
-    private var autoTrack = false
     private var shootState = ShootState.READY
     private var shootingAll = false
     private var remainingShots = 0
@@ -44,24 +44,24 @@ class TeleopDriver2(
     private fun handleFlywheel() {
         if (gamepad.dpad_left) {
             bot.flywheel?.velocity = flywheelSpeed * 1200
-            autoTrack = true
+            bot.turret?.mode = Turret.Mode.AUTO_TRACK
         } else {
-            autoTrack = false
+            bot.turret?.mode = Turret.Mode.MANUAL
             bot.flywheel?.velocity = 0.0
         }
     }
 
     private fun handleTurret() {
 //        if (abs(gamepad.right_stick_x) > 0.02) {
-//            autoTrack = false
+//            bot.turret?.mode = Turret.Mode.MANUAL
 //            bot.turret?.gotoAngle(gamepad.right_stick_x.toDouble() * PI)
 //        } else {
 //            bot.turret?.gotoAngle(0.0)
 //        }
         if (abs(gamepad.right_stick_x) > 0.02) {
-            autoTrack = false
+            bot.turret?.mode = Turret.Mode.MANUAL
             turretAngle += 1000 * gamepad.right_stick_x.toDouble() * chrono.dt / 1000
-            turretAngle.coerceIn(-PI, PI)
+            turretAngle.coerceIn(-PI, PI) // FIX: This will break if the turret has a different range. Try to hand off this to the Turret class
             bot.turret?.gotoAngle(turretAngle)
         }
     }
