@@ -2,7 +2,6 @@ package pioneer.pathing.paths
 
 import pioneer.helpers.Polynomial
 import pioneer.helpers.Pose
-import pioneer.pathing.paths.Path.HeadingInterpolationMode
 import kotlin.math.pow
 
 /**
@@ -18,9 +17,6 @@ class HermitePath(
     startVelocity: Pose = Pose(),
     endVelocity: Pose = Pose(),
 ) : Path {
-    // Enum for heading interpolation mode
-    override var headingInterpolationMode: HeadingInterpolationMode = HeadingInterpolationMode.LINEAR
-
     // Hermite basis functions
     private val basis00 = Polynomial(arrayOf(1.0, 0.0, -3.0, 2.0))
     private val basis01 = Polynomial(arrayOf(0.0, 1.0, -2.0, 1.0))
@@ -61,26 +57,16 @@ class HermitePath(
         return compoundPath.getTFromLength(length)
     }
 
-    override fun getHeading(t: Double): Double {
-        when (headingInterpolationMode) {
-            HeadingInterpolationMode.LINEAR -> {
-                return startPose.theta + (endPose.theta - startPose.theta) * t
-            }
-        }
-    }
-
     override fun getPoint(t: Double): Pose =
         Pose(
             x = xHermite.eval(t),
             y = yHermite.eval(t),
-            theta = getHeading(t),
         )
 
     override fun getPose(t: Double): Pose =
         Pose(
             x = xHermite.eval(t),
             y = yHermite.eval(t),
-            theta = getHeading(t),
             vx = xHermite.nDerEval(t, 1),
             vy = yHermite.nDerEval(t, 1),
             ax = xHermite.nDerEval(t, 2),
@@ -128,7 +114,7 @@ class HermitePath(
         }
 
         fun setTension(tension: Double): Builder {
-            if (tension < 0.0 || tension > 1.0) {
+            if (tension !in 0.0..1.0) {
                 throw IllegalArgumentException("Tension must be in the range [0, 1]")
             }
             this.t = tension
