@@ -24,7 +24,7 @@ class SpindexerTest : BaseOpMode() {
         if (gamepad1.dpad_down) bot.spindexer!!.moveToNextOpenIntake()
         if (gamepad1.left_bumper) bot.spindexer!!.moveToNextOuttake(Artifact.GREEN)
         if (gamepad1.right_bumper) bot.spindexer!!.moveToNextOuttake(Artifact.PURPLE)
-        if (gamepad1.circle) bot.spindexer!!.consumeCurrentArtifact()
+        if (gamepad1.circle) bot.spindexer!!.popCurrentArtifact()
 
         bot.spindexer!!.update()
 

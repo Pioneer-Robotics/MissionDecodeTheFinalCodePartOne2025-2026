@@ -161,11 +161,13 @@ object Constants {
     }
 
     object Spindexer {
+        const val POSITION_TOLERANCE_TICKS = 50
+        const val TICKS_PER_REV = 8192
         // TODO: Tune these values when we test on the real hardware
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 250
+        const val CONFIRM_INTAKE_MS = 50
         // Max time the artifact can disappear without resetting confirmation (ms)
-        const val CONFIRM_LOSS_MS = 50
+        const val CONFIRM_LOSS_MS = 10
     }
 
     object Turret {

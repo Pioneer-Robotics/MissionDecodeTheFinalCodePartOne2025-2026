@@ -3,7 +3,6 @@ package pioneer.hardware
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.decode.Artifact
 import kotlin.math.abs
 import com.qualcomm.robotcore.util.ElapsedTime
@@ -65,7 +64,7 @@ class Spindexer(
 
     // Getter to check if motor has reached target position
     val reachedTarget: Boolean
-        get() = abs(motor.targetPosition - motor.currentPosition) < 5
+        get() = abs(targetMotorPosition - currentMotorPosition) < Constants.Spindexer.POSITION_TOLERANCE_TICKS
 
     // Getters for artifact storage status
     val isFull: Boolean
@@ -82,28 +81,24 @@ class Spindexer(
         get() = motor.currentPosition
 
     val targetMotorPosition: Int
-        get() = motor.targetPosition
+        get() = (motorState.radians * ticksPerRadian).toInt()
 
     val currentScannedArtifact: Artifact?
         get() = scanArtifact()
 
-    private val ticksPerRadian = 8192 / 2
-
+    // Private variables
     private val chrono = Chrono()
-
-    private val motorPID = PIDController(1.0, 0.0, 0.0)
-
+        private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
+    // TODO: Tune PID
+    private val motorPID = PIDController(0.00025, 0.0, 0.0)
     private val artifactVisibleTimer = ElapsedTime()
     private val artifactLostTimer = ElapsedTime()
-
     private var artifactSeen = false
     private var artifactWasSeenRecently = false
-
     private val intakePositions =
         listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
     private val outtakePositions =
         listOf(MotorPosition.OUTTAKE_1, MotorPosition.OUTTAKE_2, MotorPosition.OUTTAKE_3)
-
     private lateinit var motor: DcMotorEx
     private lateinit var intakeSensor: RevColorSensor
 
@@ -127,7 +122,7 @@ class Spindexer(
         intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
 
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
 
         intakeSensor.gain = 20.0f
     }
@@ -175,11 +170,11 @@ class Spindexer(
     }
 
     /**
-     * Consumes (removes and returns) the artifact at the current outtake position.
-     * @return the consumed Artifact, or null if none present or not in outtake position
+     * Pops (removes and returns) the artifact at the current outtake position.
+     * @return the popped Artifact, or null if none present or not in outtake position
      */
-    fun consumeCurrentArtifact(): Artifact? {
-        // Only allow consumption from outtake positions
+    fun popCurrentArtifact(): Artifact? {
+        // Only allow pop from outtake positions
         if (motorState !in outtakePositions) return null
         // Get and remove artifact at current position
         val index = positionIndex ?: return null
@@ -190,12 +185,21 @@ class Spindexer(
         return artifact
     }
 
-    private fun runMotorToState() {
-        val targetTicks = (motorState.radians * ticksPerRadian).toInt()
-        val currentTicks = motor.currentPosition
-        val error = targetTicks - currentTicks
+    private fun wrapTicks(error: Int, ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV): Int {
+        var e = error % ticksPerRev
+        if (e > ticksPerRev / 2) e -= ticksPerRev
+        if (e < -ticksPerRev / 2) e += ticksPerRev
+        return e
+    }
 
-        motor.power = motorPID.update(error.toDouble(), chrono.dt)
+    private fun runMotorToState() {
+        val rawError = targetMotorPosition - currentMotorPosition
+        val error = wrapTicks(rawError)
+
+        // PID -> -1..1 output
+        val power = motorPID.update(error.toDouble(), chrono.dt)
+
+        motor.power = power.coerceIn(-1.0, 1.0)
     }
 
     private fun checkForArtifact() {
