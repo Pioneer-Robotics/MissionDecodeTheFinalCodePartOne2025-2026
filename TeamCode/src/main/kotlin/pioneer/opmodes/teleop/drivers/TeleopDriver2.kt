@@ -21,6 +21,7 @@ class TeleopDriver2(
     private var shootState = ShootState.READY
     private var shootingAll = false
     private var remainingShots = 0
+    private var turretAngle = 0.0
 
     fun update() {
         updateFlywheelSpeed()
@@ -31,18 +32,18 @@ class TeleopDriver2(
     }
 
     private fun updateFlywheelSpeed() {
-        if (flywheelSpeed < 1.0 && gamepad.dpad_right) {
-            flywheelSpeed += 0.25 * chrono.dt / 1000
+        if (flywheelSpeed < 1.0 && gamepad.dpad_up) {
+            flywheelSpeed += 100.0 * chrono.dt / 1000
         }
-        if (flywheelSpeed > 0.0 && gamepad.dpad_left) {
-            flywheelSpeed -= 0.25 * chrono.dt / 1000
+        if (flywheelSpeed > 0.0 && gamepad.dpad_down) {
+            flywheelSpeed -= 100.0 * chrono.dt / 1000
         }
         flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
     }
 
     private fun handleFlywheel() {
-        if (gamepad.dpad_up) {
-            bot.flywheel?.velocity = -flywheelSpeed
+        if (gamepad.dpad_left) {
+            bot.flywheel?.velocity = flywheelSpeed * 1200
             autoTrack = true
         } else {
             autoTrack = false
@@ -51,11 +52,17 @@ class TeleopDriver2(
     }
 
     private fun handleTurret() {
-        if (abs(gamepad.right_stick_x) > 0.05) {
+//        if (abs(gamepad.right_stick_x) > 0.02) {
+//            autoTrack = false
+//            bot.turret?.gotoAngle(gamepad.right_stick_x.toDouble() * PI)
+//        } else {
+//            bot.turret?.gotoAngle(0.0)
+//        }
+        if (abs(gamepad.right_stick_x) > 0.02) {
             autoTrack = false
-            bot.turret?.gotoAngle(gamepad.right_stick_x.toDouble() * PI)
-        } else {
-            bot.turret?.gotoAngle(0.0)
+            turretAngle += 1000 * gamepad.right_stick_x.toDouble() * chrono.dt / 1000
+            turretAngle.coerceIn(-PI, PI)
+            bot.turret?.gotoAngle(turretAngle)
         }
     }
 
@@ -123,7 +130,7 @@ class TeleopDriver2(
     }
 
     private fun handleAutoTrack() {
-        if (autoTrack) {
+        if (false /*autoTrack*/) {
             bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), Pose())
         } else {
             handleTurret()

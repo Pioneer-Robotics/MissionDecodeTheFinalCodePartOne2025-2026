@@ -31,6 +31,8 @@ class SpindexerMotorControl : OpMode() {
             spindexer.motorState = targetPosition
         }
 
+        spindexer.update()
+
         telemetry.addData("Target Position", targetPosition)
         telemetry.update()
     }

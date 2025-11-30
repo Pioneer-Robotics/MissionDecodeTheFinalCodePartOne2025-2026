@@ -8,6 +8,8 @@ import pioneer.decode.Artifact
 import kotlin.math.abs
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
+import pioneer.helpers.Chrono
+import pioneer.helpers.PIDController
 import kotlin.math.PI
 
 
@@ -85,7 +87,11 @@ class Spindexer(
     val currentScannedArtifact: Artifact?
         get() = scanArtifact()
 
-    private val ticksPerRadian = 935 / 2
+    private val ticksPerRadian = 8192 / 2
+
+    private val chrono = Chrono()
+
+    private val motorPID = PIDController(1.0, 0.0, 0.0)
 
     private val artifactVisibleTimer = ElapsedTime()
     private val artifactLostTimer = ElapsedTime()
@@ -121,12 +127,7 @@ class Spindexer(
         intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
 
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        motor.targetPosition = 0
-
-        motor.setPIDFCoefficients(
-            DcMotor.RunMode.RUN_USING_ENCODER,
-            PIDFCoefficients(10.0, 0.0, 5.0, 0.0)
-        )
+        motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
 
         intakeSensor.gain = 20.0f
     }
@@ -189,21 +190,12 @@ class Spindexer(
         return artifact
     }
 
-    private fun runMotorToState(power: Double = 0.65, toleranceTicks: Int = 1) {
+    private fun runMotorToState() {
         val targetTicks = (motorState.radians * ticksPerRadian).toInt()
         val currentTicks = motor.currentPosition
-        val tickDifference = abs(targetTicks - currentTicks)
+        val error = targetTicks - currentTicks
 
-        motor.apply {
-            if (tickDifference > toleranceTicks) {
-                targetPosition = targetTicks
-                mode = DcMotor.RunMode.RUN_TO_POSITION
-                this.power = power
-            } else {
-                this.power = 0.0
-                mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-            }
-        }
+        motor.power = motorPID.update(error.toDouble(), chrono.dt)
     }
 
     private fun checkForArtifact() {

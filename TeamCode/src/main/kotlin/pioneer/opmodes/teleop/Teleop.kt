@@ -2,6 +2,7 @@ package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.helpers.DashboardPlotter
@@ -32,10 +33,12 @@ class Teleop : BaseOpMode() {
 
     private fun addTelemetryData() {
         telemetry.addData("Drive Power", driver1.drivePower)
+        telemetry.addData("Flywheel TPS", bot.flywheel?.velocity)
         telemetry.addData("Flywheel Speed", driver2.flywheelSpeed)
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Pose", bot.pinpoint!!.pose)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy))
         telemetry.addData("Voltage", bot.batteryMonitor?.voltage)
+        telemetry.addData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS))
     }
 }
