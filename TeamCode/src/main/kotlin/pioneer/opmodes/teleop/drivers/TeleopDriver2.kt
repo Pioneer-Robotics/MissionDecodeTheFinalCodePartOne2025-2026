@@ -5,6 +5,7 @@ import pioneer.Bot
 import pioneer.decode.Artifact
 import pioneer.hardware.Turret
 import pioneer.helpers.Chrono
+import kotlin.time.DurationUnit
 import pioneer.helpers.Pose
 import kotlin.math.PI
 import kotlin.math.abs
@@ -13,7 +14,7 @@ class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
-    private val chrono = Chrono()
+    private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
 
     private enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
 
@@ -29,14 +30,15 @@ class TeleopDriver2(
         handleShootInput()
         processShooting()
         handleAutoTrack()
+        chrono.update() // Manual update to allow dt to match across the loop.
     }
 
     private fun updateFlywheelSpeed() {
         if (flywheelSpeed < 1.0 && gamepad.dpad_up) {
-            flywheelSpeed += 100.0 * chrono.dt / 1000
+            flywheelSpeed += 100.0 * chrono.dt
         }
         if (flywheelSpeed > 0.0 && gamepad.dpad_down) {
-            flywheelSpeed -= 100.0 * chrono.dt / 1000
+            flywheelSpeed -= 100.0 * chrono.dt
         }
         flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
     }
@@ -60,7 +62,7 @@ class TeleopDriver2(
 //        }
         if (abs(gamepad.right_stick_x) > 0.02) {
             bot.turret?.mode = Turret.Mode.MANUAL
-            turretAngle += 1000 * gamepad.right_stick_x.toDouble() * chrono.dt / 1000
+            turretAngle += 1000 * gamepad.right_stick_x.toDouble() * chrono.dt
             turretAngle.coerceIn(-PI, PI) // FIX: This will break if the turret has a different range. Try to hand off this to the Turret class
             bot.turret?.gotoAngle(turretAngle)
         }
