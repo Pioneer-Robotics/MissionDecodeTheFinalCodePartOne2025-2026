@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.PIDCoefficients
 import com.qualcomm.robotcore.hardware.PIDFCoefficients
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
@@ -28,6 +29,9 @@ class Flywheel(
         set(value) {
             flywheel.velocity = value
         }
+
+    val current
+        get() = flywheel.getCurrent(CurrentUnit.MILLIAMPS)
 
     override fun init() {
         flywheel = hardwareMap.get(DcMotorEx::class.java, motorName).apply {
