@@ -118,13 +118,15 @@ class Spindexer(
         }
 
     override fun init() {
-        motor = hardwareMap.get(DcMotorEx::class.java, motorName)
-        intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply { init() }
+        motor = hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+            mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        }
 
-        motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-
-        intakeSensor.gain = 20.0f
+        intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply {
+            init()
+            gain = 20.0f
+        }
     }
 
     /**
