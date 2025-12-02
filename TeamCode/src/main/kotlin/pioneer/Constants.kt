@@ -99,25 +99,33 @@ object Follower {
     /** The maximum drive velocity in cm per second. */
     const val MAX_DRIVE_VELOCITY = 100.0
 
+
     /** The maximum drive acceleration in cm per second squared. */
     const val MAX_DRIVE_ACCELERATION = 50.0
+
+    /** The maximum angular velocity in rad per second. */
+    const val MAX_ANGULAR_VELOCITY = 0.0
+
+    /** The maximum angular acceleration in rad per second squared. */
+    const val MAX_ANGULAR_ACCELERATION = 0.0
 
     /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
     const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
 
     // X-axis PID coefficients for the trajectory follower
     @JvmField var X_KP = 0.0
-
     @JvmField var X_KI = 0.0
-
     @JvmField var X_KD = 0.0
 
     // Y-axis PID coefficients for the trajectory follower
     @JvmField var Y_KP = 0.0
-
     @JvmField var Y_KI = 0.0
-
     @JvmField var Y_KD = 0.0
+
+    // Theta PID coefficients for the trajectory follower
+    @JvmField var THETA_KP = 0.0
+    @JvmField var THETA_KI = 0.0
+    @JvmField var THETA_KD = 0.0
 }
 
 object Camera {
