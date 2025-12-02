@@ -7,18 +7,6 @@ import pioneer.helpers.Pose
  */
 interface Path {
     /**
-     * Enum for heading interpolation modes
-     */
-    enum class HeadingInterpolationMode {
-        LINEAR,
-    }
-
-    /**
-     * Enum for heading interpolation mode
-     */
-    var headingInterpolationMode: HeadingInterpolationMode
-
-    /**
      * The start and end poses of the path
      */
     var startPose: Pose
@@ -55,13 +43,6 @@ interface Path {
     fun getTFromLength(length: Double): Double
 
     /**
-     * Gets the heading at the given parameter t
-     * @param t The parameter value in the range [0, 1]
-     * @return The heading at the given parameter
-     */
-    fun getHeading(t: Double): Double
-
-    /**
      * Gets the point at the given parameter t
      * @param t The parameter value in the range [0, 1]
      * @return The point at the given parameter
@@ -88,17 +69,4 @@ interface Path {
      * @return The closest point on the path to the given position
      */
     fun getClosestPoint(position: Pose): Pose = getPoint(getClosestPointT(position))
-
-    /**
-     * Gets the heading goal at the given parameter t based on the interpolation mode
-     * @param t The parameter value in the range [0, 1]
-     * @return The heading goal at the given parameter
-     */
-    fun getHeadingGoal(t: Double): Double {
-        when (headingInterpolationMode) {
-            HeadingInterpolationMode.LINEAR -> {
-                return startPose.theta + (endPose.theta - startPose.theta) * t
-            }
-        }
-    }
 }
