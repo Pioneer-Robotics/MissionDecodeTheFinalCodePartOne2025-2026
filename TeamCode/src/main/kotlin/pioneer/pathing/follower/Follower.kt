@@ -73,7 +73,6 @@ class Follower(
         }
 
     fun update(dt: Double) {
-
         // Ensure motion profile and path are set
         val motionProfile = this.motionProfile ?: return
         val path = this.path ?: return
@@ -157,7 +156,7 @@ class Follower(
     private fun calculateVelocityConstraint(s: Double, path: Path): Double {
         val t = s / path.getLength()
         val k = path.getCurvature(t)
-        val curveMaxVelocity = sqrt(pioneer.Constants.Follower.MAX_CENTRIPETAL_ACCELERATION / abs(k))
+        val curveMaxVelocity = sqrt(Constants.Follower.MAX_CENTRIPETAL_ACCELERATION / abs(k))
         return if (curveMaxVelocity.isNaN()) {
             Constants.Follower.MAX_DRIVE_VELOCITY
         } else {
@@ -171,15 +170,7 @@ class Follower(
         val startState = MotionState(0.0, 0.0, 0.0)
         val endState = MotionState(totalDistance, 0.0, 0.0)
         val velocityConstraint = { s: Double ->
-            // Velocity constraint based on path curvature
-            val t = s / totalDistance
-            val k = path.getCurvature(t)
-            val curveMaxVelocity = sqrt(Constants.Follower.MAX_CENTRIPETAL_ACCELERATION / abs(k))
-            if (curveMaxVelocity.isNaN()) {
-                Constants.Follower.MAX_DRIVE_VELOCITY
-            } else {
-                min(Constants.Follower.MAX_DRIVE_VELOCITY, curveMaxVelocity)
-            }
+            calculateVelocityConstraint(s, path)
         }
         val accelerationConstraint = { s: Double ->
             // Constant acceleration constraint
