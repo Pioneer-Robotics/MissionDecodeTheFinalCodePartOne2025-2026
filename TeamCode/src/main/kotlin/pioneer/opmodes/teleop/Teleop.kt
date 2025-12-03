@@ -32,9 +32,13 @@ class Teleop : BaseOpMode() {
     }
 
     private fun addTelemetryData() {
-        telemetry.addData("Drive Power", driver1.drivePower)
+        telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
+        telemetry.addData("Turret Mode", bot.turret?.mode)
+        telemetry.addData("Shoot State", driver2.shootState)
+        telemetry.addData("Flywheel Speed", driver2.flywheelSpeedEnum)
         telemetry.addData("Flywheel TPS", bot.flywheel?.velocity)
-        telemetry.addData("Flywheel Speed", driver2.flywheelSpeed)
+        telemetry.addData("Turret Angle", driver2.turretAngle)
+        telemetry.addData("Drive Power", driver1.drivePower)
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Pose", bot.pinpoint!!.pose)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy))

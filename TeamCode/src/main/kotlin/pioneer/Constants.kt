@@ -160,8 +160,14 @@ object Constants {
             get() = YawPitchRollAngles(AngleUnit.RADIANS, YAW_DEG * DEG_TO_RAD, PITCH_DEG * DEG_TO_RAD, ROLL_DEG * DEG_TO_RAD, 0)
     }
 
+    @Config
     object Spindexer {
-        const val POSITION_TOLERANCE_TICKS = 50
+        @JvmField var KP = 0.0005
+        @JvmField var KI = 0.0005
+        @JvmField var KD = 0.00001
+        @JvmField var KS = 0.1
+
+        const val POSITION_TOLERANCE_TICKS = 200
         const val TICKS_PER_REV = 8192
         // TODO: Tune these values when we test on the real hardware
         // Time required to confirm an artifact has been intaken (ms)
@@ -177,8 +183,8 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.0
-        const val LAUNCHER_TRIGGERED = 1.0
+        const val LAUNCHER_REST = 0.067
+        const val LAUNCHER_TRIGGERED = 0.315
     }
 }
 

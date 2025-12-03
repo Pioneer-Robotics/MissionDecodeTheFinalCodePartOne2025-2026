@@ -5,8 +5,9 @@ import pioneer.Bot
 import pioneer.decode.Artifact
 import pioneer.hardware.Turret
 import pioneer.helpers.Chrono
-import kotlin.time.DurationUnit
 import pioneer.helpers.Pose
+import pioneer.helpers.Toggle
+import pioneer.helpers.next
 import kotlin.math.PI
 import kotlin.math.abs
 
@@ -14,58 +15,64 @@ class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
-    private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
 
-    private enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
+    enum class FlywheelSpeed(val speed: Double) {
+        SHORT_RANGE(0.75),
+        LONG_RANGE(1.0),
+    }
 
-    var flywheelSpeed = 0.7 * 1200
-    private var shootState = ShootState.READY
+    private val chrono = Chrono(autoUpdate = false)
+    private val isAutoTracking = Toggle(false)
+    private val flywheelToggle = Toggle(false)
+    private val changeFlywheelSpeedToggle = Toggle(false)
+
+    enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
+    var flywheelSpeedEnum = FlywheelSpeed.SHORT_RANGE
+    var flywheelSpeed = 0.7
+    var shootState = ShootState.READY
     private var shootingAll = false
     private var remainingShots = 0
-    private var turretAngle = 0.0
+    var turretAngle = 0.0
 
     fun update() {
         updateFlywheelSpeed()
         handleFlywheel()
+        handleTurret()
         handleShootInput()
         processShooting()
-        handleAutoTrack()
         chrono.update() // Manual update to allow dt to match across the loop.
+
+        if (gamepad.square) bot.launcher?.triggerLaunch()
     }
 
     private fun updateFlywheelSpeed() {
-        if (flywheelSpeed < 1.0 && gamepad.dpad_up) {
-            flywheelSpeed += 100.0 * chrono.dt
+//        if (flywheelSpeed < 1.0 && gamepad.dpad_up) {
+//            flywheelSpeed += chrono.dt * 0.5
+//        }
+//        if (flywheelSpeed > 0.0 && gamepad.dpad_down) {
+//            flywheelSpeed -= chrono.dt * 0.5
+//        }
+//        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
+        changeFlywheelSpeedToggle.toggle(gamepad.dpad_up)
+        if (changeFlywheelSpeedToggle.justChanged) {
+            flywheelSpeedEnum = flywheelSpeedEnum.next()
+            flywheelSpeed = flywheelSpeedEnum.speed
         }
-        if (flywheelSpeed > 0.0 && gamepad.dpad_down) {
-            flywheelSpeed -= 100.0 * chrono.dt
-        }
-        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
     }
 
     private fun handleFlywheel() {
-        if (gamepad.dpad_left) {
-            bot.flywheel?.velocity = flywheelSpeed * 1200
-            bot.turret?.mode = Turret.Mode.AUTO_TRACK
+        flywheelToggle.toggle(gamepad.dpad_left)
+        if (flywheelToggle.state) {
+            bot.flywheel?.velocity = -flywheelSpeed * 1200
         } else {
-            bot.turret?.mode = Turret.Mode.MANUAL
             bot.flywheel?.velocity = 0.0
         }
     }
 
     private fun handleTurret() {
-//        if (abs(gamepad.right_stick_x) > 0.02) {
-//            bot.turret?.mode = Turret.Mode.MANUAL
-//            bot.turret?.gotoAngle(gamepad.right_stick_x.toDouble() * PI)
-//        } else {
-//            bot.turret?.gotoAngle(0.0)
-//        }
-        if (abs(gamepad.right_stick_x) > 0.02) {
-            bot.turret?.mode = Turret.Mode.MANUAL
-            turretAngle += 1000 * gamepad.right_stick_x.toDouble() * chrono.dt
-            turretAngle.coerceIn(-PI, PI) // FIX: This will break if the turret has a different range. Try to hand off this to the Turret class
-            bot.turret?.gotoAngle(turretAngle)
-        }
+        isAutoTracking.toggle(gamepad.cross)
+        bot.turret?.mode = if (isAutoTracking.state) Turret.Mode.AUTO_TRACK else Turret.Mode.MANUAL
+        if (bot.turret?.mode == Turret.Mode.MANUAL) handleManualTrack() else handleAutoTrack()
     }
 
     private fun handleShootInput() {
@@ -84,6 +91,7 @@ class TeleopDriver2(
             ShootState.MOVING_TO_POSITION -> {
                 if (bot.spindexer?.reachedTarget == true) {
                     bot.launcher?.triggerLaunch()
+                    bot.spindexer?.popCurrentArtifact()
                     shootState = ShootState.LAUNCHING
                 }
             }
@@ -131,11 +139,20 @@ class TeleopDriver2(
         }
     }
 
+    private fun handleManualTrack() {
+        if (abs(gamepad.right_stick_x) > 0.02) {
+            turretAngle += gamepad.right_stick_x.toDouble() * chrono.dt
+            turretAngle.coerceIn(
+                -PI,
+                PI
+            ) // FIX: This will break if the turret has a different range. Try to hand off this to the Turret class
+        }
+        bot.turret?.gotoAngle(turretAngle)
+    }
+
     private fun handleAutoTrack() {
-        if (false /*autoTrack*/) {
-            bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), Pose())
-        } else {
-            handleTurret()
+        if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
+            bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), Pose(10.0,10.0))
         }
     }
 }

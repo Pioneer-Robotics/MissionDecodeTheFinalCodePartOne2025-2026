@@ -2,6 +2,7 @@ package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.decode.Artifact
 import kotlin.math.abs
@@ -10,6 +11,7 @@ import pioneer.Constants
 import pioneer.helpers.Chrono
 import pioneer.helpers.PIDController
 import kotlin.math.PI
+import kotlin.math.sign
 
 
 /*
@@ -48,11 +50,11 @@ class Spindexer(
     // Motor positions in radians
     enum class MotorPosition(val radians: Double) {
         INTAKE_1(0 * PI / 6),
-        OUTTAKE_1(3 * PI / 6), // Shift down (+2)
-        INTAKE_2(2 * PI / 6),
-        OUTTAKE_2(5 * PI / 6), // Shift down (+2)
-        INTAKE_3(4 * PI / 6),
-        OUTTAKE_3(1 * PI / 6); // Shift down (+2) (wrapped)
+        OUTTAKE_1(3 * PI / 3), // Shift down (+2)
+        INTAKE_2(2 * PI / 3),
+        OUTTAKE_2(5 * PI / 3), // Shift down (+2)
+        INTAKE_3(4 * PI / 3),
+        OUTTAKE_3(1 * PI / 3); // Shift down (+2) (wrapped)
     }
 
     // Indirect reference to internal artifacts array to prevent modification
@@ -88,9 +90,12 @@ class Spindexer(
 
     // Private variables
     private val chrono = Chrono()
-        private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
-    // TODO: Tune PID
-    private val motorPID = PIDController(0.00025, 0.0, 0.0)
+    private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
+    private val motorPID = PIDController(
+        Constants.Spindexer.KP,
+        Constants.Spindexer.KI,
+        Constants.Spindexer.KD
+    )
     private val artifactVisibleTimer = ElapsedTime()
     private val artifactLostTimer = ElapsedTime()
     private var artifactSeen = false
@@ -199,9 +204,10 @@ class Spindexer(
         val error = wrapTicks(rawError)
 
         // PID -> -1..1 output
-        val power = motorPID.update(error.toDouble(), chrono.dt)
-
-        motor.power = power.coerceIn(-1.0, 1.0)
+        var power = motorPID.update(error.toDouble(), chrono.dt)
+        // Static constant
+        power += if (abs(power) > 0.01) Constants.Spindexer.KS * sign(power) else 0.0
+        motor.power = -power.coerceIn(-1.0, 1.0) * 0.5 // FIXME: POWER SCALING
     }
 
     private fun checkForArtifact() {
