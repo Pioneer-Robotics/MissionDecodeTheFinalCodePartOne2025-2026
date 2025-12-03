@@ -5,6 +5,9 @@ import pioneer.Bot
 import pioneer.Constants
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 
 class TeleopDriver1(
     var gamepad: Gamepad,
@@ -29,7 +32,12 @@ class TeleopDriver1(
     }
 
     private fun drive() {
-        val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
+        var direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
+        if (fieldCentric) {
+            val angle = atan2(direction.y, direction.x) - bot.pinpoint?.pose!!.theta
+            val mag = direction.getLength()
+            direction = Pose(mag * cos(angle), mag * sin(angle))
+        }
         bot.mecanumBase?.setDrivePower(
             Pose(
                 vx = direction.x,
