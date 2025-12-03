@@ -56,11 +56,11 @@ class AprilTagsTest : BaseOpMode() {
                 val rangeShadow = cos(tgRelPose.elevation) * tgRelPose.range
                 //Method 1: Angle origin is on camera
                 //yaw+theta gives robot theta, then - bearing?
-                val insideAngle1 = (tgRelPose.yaw + tagInfo!!.theta) - tgRelPose.bearing //Not sure about signs(+/-) here
+                val insideAngle1 = (-tgRelPose.yaw + tagInfo!!.theta) - tgRelPose.bearing //Not sure about signs(+/-) here
                 val dX1 = rangeShadow * sin(insideAngle1)
                 val dY1 = rangeShadow * cos(insideAngle1)
                 //Method 2: Angle origin is on AprilTag
-                val insideAngle2 = (PI/4) - tgRelPose.yaw - tgRelPose.bearing
+                val insideAngle2 = (PI/2 -tagInfo.theta ) - tgRelPose.yaw - tgRelPose.bearing
                 val dX2 = rangeShadow * cos(insideAngle2)
                 val dy2 = rangeShadow * sin(insideAngle2)
 
