@@ -2,7 +2,6 @@ package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.decode.Artifact
 import kotlin.math.abs
@@ -11,7 +10,9 @@ import pioneer.Constants
 import pioneer.helpers.Chrono
 import pioneer.helpers.PIDController
 import kotlin.math.PI
+import kotlin.math.max
 import kotlin.math.sign
+import kotlin.time.DurationUnit
 
 
 /*
@@ -66,7 +67,11 @@ class Spindexer(
 
     // Getter to check if motor has reached target position
     val reachedTarget: Boolean
-        get() = abs(targetMotorPosition - currentMotorPosition) < Constants.Spindexer.POSITION_TOLERANCE_TICKS
+        get() {
+            // Compute circular error
+            val error = wrapTicks(targetMotorPosition - currentMotorPosition)
+            return abs(error) < Constants.Spindexer.POSITION_TOLERANCE_TICKS
+        }
 
     // Getters for artifact storage status
     val isFull: Boolean
@@ -89,7 +94,8 @@ class Spindexer(
         get() = scanArtifact()
 
     // Private variables
-    private val chrono = Chrono()
+    private var lastPower = 0.0
+    private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
     private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
     private val motorPID = PIDController(
         Constants.Spindexer.KP,
@@ -139,6 +145,7 @@ class Spindexer(
      * Checks for new artifacts if in an intake position.
      */
     override fun update() {
+        chrono.update()
         runMotorToState()
         checkForArtifact()
     }
@@ -192,11 +199,23 @@ class Spindexer(
         return artifact
     }
 
+    fun reset() {
+        // Re-add stored artifacts
+    }
+
     private fun wrapTicks(error: Int, ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV): Int {
         var e = error % ticksPerRev
         if (e > ticksPerRev / 2) e -= ticksPerRev
         if (e < -ticksPerRev / 2) e += ticksPerRev
         return e
+    }
+
+    private fun rampPower(desired: Double, dt: Double): Double {
+        val maxDelta = Constants.Spindexer.MAX_POWER_RATE * dt / 1000
+        val delta = desired - lastPower
+        val clipped = delta.coerceIn(-maxDelta, maxDelta)
+        lastPower += clipped
+        return lastPower
     }
 
     private fun runMotorToState() {
@@ -205,9 +224,17 @@ class Spindexer(
 
         // PID -> -1..1 output
         var power = motorPID.update(error.toDouble(), chrono.dt)
+
+        // Ramp power to prevent sudden acceleration
+        power = rampPower(power, chrono.dt)
+
         // Static constant
-        power += if (abs(power) > 0.01) Constants.Spindexer.KS * sign(power) else 0.0
-        motor.power = -power.coerceIn(-1.0, 1.0) * 0.5 // FIXME: POWER SCALING
+        val adjustedKS = 0.04 + 0.025 * numStoredArtifacts
+        power += if (abs(error) > 100) adjustedKS * sign(error.toDouble()) else 0.0
+
+        // Apply power (inverted due to motor orientation)
+        val maxPower = 0.75
+        motor.power = -power.coerceIn(-maxPower, maxPower)
     }
 
     private fun checkForArtifact() {

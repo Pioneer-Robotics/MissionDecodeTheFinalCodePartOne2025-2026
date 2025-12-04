@@ -9,7 +9,7 @@ class ManualSpindexerControl: OpMode() {
     private lateinit var motor: DcMotorEx
 
     override fun init() {
-        motor = hardwareMap.get(DcMotorEx::class.java, "spindexerMotor")
+        motor = hardwareMap.get(DcMotorEx::class.java, "turretMotor")
     }
 
     override fun loop() {

@@ -7,6 +7,7 @@ import pioneer.helpers.DashboardPlotter
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.HermitePath
+import kotlin.math.PI
 import kotlin.math.hypot
 
 @Autonomous(name = "Pathing Test", group = "Testing")
@@ -32,8 +33,8 @@ class PathingTest : BaseOpMode() {
                 bot.follower.path =
                     HermitePath
                         .Builder()
-                        .addPoint(Pose(0.0, 0.0), Pose(100.0, 0.0))
-                        .addPoint(Pose(50.0, 100.0), Pose(100.0, 0.0))
+                        .addPoint(Pose(0.0, 0.0, theta = 0.0), Pose(100.0, 0.0))
+                        .addPoint(Pose(50.0, 100.0, theta = PI/2), Pose(100.0, 0.0))
                         .build()
                 bot.follower.start()
                 state = State.RUNNING

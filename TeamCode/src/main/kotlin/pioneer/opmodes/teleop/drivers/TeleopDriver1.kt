@@ -25,6 +25,7 @@ class TeleopDriver1(
         updateDrivePower()
         updateFieldCentric()
         updateIntake()
+        handleSpindexerReset()
         bot.spindexer?.update()
     }
 
@@ -67,6 +68,15 @@ class TeleopDriver1(
             } else {
                 bot.intake?.stop()
             }
+        }
+        if (intakeToggle.justChanged && intakeToggle.state) {
+            bot.spindexer?.moveToNextOpenIntake()
+        }
+    }
+
+    private fun handleSpindexerReset() {
+        if (gamepad.share) {
+            bot.spindexer?.reset()
         }
     }
 }

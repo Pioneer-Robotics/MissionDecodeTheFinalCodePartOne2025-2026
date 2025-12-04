@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.Constants
+import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.PI
@@ -18,6 +19,7 @@ class OdometerOffsetCalculation : BaseOpMode() {
 
     override fun onInit() {
         bot = Bot.fromType(BotType.MECANUM_BOT, hardwareMap)
+        bot.initAll() // Init before using pinpoint
         bot.pinpoint!!.update(dt) // Get initial encoder values
         initialXEncoderTicks = bot.pinpoint!!.encoderXTicks
         initialYEncoderTicks = bot.pinpoint!!.encoderYTicks
@@ -36,6 +38,8 @@ class OdometerOffsetCalculation : BaseOpMode() {
 
             telemetry.addData("X Offset", xOffset)
             telemetry.addData("Y Offset", yOffset)
+            FileLogger.info("Odometer Offset Calibration", "X Offset: $xOffset")
+            FileLogger.info("Odometer Offset Calibration", "Y Offset: $xOffset")
         } else {
             val dTheta = (bot.pinpoint!!.pose.theta - prevTheta) % (2 * PI)
 

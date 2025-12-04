@@ -110,6 +110,9 @@ class TeleopDriver2(
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {
+        // Can't shoot when flywheel isn't moving
+        if (!flywheelToggle.state) return
+        // Start artifact launch sequence
         val moved = if (artifact != null) {
             bot.spindexer?.moveToNextOuttake(artifact)
         } else {
@@ -152,7 +155,7 @@ class TeleopDriver2(
 
     private fun handleAutoTrack() {
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
-            bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), Pose(10.0,10.0))
+            bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), Pose(0.0,270.0))
         }
     }
 }

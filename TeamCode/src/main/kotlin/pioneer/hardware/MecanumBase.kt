@@ -66,6 +66,10 @@ class MecanumBase(
         val ffY = calculateFeedforward(pose.vy, pose.ay, Constants.Drive.kV.y, Constants.Drive.kA.y, Constants.Drive.kS.y)
         val ffTheta = calculateFeedforward(pose.omega, pose.alpha, Constants.Drive.kV.theta, Constants.Drive.kA.theta, Constants.Drive.kS.theta)
 
+//        val ffX = calculateFeedforward(pose.vx, pose.ax, Constants.Drive.kV.x, Constants.Drive.kAX, Constants.Drive.kS.x)
+//        val ffY = calculateFeedforward(pose.vy, pose.ay, Constants.Drive.kV.y, Constants.Drive.kAY, Constants.Drive.kS.y)
+//        val ffTheta = calculateFeedforward(pose.omega, pose.alpha, Constants.Drive.kV.theta, Constants.Drive.kAT, Constants.Drive.kS.theta)
+
         val motorPowers = calculateMotorPowers(Pose(vx=ffX, vy=ffY, omega=ffTheta))
         motors.values.forEachIndexed { index, motor ->
             motor.power = motorPowers[index].coerceIn(-1.0, 1.0)

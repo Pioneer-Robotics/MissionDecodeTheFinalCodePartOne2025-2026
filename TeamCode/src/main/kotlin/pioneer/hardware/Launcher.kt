@@ -17,7 +17,7 @@ class Launcher(
     val resetTimer = ElapsedTime()
 
     val isReset: Boolean
-        get() = resetTimer.milliseconds() > 500
+        get() = resetTimer.milliseconds() > 750
 
     private val scheduler = Executors.newSingleThreadScheduledExecutor()
     private val isTriggered = AtomicBoolean(false)

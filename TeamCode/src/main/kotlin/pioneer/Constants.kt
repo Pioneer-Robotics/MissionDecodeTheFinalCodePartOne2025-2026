@@ -55,6 +55,7 @@ object Constants {
     }
 
     // -------- Drivebase (mecanum) --------
+    @Config
     object Drive {
         // geometry (cm)
         const val TRACK_WIDTH_CM = 0.0
@@ -67,8 +68,15 @@ object Constants {
         const val DEFAULT_POWER = 0.7
 
         // Feedforward gains using Pose(x,y,theta)
-        val kV = Pose(x = 0.006, y = 0.0052, theta = 0.025)
-        val kA = Pose(x = 0.0025, y = 0.0001, theta = 0.0)
+//        @JvmField var kVX = 0.0
+//        @JvmField var kVY = 0.0
+//        @JvmField var kVT = 0.0
+//        @JvmField var kAX = 0.0
+//        @JvmField var kAY = 0.0
+//        @JvmField var kAT = 0.0
+
+        val kV = Pose(x = 0.0063, y = 0.0055, theta = -0.0147)
+        val kA = Pose(x = 0.0025, y = 0.001, theta = 0.0)
         val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
 
         val MOTOR_CONFIG =
@@ -83,12 +91,12 @@ object Constants {
     // -------- Pinpoint (odometry pods) --------
     object Pinpoint {
         // offsets from tracking point (mm): +forward, +left
-        const val Y_POD_OFFSET_MM = -107.0
-        const val X_POD_OFFSET_MM = 125.0
+        const val Y_POD_OFFSET_MM = -156.7
+        const val X_POD_OFFSET_MM = 67.0
 
         // encoder configuration. Y should increase left, X should increase forward
         val Y_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
-        val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.REVERSED
+        val X_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD
 
         val ENCODER_RESOLUTION = GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD
     }
@@ -162,10 +170,12 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.0005
-        @JvmField var KI = 0.0005
-        @JvmField var KD = 0.00001
-        @JvmField var KS = 0.1
+        @JvmField var KP = 0.00045
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.025
+        @JvmField var KS = 0.075
+
+        @JvmField var MAX_POWER_RATE = 5.0
 
         const val POSITION_TOLERANCE_TICKS = 200
         const val TICKS_PER_REV = 8192
@@ -177,7 +187,7 @@ object Constants {
     }
 
     object Turret {
-        const val TICKS_PER_REV = 538 * 3
+        const val TICKS_PER_REV = 384.5 * 3
         const val HEIGHT = 0.0 //TODO MEASURE
         const val THETA = 0.93
     }
