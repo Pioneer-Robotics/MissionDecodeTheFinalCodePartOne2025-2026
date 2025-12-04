@@ -144,7 +144,7 @@ class TeleopDriver2(
 
     private fun handleManualTrack() {
         if (abs(gamepad.right_stick_x) > 0.02) {
-            turretAngle += gamepad.right_stick_x.toDouble() * chrono.dt
+            turretAngle -= gamepad.right_stick_x.toDouble() * chrono.dt
             turretAngle.coerceIn(
                 -PI,
                 PI
