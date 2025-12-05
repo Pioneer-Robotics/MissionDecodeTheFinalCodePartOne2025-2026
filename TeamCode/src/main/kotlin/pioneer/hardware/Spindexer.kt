@@ -220,10 +220,10 @@ class Spindexer(
     }
 
     fun reset() {
-        // Re-add stored artifacts
-        _artifacts[0] = null
-        _artifacts[1] = null
-        _artifacts[2] = null
+        // Clear all stored artifacts
+        for (i in _artifacts.indices) {
+            _artifacts[i] = null
+        }
     }
 
     fun moveManual(power: Double) {
@@ -231,10 +231,11 @@ class Spindexer(
         manualMoveTimer.reset()
     }
 
-    fun setArtifacts(a1: Artifact?, a2: Artifact?, a3: Artifact?) {
-        _artifacts[0] = a1
-        _artifacts[1] = a2
-        _artifacts[2] = a3
+    fun setArtifacts(vararg artifacts: Artifact?) {
+        require(artifacts.size == 3) { "Exactly 3 artifacts must be provided." }
+        artifacts.forEachIndexed { index, artifact ->
+            _artifacts[index] = artifact
+        }
     }
 
     private fun wrapTicks(error: Int, ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV): Int {
@@ -382,5 +383,16 @@ class Spindexer(
         }
 
         return false
+    }
+
+    // To be used in tandem with reset(). Only to be called when something bad happens :(
+    fun rescanAllArtifacts() {
+        intakePositions.forEachIndexed { i, position ->
+            motorState = position
+            // Check if reached target and rescan artifact
+            if (reachedTarget) {
+                _artifacts[i] = scanArtifact()
+            }
+        }
     }
 }

@@ -47,35 +47,4 @@ class Camera(
     fun close() {
         portal.close()
     }
-
-    companion object {
-        fun createAprilTagProcessor(
-            position: Position = Position(DistanceUnit.CM, 0.0, 0.0, 0.0, 0),
-            orientation: YawPitchRollAngles = YawPitchRollAngles(AngleUnit.RADIANS, 0.0, 0.0, 0.0, 0),
-            distanceUnit: DistanceUnit = DistanceUnit.CM,
-            angleUnit: AngleUnit = AngleUnit.RADIANS,
-            draw: Boolean = false,
-        ): AprilTagProcessor {
-            val library: AprilTagLibrary =
-                AprilTagLibrary
-                    .Builder()
-                    .addTags(AprilTagGameDatabase.getCurrentGameTagLibrary())
-                    .build()
-
-            val processor: AprilTagProcessor =
-                AprilTagProcessor
-                    .Builder()
-                    .setTagLibrary(library)
-                    .setCameraPose(position, orientation)
-                    .setLensIntrinsics(Constants.Camera.fx, Constants.Camera.fy, Constants.Camera.cx, Constants.Camera.cy)
-                    .setOutputUnits(distanceUnit, angleUnit)
-                    .setDrawTagID(draw)
-                    .setDrawTagOutline(draw)
-                    .setDrawAxes(draw)
-                    .setDrawCubeProjection(draw)
-                    .build()
-
-            return processor
-        }
-    }
 }

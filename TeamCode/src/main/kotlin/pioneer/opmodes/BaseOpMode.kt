@@ -27,6 +27,9 @@ abstract class BaseOpMode : OpMode() {
     protected val dt: Double
         get() = chrono.dt
 
+    val elapsedTime: Double
+        get() = getRuntime()
+
     final override fun init() {
         onInit() // Call user-defined init method
         bot.initAll() // Initialize bot hardware
