@@ -75,7 +75,7 @@ object Constants {
 //        @JvmField var kAY = 0.0
 //        @JvmField var kAT = 0.0
 
-        val kV = Pose(x = 0.0063, y = 0.0055, theta = -0.0147)
+        val kV = Pose(x = 0.0063, y = 0.0055, theta = -0.147)
         val kA = Pose(x = 0.0025, y = 0.001, theta = 0.0)
         val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
 
@@ -108,7 +108,7 @@ object Constants {
         const val POSITION_THRESHOLD = 0.5
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.01
+        const val ROTATION_THRESHOLD = 0.05
 
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 100.0
@@ -120,23 +120,23 @@ object Constants {
         const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
 
         /** The maximum angular velocity in rad per second. */
-        const val MAX_ANGULAR_VELOCITY = 0.0
+        const val MAX_ANGULAR_VELOCITY = 1.0
 
         /** The maximum angular acceleration in rad per second squared. */
-        const val MAX_ANGULAR_ACCELERATION = 0.0
+        const val MAX_ANGULAR_ACCELERATION = 10.0
 
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 0.0
+        @JvmField var X_KP = 10.0
         @JvmField var X_KI = 0.0
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 0.0
+        @JvmField var Y_KP = 10.0
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 0.0
+        @JvmField var THETA_KP = 0.5
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
     }
@@ -193,7 +193,7 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.067
+        const val LAUNCHER_REST = 0.1
         const val LAUNCHER_TRIGGERED = 0.315
     }
 }

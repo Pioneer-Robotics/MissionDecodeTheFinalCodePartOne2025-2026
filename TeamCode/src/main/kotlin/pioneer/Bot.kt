@@ -1,6 +1,7 @@
 package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.general.AllianceColor
 import pioneer.hardware.BatteryMonitor
 import pioneer.hardware.Camera
 import pioneer.hardware.Flywheel
@@ -35,6 +36,8 @@ class Bot private constructor(
     fun initAll() {
         hardwareComponents.values.forEach { it.init() }
     }
+
+    var allianceColor = AllianceColor.NEUTRAL
 
     // Property-style access for known components
     val mecanumBase get() = get<MecanumBase>()

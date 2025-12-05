@@ -68,6 +68,6 @@ class Pinpoint(
     override fun reset(pose: Pose) {
         this.pose = pose
         // Coordinate conversion back to Pinpoint system
-        pinpoint.setPosition(Pose2D(DistanceUnit.CM, pose.y, -pose.x, AngleUnit.RADIANS, -pose.theta))
+        pinpoint.setPosition(Pose2D(DistanceUnit.CM, pose.y, -pose.x, AngleUnit.RADIANS, pose.theta))
     }
 }

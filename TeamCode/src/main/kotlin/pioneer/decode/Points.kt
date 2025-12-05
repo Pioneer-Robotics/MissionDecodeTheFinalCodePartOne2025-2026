@@ -30,14 +30,15 @@ class Points(color: AllianceColor) {
         return when (c) {
             AllianceColor.RED -> this
             AllianceColor.BLUE -> Pose(-this.x, this.y, -this.theta)
+            AllianceColor.NEUTRAL -> this
         }
     }
 
     // Key positions on the field
     // Written in ACTION_POSITION format
-    val START_GOAL            = Pose(130.0, 137.0, 0.0).T(color)
+    val START_GOAL            = Pose(130.0, 137.0, theta=3*PI/ 4).T(color)
 
-    val SHOOT_GOAL_CLOSE      = Pose(60.0,  60.0,  0.0).T(color)
+    val SHOOT_GOAL_CLOSE      = Pose(60.0,  60.0,  theta=0.0).T(color)
 
     private fun collectY(i: Int) = 30 - (i * 60.0) // 30, -30, -90
 

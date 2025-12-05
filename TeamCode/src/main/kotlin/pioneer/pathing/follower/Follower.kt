@@ -49,6 +49,8 @@ class Follower(
             reset()
         }
 
+    private var poseAtStartTheta: Double = 0.0
+
     val done: Boolean get() {
         // Ensure path and motion profile are set
         val path = this.path ?: return false
@@ -82,7 +84,16 @@ class Follower(
         val t = elapsedTime.seconds().coerceAtMost(motionProfile.duration())
         // Get the target state from the motion profile
         val targetState = motionProfile[t]
-        val headingTarget = headingProfile[t]
+
+        val headingTargetRaw = headingProfile[t]
+        val startTheta = poseAtStartTheta
+
+        val headingTarget = MotionState(
+            x = startTheta + headingTargetRaw.x,
+            v = headingTargetRaw.v,
+            a = headingTargetRaw.a
+        )
+
 
         // Calculate the parameter t for the path based on the target state
         val pathT = path.getTFromLength(targetState.x)
@@ -151,6 +162,9 @@ class Follower(
         // Recalculate the motion profile when the path is set
         motionProfile = calculateMotionProfile()
         headingProfile = calculateHeadingProfile()
+        FileLogger.debug("Follower","Motion Profile Time: ${motionProfile?.duration()}")
+        FileLogger.debug("Follower","Heading Profile Time: ${headingProfile?.duration()}")
+        FileLogger.debug("Follower","Heading Profile Start: ${headingProfile?.start()}")
     }
 
     private fun calculateVelocityConstraint(s: Double, path: Path): Double {
@@ -185,11 +199,23 @@ class Follower(
     }
 
     private fun calculateHeadingProfile(): MotionProfile? {
-        return if (path != null) MotionProfileGenerator.generateMotionProfile(
-            MotionState(localizer.pose.theta, 0.0, 0.0),
-            MotionState(path!!.endPose.theta, 0.0, 0.0),
+        val path = this.path ?: return null
+
+        val startTheta = localizer.pose.theta
+        poseAtStartTheta = startTheta
+        val endTheta = path.endPose.theta
+
+        // Offset everything so profile is generated from 0 → Δθ
+        val deltaTheta = MathUtils.normalizeRadians(endTheta - startTheta)
+
+        // Raw profile always starts from 0 → deltaTheta
+        val rawProfile = MotionProfileGenerator.generateMotionProfile(
+            MotionState(0.0, 0.0, 0.0),
+            MotionState(deltaTheta, 0.0, 0.0),
             { Constants.Follower.MAX_ANGULAR_VELOCITY },
-            { Constants.Follower.MAX_ANGULAR_ACCELERATION },
-        ) else null
+            { Constants.Follower.MAX_ANGULAR_ACCELERATION }
+        )
+
+        return rawProfile
     }
 }

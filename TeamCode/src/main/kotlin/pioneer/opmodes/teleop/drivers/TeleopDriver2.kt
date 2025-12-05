@@ -3,22 +3,27 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.decode.Artifact
+import pioneer.decode.GoalTag
+import pioneer.general.AllianceColor
+import pioneer.hardware.Spindexer
 import pioneer.hardware.Turret
 import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
+import java.lang.Math.pow
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.pow
 
 class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
 
-    enum class FlywheelSpeed(val speed: Double) {
-        SHORT_RANGE(0.75),
-        LONG_RANGE(1.0),
+    enum class FlywheelSpeed(val velocity: Double) {
+        SHORT_RANGE(800.0),
+        LONG_RANGE(1000.0),
     }
 
     private val chrono = Chrono(autoUpdate = false)
@@ -27,9 +32,9 @@ class TeleopDriver2(
     private val changeFlywheelSpeedToggle = Toggle(false)
 
     enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
-    var flywheelSpeedEnum = FlywheelSpeed.SHORT_RANGE
-    var flywheelSpeed = 0.7
+    var flywheelVelocityEnum = FlywheelSpeed.SHORT_RANGE
     var shootState = ShootState.READY
+    var targetGoal = Pose()
     private var shootingAll = false
     private var remainingShots = 0
     var turretAngle = 0.0
@@ -41,8 +46,6 @@ class TeleopDriver2(
         handleShootInput()
         processShooting()
         chrono.update() // Manual update to allow dt to match across the loop.
-
-        if (gamepad.square) bot.launcher?.triggerLaunch()
     }
 
     private fun updateFlywheelSpeed() {
@@ -55,15 +58,14 @@ class TeleopDriver2(
 //        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
         changeFlywheelSpeedToggle.toggle(gamepad.dpad_up)
         if (changeFlywheelSpeedToggle.justChanged) {
-            flywheelSpeedEnum = flywheelSpeedEnum.next()
-            flywheelSpeed = flywheelSpeedEnum.speed
+            flywheelVelocityEnum = flywheelVelocityEnum.next()
         }
     }
 
     private fun handleFlywheel() {
         flywheelToggle.toggle(gamepad.dpad_left)
         if (flywheelToggle.state) {
-            bot.flywheel?.velocity = -flywheelSpeed * 1200
+            bot.flywheel?.velocity = flywheelVelocityEnum.velocity
         } else {
             bot.flywheel?.velocity = 0.0
         }
@@ -81,81 +83,97 @@ class TeleopDriver2(
                 gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
                 gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
                 gamepad.triangle -> shootArtifact()
-                gamepad.touchpad -> startShootingAll()
+//                gamepad.touchpad -> startShootingAll()
+//                gamepad.touchpad -> startShootingAll()
             }
         }
     }
 
     private fun processShooting() {
-        when (shootState) {
-            ShootState.MOVING_TO_POSITION -> {
-                if (bot.spindexer?.reachedTarget == true) {
-                    bot.launcher?.triggerLaunch()
-                    bot.spindexer?.popCurrentArtifact()
-                    shootState = ShootState.LAUNCHING
-                }
-            }
-            ShootState.LAUNCHING -> {
-                if (bot.launcher?.isReset == true) {
-                    if (shootingAll && remainingShots > 0) {
-                        shootNextForAll()
-                    } else {
-                        shootState = ShootState.READY
-                        shootingAll = false
-                    }
-                }
-            }
-            else -> {}
+//        when (shootState) {
+//            ShootState.MOVING_TO_POSITION -> {
+//                if (bot.spindexer?.reachedTarget == true) {
+//                    bot.launcher?.triggerLaunch()
+//                    bot.spindexer?.popCurrentArtifact()
+//                    shootState = ShootState.LAUNCHING
+//                }
+//            }
+//            ShootState.LAUNCHING -> {
+//                if (bot.launcher?.isReset == true) {
+//                    if (shootingAll && remainingShots > 0) {
+//                        shootNextForAll()
+//                    } else {
+//                        shootState = ShootState.READY
+//                        shootingAll = false
+//                    }
+//                }
+//            }
+//            else -> {}
+//        }
+        if (!flywheelToggle.state) return
+        if (gamepad.square &&
+            bot.spindexer?.reachedTarget == true &&
+            bot.spindexer?.isOuttakePosition == true) {
+            bot.launcher?.triggerLaunch()
+            bot.spindexer?.popCurrentArtifact()
         }
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {
         // Can't shoot when flywheel isn't moving
-        if (!flywheelToggle.state) return
         // Start artifact launch sequence
         val moved = if (artifact != null) {
             bot.spindexer?.moveToNextOuttake(artifact)
         } else {
             bot.spindexer?.moveToNextOuttake()
         }
-        if (moved == true) shootState = ShootState.MOVING_TO_POSITION
+//        if (moved == true) shootState = ShootState.MOVING_TO_POSITION
     }
 
-    private fun startShootingAll() {
-        shootingAll = true
-        remainingShots = bot.spindexer?.numStoredArtifacts ?: 0
-        if (remainingShots > 0) {
-            shootNextForAll()
-        } else {
-            shootingAll = false
-        }
-    }
+//    private fun startShootingAll() {
+//        shootingAll = true
+//        remainingShots = bot.spindexer?.numStoredArtifacts ?: 0
+//        if (remainingShots > 0) {
+//            shootNextForAll()
+//        } else {
+//            shootingAll = false
+//        }
+//    }
 
-    private fun shootNextForAll() {
-        if (remainingShots > 0) {
-            remainingShots--
-            shootArtifact()
-            shootState = ShootState.MOVING_TO_POSITION
-        } else {
-            shootingAll = false
-            shootState = ShootState.READY
-        }
-    }
+//    private fun shootNextForAll() {
+//        if (remainingShots > 0) {
+//            remainingShots--
+//            shootArtifact()
+//            shootState = ShootState.MOVING_TO_POSITION
+//        } else {
+//            shootingAll = false
+//            shootState = ShootState.READY
+//        }
+//    }
 
     private fun handleManualTrack() {
         if (abs(gamepad.right_stick_x) > 0.02) {
-            turretAngle -= gamepad.right_stick_x.toDouble() * chrono.dt
+            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * chrono.dt * 2.5
             turretAngle.coerceIn(
                 -PI,
                 PI
             ) // FIX: This will break if the turret has a different range. Try to hand off this to the Turret class
+        }
+
+        if (gamepad.right_stick_button){
+            turretAngle = 0.0
         }
         bot.turret?.gotoAngle(turretAngle)
     }
 
     private fun handleAutoTrack() {
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
-            bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), Pose(0.0,270.0))
+            if (bot.allianceColor == AllianceColor.RED) {
+                targetGoal = GoalTag.RED.pose
+            } else {
+                targetGoal = GoalTag.BLUE.pose
+            }
+            bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), targetGoal)
         }
     }
 }

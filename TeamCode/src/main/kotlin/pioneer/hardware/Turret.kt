@@ -13,7 +13,7 @@ import kotlin.math.atan2
 class Turret(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.TURRET_MOTOR,
-    private val motorRange: Pair<Double, Double> = -PI to PI,
+    private val motorRange: Pair<Double, Double> = -3*PI/2 to PI/2,
 ) : HardwareComponent {
 
     private lateinit var turret: DcMotorEx
@@ -49,14 +49,13 @@ class Turret(
 
     fun gotoAngle(
         angle: Double,
-        power: Double = 0.5,
+        power: Double = 0.75,
     ) {
         require(power in -1.0..1.0)
         check(::turret.isInitialized)
 
         val desiredAngle = MathUtils
-            .normalizeRadians(angle)
-            .coerceIn(motorRange.first, motorRange.second)
+            .normalizeRadians(angle, motorRange)
 
         val currentTicks = turret.currentPosition
         val currentAngle = currentTicks / ticksPerRadian
@@ -75,6 +74,6 @@ class Turret(
         //General Angle(From robot 0 to target):
         val targetTheta = (pose angleTo target)
         val turretTheta = (PI/2 + targetTheta) - pose.theta
-        gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.767)
+        gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.85)
     }
 }

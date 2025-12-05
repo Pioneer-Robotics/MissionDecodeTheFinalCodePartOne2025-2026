@@ -30,11 +30,13 @@ class PathingTest : BaseOpMode() {
     override fun onLoop() {
         when (state) {
             State.INIT -> {
+                bot.pinpoint!!.reset(Pose(10.0, 10.0, theta=0.1))
+                Thread.sleep(500)
                 bot.follower.path =
                     HermitePath
                         .Builder()
                         .addPoint(Pose(0.0, 0.0, theta = 0.0), Pose(100.0, 0.0))
-                        .addPoint(Pose(50.0, 100.0, theta = PI/2), Pose(100.0, 0.0))
+                        .addPoint(Pose(50.0, 100.0, theta = 0.0), Pose(100.0, 0.0))
                         .build()
                 bot.follower.start()
                 state = State.RUNNING

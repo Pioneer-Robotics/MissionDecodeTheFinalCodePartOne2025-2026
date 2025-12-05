@@ -65,6 +65,20 @@ class Spindexer(
     // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1
 
+    val isOuttakePosition: Boolean
+        get() = motorState in listOf(
+            MotorPosition.OUTTAKE_1,
+            MotorPosition.OUTTAKE_2,
+            MotorPosition.OUTTAKE_3
+        )
+
+    val isIntakePosition: Boolean
+        get() = motorState in listOf(
+            MotorPosition.INTAKE_1,
+            MotorPosition.INTAKE_2,
+            MotorPosition.INTAKE_3
+        )
+
     // Getter to check if motor has reached target position
     val reachedTarget: Boolean
         get() {
@@ -106,6 +120,8 @@ class Spindexer(
     private val artifactLostTimer = ElapsedTime()
     private var artifactSeen = false
     private var artifactWasSeenRecently = false
+    private var lastStoredIndex = 0
+    private val manualMoveTimer = ElapsedTime()
     private val intakePositions =
         listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
     private val outtakePositions =
@@ -155,7 +171,7 @@ class Spindexer(
      * @return true if moved to the next open intake, false otherwise.
      */
     fun moveToNextOpenIntake(): Boolean {
-        artifacts.indexOfFirst { it == null }.takeIf { it != -1 }?.let {
+        _artifacts.indexOfFirst { it == null }.takeIf { it != -1 }?.let {
             motorState = intakePositions[it]
             return true
         }
@@ -199,8 +215,26 @@ class Spindexer(
         return artifact
     }
 
+    fun cancelLastIntake() {
+        artifacts[lastStoredIndex] = null
+    }
+
     fun reset() {
         // Re-add stored artifacts
+        _artifacts[0] = null
+        _artifacts[1] = null
+        _artifacts[2] = null
+    }
+
+    fun moveManual(power: Double) {
+        motor.power = power
+        manualMoveTimer.reset()
+    }
+
+    fun setArtifacts(a1: Artifact?, a2: Artifact?, a3: Artifact?) {
+        _artifacts[0] = a1
+        _artifacts[1] = a2
+        _artifacts[2] = a3
     }
 
     private fun wrapTicks(error: Int, ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV): Int {
@@ -219,6 +253,8 @@ class Spindexer(
     }
 
     private fun runMotorToState() {
+        if (manualMoveTimer.milliseconds() < 250) return
+
         val rawError = targetMotorPosition - currentMotorPosition
         val error = wrapTicks(rawError)
 
@@ -274,6 +310,7 @@ class Spindexer(
      */
     private fun storeArtifact(artifact: Artifact?) {
         val index = positionIndex ?: return
+        lastStoredIndex = index
         _artifacts[index] = artifact
     }
 

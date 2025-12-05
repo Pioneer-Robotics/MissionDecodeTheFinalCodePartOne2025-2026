@@ -1,7 +1,9 @@
 package pioneer.opmodes.auto
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.Bot
 import pioneer.BotType
+import pioneer.decode.Artifact
 import pioneer.hardware.MecanumBase
 import pioneer.localization.localizers.Pinpoint
 import pioneer.opmodes.BaseOpMode
@@ -9,6 +11,7 @@ import pioneer.pathing.paths.LinearPath
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
 
+@Autonomous(name = "Goal Side Auto", group = "Autonomous")
 class RedGoalSideAuto : BaseOpMode() {
 
     val P = Points(AllianceColor.RED)
@@ -26,6 +29,7 @@ class RedGoalSideAuto : BaseOpMode() {
 
     // Main state for auto
     enum class State {
+        INIT,
         GOTO_SHOOT,
         SHOOT,
         GOTO_COLLECT,
@@ -41,22 +45,33 @@ class RedGoalSideAuto : BaseOpMode() {
         DONE
     }
 
-    var autoType = AutoOptions.ALL
-    var state = State.GOTO_SHOOT
+    enum class LaunchState {
+        READY,
+        MOVING_TO_POSITION,
+        LAUNCHING,
+    }
+
+    var autoType = AutoOptions.PRELOAD_ONLY
+    var state = State.INIT
     var collectState = CollectState.GOAL
+    var launchState = LaunchState.READY
 
     /* ------------------
        - MAIN FUNCTIONS -
        ------------------ */
 
     override fun onInit() {
-        // TODO: Change when we get new bot
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
-        bot.pinpoint!!.reset(P.START_GOAL)
     }
 
     override fun onLoop() {
         when (state) {
+            State.INIT -> {
+                bot.follower.path = null
+                bot.pinpoint!!.reset(P.START_GOAL.copy(theta = 0.1))
+                bot.spindexer?.setArtifacts(Artifact.PURPLE, Artifact.PURPLE, Artifact.PURPLE)
+                state = State.GOTO_SHOOT
+            }
             State.GOTO_SHOOT -> state_goto_shoot()
             State.SHOOT -> state_shoot()
             State.GOTO_COLLECT -> state_goto_collect()
@@ -77,6 +92,7 @@ class RedGoalSideAuto : BaseOpMode() {
        ------------------- */
 
     private fun state_goto_shoot() {
+        bot.flywheel?.velocity = 800.0
         if (bot.follower.path == null) { // Starting path
             bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_CLOSE)
             bot.follower.start()
@@ -88,8 +104,8 @@ class RedGoalSideAuto : BaseOpMode() {
     }
 
     private fun state_shoot() { 
-        // TODO: Shoot
-        if (true) {
+        handle_shoot_all()
+        if (bot.spindexer?.isEmpty == true) {
             state = State.GOTO_COLLECT
 
             // Breakpoint for the different auto options
@@ -110,6 +126,28 @@ class RedGoalSideAuto : BaseOpMode() {
                     }
                 }
                 AutoOptions.ALL -> {}
+            }
+        }
+    }
+
+    private fun handle_shoot_all() {
+        when (launchState) {
+            LaunchState.READY -> {
+                bot.spindexer?.moveToNextOuttake()
+                launchState = LaunchState.MOVING_TO_POSITION
+            }
+
+            LaunchState.MOVING_TO_POSITION -> {
+                if (bot.spindexer?.reachedTarget == true) {
+                    bot.launcher?.triggerLaunch()
+                }
+                launchState = LaunchState.LAUNCHING
+            }
+
+            LaunchState.LAUNCHING -> {
+                if (bot.launcher?.isReset == true) {
+                    launchState = LaunchState.READY
+                }
             }
         }
     }

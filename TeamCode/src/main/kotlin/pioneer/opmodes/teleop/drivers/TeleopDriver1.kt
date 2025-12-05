@@ -3,8 +3,10 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.Constants
+import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
+import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -28,14 +30,18 @@ class TeleopDriver1(
         updateDrivePower()
         updateFieldCentric()
         updateIntake()
+        moveSpindexerManual()
+        handleCancelLastIntake()
         handleSpindexerReset()
+        handleResetPose()
         bot.spindexer?.update()
     }
 
     private fun drive() {
         var direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
         if (fieldCentric) {
-            val angle = atan2(direction.y, direction.x) - bot.pinpoint?.pose!!.theta
+            var angle = atan2(direction.y, direction.x) - bot.pinpoint?.pose!!.theta
+            angle += if (bot.allianceColor == AllianceColor.BLUE) PI/2 else -PI/2
             val mag = direction.getLength()
             direction = Pose(mag * cos(angle), mag * sin(angle))
         }
@@ -82,9 +88,34 @@ class TeleopDriver1(
         }
     }
 
+    private fun moveSpindexerManual() {
+        if (gamepad.right_trigger > 0.25) {
+            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
+        }
+        if (gamepad.left_trigger > 0.25) {
+            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
+        }
+    }
+
+    private fun handleCancelLastIntake() {
+        if (gamepad.guide) {
+            bot.spindexer?.cancelLastIntake()
+        }
+    }
+
     private fun handleSpindexerReset() {
         if (gamepad.share) {
             bot.spindexer?.reset()
+        }
+    }
+
+    private fun handleResetPose() {
+        if (gamepad.options) {
+            if (bot.allianceColor == AllianceColor.RED) {
+                bot.pinpoint?.reset(Pose(-80.0, -95.0, theta=0.1))
+            } else {
+                bot.pinpoint?.reset(Pose(80.0, -95.0, theta=0.1))
+            }
         }
     }
 }

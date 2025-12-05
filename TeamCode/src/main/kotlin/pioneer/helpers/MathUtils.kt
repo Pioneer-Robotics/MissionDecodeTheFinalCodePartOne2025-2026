@@ -22,6 +22,13 @@ object MathUtils {
         return normalized
     }
 
+    fun normalizeRadians(angle: Double, range: Pair<Double, Double>): Double {
+        var normalized = angle
+        while (normalized > range.second) normalized -= 2 * PI
+        while (normalized <= range.first) normalized += 2 * PI
+        return normalized
+    }
+
     /**
      * Creates a linearly spaced array of values.
      * @param start Starting value
@@ -60,7 +67,6 @@ object MathUtils {
             x * sin + y * cos
         )
     }
-}
 
     fun quaternionToEuler(q: Quaternion): YawPitchRollAngles {
         val qw = q.w.toDouble()
