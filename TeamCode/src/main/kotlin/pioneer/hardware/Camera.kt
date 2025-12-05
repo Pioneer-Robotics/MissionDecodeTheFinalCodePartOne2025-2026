@@ -13,8 +13,6 @@ class Camera(
     private val cameraName: String = Constants.HardwareNames.WEBCAM,
     val processors: Array<VisionProcessor> = emptyArray(),
 ) : HardwareComponent {
-    override val name = "Camera"
-
     private lateinit var portal: VisionPortal
 
     override fun init() {

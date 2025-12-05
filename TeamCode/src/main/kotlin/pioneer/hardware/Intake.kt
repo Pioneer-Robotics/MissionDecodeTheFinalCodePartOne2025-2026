@@ -10,7 +10,6 @@ class Intake(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.INTAKE_MOTOR,
 ) : HardwareComponent {
-    override val name = "Intake"
     private lateinit var intake: DcMotorEx
 
     var power
