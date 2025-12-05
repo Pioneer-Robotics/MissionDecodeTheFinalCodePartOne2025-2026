@@ -3,9 +3,6 @@ package pioneer.opmodes.calibration
 import android.icu.text.DecimalFormat
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.DistanceSensor
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import pioneer.decode.Artifact
 import pioneer.hardware.RevColorSensor
 
@@ -20,14 +17,15 @@ class ColorSensorGain : OpMode() {
     }
 
     override fun loop() {
-        val artifact: Artifact? = when {
-            // Purple 165-240
-            // Green 150-163
-            sensor.distance > 15.0 -> null
-            sensor.hue < 175 && sensor.hue > 150 -> Artifact.GREEN
-            sensor.hue < 240 && sensor.hue > 175 -> Artifact.PURPLE
-            else -> null
-        }
+        val artifact: Artifact? =
+            when {
+                // Purple 165-240
+                // Green 150-163
+                sensor.distance > 15.0 -> null
+                sensor.hue < 175 && sensor.hue > 150 -> Artifact.GREEN
+                sensor.hue < 240 && sensor.hue > 175 -> Artifact.PURPLE
+                else -> null
+            }
 
         if (gamepad1.right_trigger > 0.05) gain += gamepad1.right_trigger
         if (gamepad1.left_trigger > 0.05) gain -= gamepad1.left_trigger

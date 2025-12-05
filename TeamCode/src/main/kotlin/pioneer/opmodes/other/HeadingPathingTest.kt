@@ -14,16 +14,18 @@ class HeadingPathingTest : BaseOpMode() {
         INIT,
         FORWARD,
         BACKWARD,
-        STOP
+        STOP,
     }
 
     var state = State.INIT
 
     override fun onInit() {
-        bot = Bot.Builder()
-            .add(MecanumBase(hardwareMap))
-            .add(Pinpoint(hardwareMap))
-            .build()
+        bot =
+            Bot
+                .Builder()
+                .add(MecanumBase(hardwareMap))
+                .add(Pinpoint(hardwareMap))
+                .build()
     }
 
     override fun onLoop() {
@@ -36,23 +38,24 @@ class HeadingPathingTest : BaseOpMode() {
         telemetry.addData("State", state)
     }
 
-
     private fun state_init() {
-        bot.pinpoint!!.reset(Pose(0.0,0.0))
-        bot.follower.path = LinearPath(
-            Pose(x=0.0, y=0.0, theta=0.0),
-            Pose(x=0.0, y=100.0, theta=3.14)
-        )
+        bot.pinpoint!!.reset(Pose(0.0, 0.0))
+        bot.follower.path =
+            LinearPath(
+                Pose(x = 0.0, y = 0.0, theta = 0.0),
+                Pose(x = 0.0, y = 100.0, theta = 3.14),
+            )
         bot.follower.start()
         state = State.FORWARD
     }
 
     private fun state_forward() {
         if (bot.follower.done) {
-            bot.follower.path = LinearPath(
-                bot.pinpoint!!.pose,
-                Pose(x=0.0, y=0.0, theta=0.0)
-            )
+            bot.follower.path =
+                LinearPath(
+                    bot.pinpoint!!.pose,
+                    Pose(x = 0.0, y = 0.0, theta = 0.0),
+                )
             bot.follower.start()
             state = State.BACKWARD
         }

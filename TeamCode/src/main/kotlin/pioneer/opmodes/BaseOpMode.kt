@@ -6,7 +6,6 @@ import pioneer.Bot
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
-import pioneer.localization.Localizer
 import pioneer.localization.localizers.Pinpoint
 
 // Base OpMode class to be extended by all user-defined OpModes

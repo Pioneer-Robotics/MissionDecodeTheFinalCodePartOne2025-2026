@@ -5,8 +5,6 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import org.firstinspires.ftc.robotcore.external.navigation.Position
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import pioneer.helpers.Pose
 import kotlin.math.PI
 
@@ -127,17 +125,23 @@ object Constants {
 
         // X-axis PID coefficients for the trajectory follower
         @JvmField var X_KP = 10.0
+
         @JvmField var X_KI = 0.0
+
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
         @JvmField var Y_KP = 10.0
+
         @JvmField var Y_KI = 0.0
+
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
         @JvmField var THETA_KP = 0.5
+
         @JvmField var THETA_KI = 0.0
+
         @JvmField var THETA_KD = 0.0
     }
 
@@ -162,24 +166,29 @@ object Constants {
     @Config
     object Spindexer {
         @JvmField var KP = 0.00045
+
         @JvmField var KI = 0.0
+
         @JvmField var KD = 0.025
+
         @JvmField var KS = 0.075
 
         @JvmField var MAX_POWER_RATE = 5.0
 
         const val POSITION_TOLERANCE_TICKS = 200
         const val TICKS_PER_REV = 8192
+
         // TODO: Tune these values when we test on the real hardware
         // Time required to confirm an artifact has been intaken (ms)
         const val CONFIRM_INTAKE_MS = 50
+
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10
     }
 
     object Turret {
         const val TICKS_PER_REV = 384.5 * 3
-        const val HEIGHT = 0.0 //TODO MEASURE
+        const val HEIGHT = 0.0 // TODO MEASURE
         const val THETA = 0.93
     }
 
@@ -188,4 +197,3 @@ object Constants {
         const val LAUNCHER_TRIGGERED = 0.315
     }
 }
-

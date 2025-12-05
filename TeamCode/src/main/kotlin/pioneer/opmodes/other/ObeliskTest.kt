@@ -2,17 +2,16 @@ package pioneer.opmodes.other
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
-import pioneer.hardware.Camera
-import pioneer.vision.AprilTag
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
 import pioneer.opmodes.BaseOpMode
+import pioneer.vision.AprilTag
 
 @TeleOp(name = "Obelisk Test")
 class ObeliskTest : BaseOpMode() {
     private var alliance = AllianceColor.BLUE
 
-    private val processor = AprilTag(draw=true).processor
+    private val processor = AprilTag(draw = true).processor
 
     override fun onInit() {
         bot = Bot.builder().build()

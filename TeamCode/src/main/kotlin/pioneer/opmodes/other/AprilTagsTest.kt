@@ -5,20 +5,22 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.decode.GoalTag
 import pioneer.decode.GoalTagProcessor
-import pioneer.vision.AprilTag
 import pioneer.hardware.Camera
 import pioneer.opmodes.BaseOpMode
+import pioneer.vision.AprilTag
 import kotlin.math.*
 
 @TeleOp(name = "April Tags Test")
 class AprilTagsTest : BaseOpMode() {
-    private val processor : AprilTagProcessor = AprilTag(draw=true).processor
+    private val processor: AprilTagProcessor = AprilTag(draw = true).processor
 
     override fun onInit() {
-        bot = Bot.builder()
+        bot =
+            Bot
+                .builder()
 //            .add(Pinpoint(hardwareMap))
-            .add(Camera(hardwareMap, processors = arrayOf(processor)))
-            .build()
+                .add(Camera(hardwareMap, processors = arrayOf(processor)))
+                .build()
     }
 
     override fun onLoop() {
@@ -29,7 +31,7 @@ class AprilTagsTest : BaseOpMode() {
 
     private fun fieldPosition() {
         val detections = processor.detections
-        //TODO: Avg position if given multiple tags?
+        // TODO: Avg position if given multiple tags?
 //        val goalTagProcessorInstant = GoalTagProcessor()
 
         val tagInfo = GoalTagProcessor.getRobotFieldPose(detections)
@@ -42,31 +44,30 @@ class AprilTagsTest : BaseOpMode() {
 
 //        telemetry.addLine("--Tag Position (x, y): (%.2f, %.2f, %.2f)".format(tagInfo?.x, tagPosition?.y))
 //            telemetry.addLine("--Bot Position (x, y): (%.2f, %.2f)".format(bot.pinpoint?.pose?.x, bot.pinpoint?.pose?.y))
-
     }
+
 //    @Deprecated("ts sucks just use the library")
     private fun calculateAprilTag() {
         val detections = processor.detections
         val tagInfo = GoalTagProcessor.getRobotFieldPose(detections)
 
-    for (detection in detections) {
+        for (detection in detections) {
             if (detection?.ftcPose != null) {
                 val tgRelPose = detection.ftcPose
-                //Untested, but potential ways to calculate
+                // Untested, but potential ways to calculate
                 val rangeShadow = cos(tgRelPose.elevation) * tgRelPose.range
-                //Method 1: Angle origin is on camera
-                //yaw+theta gives robot theta, then - bearing?
-                val insideAngle1 = (-tgRelPose.yaw + tagInfo!!.theta) - tgRelPose.bearing //Not sure about signs(+/-) here
+                // Method 1: Angle origin is on camera
+                // yaw+theta gives robot theta, then - bearing?
+                val insideAngle1 = (-tgRelPose.yaw + tagInfo!!.theta) - tgRelPose.bearing // Not sure about signs(+/-) here
                 val dX1 = rangeShadow * sin(insideAngle1)
                 val dY1 = rangeShadow * cos(insideAngle1)
-                //Method 2: Angle origin is on AprilTag
-                val insideAngle2 = (PI/2 -tagInfo.theta ) - tgRelPose.yaw - tgRelPose.bearing
+                // Method 2: Angle origin is on AprilTag
+                val insideAngle2 = (PI / 2 - tagInfo.theta) - tgRelPose.yaw - tgRelPose.bearing
                 val dX2 = rangeShadow * cos(insideAngle2)
                 val dy2 = rangeShadow * sin(insideAngle2)
 
                 telemetry.addLine("--Calculated Rel M1(x, y): (%.2f, %.2f)".format(dX1, dY1))
                 telemetry.addLine("--Calculated Rel M2(x, y): (%.2f, %.2f)".format(dX2, dy2))
-
             }
         }
     }
@@ -110,5 +111,4 @@ class AprilTagsTest : BaseOpMode() {
             }
         }
     }
-
 }

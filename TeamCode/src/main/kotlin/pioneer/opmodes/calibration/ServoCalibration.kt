@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.Servo
 
-@TeleOp(name="Servo Calibration", group="Calibration")
+@TeleOp(name = "Servo Calibration", group = "Calibration")
 class ServoCalibration : OpMode() {
     lateinit var servo: Servo
 

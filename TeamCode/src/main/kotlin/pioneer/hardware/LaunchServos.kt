@@ -10,7 +10,6 @@ class LaunchServos(
     private val leftName: String = Constants.HardwareNames.LAUNCH_SERVO_L,
     private val rightName: String = Constants.HardwareNames.LAUNCH_SERVO_R,
 ) : HardwareComponent {
-
     private lateinit var servo1: CRServo
     private lateinit var servo2: CRServo
 

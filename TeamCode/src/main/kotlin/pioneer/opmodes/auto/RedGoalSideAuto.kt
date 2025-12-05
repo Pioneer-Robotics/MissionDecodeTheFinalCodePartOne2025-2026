@@ -4,16 +4,13 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.decode.Artifact
-import pioneer.hardware.MecanumBase
-import pioneer.localization.localizers.Pinpoint
-import pioneer.opmodes.BaseOpMode
-import pioneer.pathing.paths.LinearPath
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
+import pioneer.opmodes.BaseOpMode
+import pioneer.pathing.paths.LinearPath
 
 @Autonomous(name = "Goal Side Auto", group = "Autonomous")
 class RedGoalSideAuto : BaseOpMode() {
-
     val P = Points(AllianceColor.RED)
     /* ----------------
        -    ENUMS     -
@@ -24,7 +21,7 @@ class RedGoalSideAuto : BaseOpMode() {
         PRELOAD_ONLY,
         FIRST_ROW,
         SECOND_ROW,
-        ALL
+        ALL,
     }
 
     // Main state for auto
@@ -34,7 +31,7 @@ class RedGoalSideAuto : BaseOpMode() {
         SHOOT,
         GOTO_COLLECT,
         COLLECT,
-        STOP
+        STOP,
     }
 
     // State for which line of artifacts to collect
@@ -42,7 +39,7 @@ class RedGoalSideAuto : BaseOpMode() {
         GOAL,
         MID,
         AUDIENCE,
-        DONE
+        DONE,
     }
 
     enum class LaunchState {
@@ -86,7 +83,6 @@ class RedGoalSideAuto : BaseOpMode() {
 
     override fun onStop() {}
 
-
     /* -------------------
        - STATE FUNCTIONS -
        ------------------- */
@@ -103,7 +99,7 @@ class RedGoalSideAuto : BaseOpMode() {
         }
     }
 
-    private fun state_shoot() { 
+    private fun state_shoot() {
         handle_shoot_all()
         if (bot.spindexer?.isEmpty == true) {
             state = State.GOTO_COLLECT

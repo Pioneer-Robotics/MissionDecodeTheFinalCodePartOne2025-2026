@@ -1,10 +1,10 @@
 package pioneer.hardware
 
+import android.graphics.Color
+import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import com.qualcomm.robotcore.hardware.DistanceSensor
-import android.graphics.Color
 
 data class NormalizedRGBA(
     val red: Float,
@@ -22,7 +22,7 @@ data class NormalizedHSV(
 class RevColorSensor(
     private val hardwareMap: HardwareMap,
     private val sensorName: String,
-    private val distanceUnit: DistanceUnit = DistanceUnit.CM
+    private val distanceUnit: DistanceUnit = DistanceUnit.CM,
 ) : HardwareComponent {
     lateinit var sensor: NormalizedColorSensor
 
@@ -39,7 +39,7 @@ class RevColorSensor(
                 red = colors.red * 255,
                 green = colors.green * 255,
                 blue = colors.blue * 255,
-                alpha = colors.alpha * 255
+                alpha = colors.alpha * 255,
             )
         }
 
@@ -80,7 +80,7 @@ class RevColorSensor(
             h,
             s,
             v,
-            d
+            d,
         )
     }
 }

@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class Launcher(
     val hardwareMap: HardwareMap,
-    val servoName: String = Constants.HardwareNames.LAUNCH_SERVO
-): HardwareComponent {
+    val servoName: String = Constants.HardwareNames.LAUNCH_SERVO,
+) : HardwareComponent {
     lateinit var launchServo: Servo
 
     val resetTimer = ElapsedTime()

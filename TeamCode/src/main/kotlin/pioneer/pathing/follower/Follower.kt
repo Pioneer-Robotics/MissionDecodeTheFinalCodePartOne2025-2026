@@ -65,10 +65,11 @@ class Follower(
 
     val targetState: MotionState?
         get() {
-            val motionProfile = this.motionProfile ?: return run {
-                FileLogger.error("Follower", "No motion profile set")
-                null
-            }
+            val motionProfile =
+                this.motionProfile ?: return run {
+                    FileLogger.error("Follower", "No motion profile set")
+                    null
+                }
             // Get the current time in seconds since the follower started
             val t = elapsedTime.seconds()
             return motionProfile[t]
@@ -88,12 +89,12 @@ class Follower(
         val headingTargetRaw = headingProfile[t]
         val startTheta = poseAtStartTheta
 
-        val headingTarget = MotionState(
-            x = startTheta + headingTargetRaw.x,
-            v = headingTargetRaw.v,
-            a = headingTargetRaw.a
-        )
-
+        val headingTarget =
+            MotionState(
+                x = startTheta + headingTargetRaw.x,
+                v = headingTargetRaw.v,
+                a = headingTargetRaw.a,
+            )
 
         // Calculate the parameter t for the path based on the target state
         val pathT = path.getTFromLength(targetState.x)
@@ -116,7 +117,7 @@ class Follower(
                 ay = targetState.a * tangent.y + targetState.v.pow(2) * curvature * tangent.x,
                 theta = headingTarget.x,
                 omega = headingTarget.v,
-                alpha = headingTarget.a
+                alpha = headingTarget.a,
             )
 
         // Calculate the error and convert to robot-centric coordinates
@@ -124,7 +125,7 @@ class Follower(
             Pose(
                 x = targetPose.x - localizer.pose.x,
                 y = targetPose.y - localizer.pose.y,
-                theta = MathUtils.normalizeRadians(headingTarget.x - localizer.pose.theta)
+                theta = MathUtils.normalizeRadians(headingTarget.x - localizer.pose.theta),
             )
 
         // Calculate the PID outputs
@@ -134,17 +135,19 @@ class Follower(
 
         // Apply corrections to velocity directly
         // Rotate to convert to robot-centric coordinates
-        val (vxRobot, vyRobot) = MathUtils.rotateVector(
-            x = targetPose.vx + xCorrection,
-            y = targetPose.vy + yCorrection,
-            heading = -localizer.pose.theta
-        )
+        val (vxRobot, vyRobot) =
+            MathUtils.rotateVector(
+                x = targetPose.vx + xCorrection,
+                y = targetPose.vy + yCorrection,
+                heading = -localizer.pose.theta,
+            )
 
-        val correctedPose = targetPose.copy(
-            vx = vxRobot,
-            vy = vyRobot,
-            omega = targetPose.omega + turnCorrection
-        )
+        val correctedPose =
+            targetPose.copy(
+                vx = vxRobot,
+                vy = vyRobot,
+                omega = targetPose.omega + turnCorrection,
+            )
 
         mecanumBase.setDriveVA(correctedPose)
     }
@@ -162,12 +165,15 @@ class Follower(
         // Recalculate the motion profile when the path is set
         motionProfile = calculateMotionProfile()
         headingProfile = calculateHeadingProfile()
-        FileLogger.debug("Follower","Motion Profile Time: ${motionProfile?.duration()}")
-        FileLogger.debug("Follower","Heading Profile Time: ${headingProfile?.duration()}")
-        FileLogger.debug("Follower","Heading Profile Start: ${headingProfile?.start()}")
+        FileLogger.debug("Follower", "Motion Profile Time: ${motionProfile?.duration()}")
+        FileLogger.debug("Follower", "Heading Profile Time: ${headingProfile?.duration()}")
+        FileLogger.debug("Follower", "Heading Profile Start: ${headingProfile?.start()}")
     }
 
-    private fun calculateVelocityConstraint(s: Double, path: Path): Double {
+    private fun calculateVelocityConstraint(
+        s: Double,
+        path: Path,
+    ): Double {
         val t = s / path.getLength()
         val k = path.getCurvature(t)
         val curveMaxVelocity = sqrt(Constants.Follower.MAX_CENTRIPETAL_ACCELERATION / abs(k))
@@ -191,11 +197,11 @@ class Follower(
             Constants.Follower.MAX_DRIVE_ACCELERATION
         }
         return MotionProfileGenerator.generateMotionProfile(
-                startState,
-                endState,
-                velocityConstraint,
-                accelerationConstraint,
-            )
+            startState,
+            endState,
+            velocityConstraint,
+            accelerationConstraint,
+        )
     }
 
     private fun calculateHeadingProfile(): MotionProfile? {
@@ -209,12 +215,13 @@ class Follower(
         val deltaTheta = MathUtils.normalizeRadians(endTheta - startTheta)
 
         // Raw profile always starts from 0 → deltaTheta
-        val rawProfile = MotionProfileGenerator.generateMotionProfile(
-            MotionState(0.0, 0.0, 0.0),
-            MotionState(deltaTheta, 0.0, 0.0),
-            { Constants.Follower.MAX_ANGULAR_VELOCITY },
-            { Constants.Follower.MAX_ANGULAR_ACCELERATION }
-        )
+        val rawProfile =
+            MotionProfileGenerator.generateMotionProfile(
+                MotionState(0.0, 0.0, 0.0),
+                MotionState(deltaTheta, 0.0, 0.0),
+                { Constants.Follower.MAX_ANGULAR_VELOCITY },
+                { Constants.Follower.MAX_ANGULAR_ACCELERATION },
+            )
 
         return rawProfile
     }

@@ -7,7 +7,7 @@ import pioneer.hardware.Spindexer
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 
-@TeleOp(name="Spindexer Motor Control", group = "Calibration")
+@TeleOp(name = "Spindexer Motor Control", group = "Calibration")
 class SpindexerMotorControl : OpMode() {
     lateinit var spindexer: Spindexer
 

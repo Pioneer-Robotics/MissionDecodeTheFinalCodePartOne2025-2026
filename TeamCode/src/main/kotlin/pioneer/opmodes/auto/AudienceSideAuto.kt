@@ -14,11 +14,10 @@ import pioneer.pathing.paths.LinearPath
 
 @Autonomous(name = "Audience Side Auto", group = "Autonomous")
 class AudienceSideAuto : BaseOpMode() {
-
     enum class State {
         INIT,
         DRIVE,
-        SHOOT
+        SHOOT,
     }
 
     enum class LaunchState {
@@ -47,7 +46,7 @@ class AudienceSideAuto : BaseOpMode() {
     override fun onLoop() {
         bot.turret?.autoTrack(
             bot.pinpoint?.pose ?: Pose(),
-            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.pose else GoalTag.RED.pose + Pose(y = 60.0 / 2, x = 60.0) // TODO Use GoalTag shooting offset
+            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.pose else GoalTag.RED.pose + Pose(y = 60.0 / 2, x = 60.0), // TODO Use GoalTag shooting offset
         )
         when (state) {
             State.INIT -> {
@@ -79,9 +78,10 @@ class AudienceSideAuto : BaseOpMode() {
             state = State.SHOOT
         }
     }
+
     fun state_shoot() {
         bot.flywheel?.velocity?.let {
-            if (it > 980.0)
+            if (it > 980.0) {
                 when (launchState) {
                     LaunchState.READY -> {
                         bot.spindexer?.moveToNextOuttake()
@@ -102,6 +102,7 @@ class AudienceSideAuto : BaseOpMode() {
                         }
                     }
                 }
+            }
         }
     }
 }

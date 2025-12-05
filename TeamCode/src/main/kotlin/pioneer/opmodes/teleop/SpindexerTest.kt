@@ -13,11 +13,12 @@ import pioneer.opmodes.BaseOpMode
 
 @TeleOp(name = "Spindexer Test")
 class SpindexerTest : BaseOpMode() {
-
     override fun onInit() {
-        bot = Bot.Builder()
-            .add(Spindexer(hardwareMap))
-            .build()
+        bot =
+            Bot
+                .Builder()
+                .add(Spindexer(hardwareMap))
+                .build()
     }
 
     override fun onLoop() {

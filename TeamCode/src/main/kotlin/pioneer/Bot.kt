@@ -10,8 +10,8 @@ import pioneer.hardware.Intake
 import pioneer.hardware.LaunchServos
 import pioneer.hardware.Launcher
 import pioneer.hardware.MecanumBase
-import pioneer.hardware.Turret
 import pioneer.hardware.Spindexer
+import pioneer.hardware.Turret
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
 import pioneer.vision.AprilTag
@@ -99,7 +99,7 @@ class Bot private constructor(
                         .add(Turret(hardwareMap))
                         .add(Spindexer(hardwareMap))
                         .add(Launcher(hardwareMap))
-                        //.add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                        // .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
                         .add(BatteryMonitor(hardwareMap))
                         .build()
                 BotType.CUSTOM -> throw IllegalArgumentException("Use Bot.builder() to create a custom bot")

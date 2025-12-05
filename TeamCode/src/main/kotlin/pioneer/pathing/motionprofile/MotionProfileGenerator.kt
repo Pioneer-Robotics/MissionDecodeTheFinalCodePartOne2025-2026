@@ -1,6 +1,5 @@
 package pioneer.pathing.motionprofile
 
-import pioneer.helpers.FileLogger
 import pioneer.helpers.MathUtils
 import pioneer.pathing.motionprofile.constraints.AccelerationConstraint
 import pioneer.pathing.motionprofile.constraints.VelocityConstraint
@@ -35,7 +34,7 @@ object MotionProfileGenerator {
             return MotionProfile(
                 listOf(
                     MotionSegment(startState, 0.0),
-                )
+                ),
             )
         }
 

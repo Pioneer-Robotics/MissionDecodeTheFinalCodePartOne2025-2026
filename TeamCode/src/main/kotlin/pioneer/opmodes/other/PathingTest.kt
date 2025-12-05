@@ -7,7 +7,6 @@ import pioneer.helpers.DashboardPlotter
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.HermitePath
-import kotlin.math.PI
 import kotlin.math.hypot
 
 @Autonomous(name = "Pathing Test", group = "Testing")
@@ -30,7 +29,7 @@ class PathingTest : BaseOpMode() {
     override fun onLoop() {
         when (state) {
             State.INIT -> {
-                bot.pinpoint!!.reset(Pose(10.0, 10.0, theta=0.1))
+                bot.pinpoint!!.reset(Pose(10.0, 10.0, theta = 0.1))
                 Thread.sleep(500)
                 bot.follower.path =
                     HermitePath

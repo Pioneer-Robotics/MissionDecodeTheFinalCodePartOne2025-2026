@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotorEx
 
 @TeleOp(name = "Manual Spindexer Control", group = "Calibration")
-class ManualSpindexerControl: OpMode() {
+class ManualSpindexerControl : OpMode() {
     private lateinit var motor: DcMotorEx
 
     override fun init() {

@@ -14,15 +14,18 @@ class ThetaPidTuner : BaseOpMode() {
         INIT,
         CLOCK,
         COUNTER,
-        STOP
+        STOP,
     }
 
     var state = State.INIT
+
     override fun onInit() {
-        bot = Bot.Builder()
-            .add(MecanumBase(hardwareMap))
-            .add(Pinpoint(hardwareMap))
-            .build()
+        bot =
+            Bot
+                .Builder()
+                .add(MecanumBase(hardwareMap))
+                .add(Pinpoint(hardwareMap))
+                .build()
     }
 
     override fun onLoop() {
@@ -36,26 +39,28 @@ class ThetaPidTuner : BaseOpMode() {
     }
 
     private fun state_init() {
-        bot.follower.path = LinearPath(Pose(), Pose(theta=-3.14))
+        bot.follower.path = LinearPath(Pose(), Pose(theta = -3.14))
         bot.follower.start()
         state = State.CLOCK
     }
+
     private fun state_clock() {
         if (bot.follower.done) {
-            bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(theta=0.0))
+            bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(theta = 0.0))
             bot.follower.start()
             state = State.COUNTER
         }
     }
+
     private fun state_counter() {
         if (bot.follower.done) {
-            bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(theta=-3.14))
+            bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(theta = -3.14))
             bot.follower.start()
             state = State.COUNTER
         }
     }
+
     private fun state_stop() {
         requestOpModeStop()
     }
-
 }

@@ -7,7 +7,7 @@ class ServoPair(
     private val hardwareMap: HardwareMap,
     private val servo1Name: String,
     private val servo2Name: String,
-    private val reversed: Boolean = true
+    private val reversed: Boolean = true,
 ) : HardwareComponent {
     private lateinit var servo1: Servo
     private lateinit var servo2: Servo

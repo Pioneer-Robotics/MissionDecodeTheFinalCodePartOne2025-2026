@@ -4,21 +4,23 @@ import org.firstinspires.ftc.robotcore.external.matrices.VectorF
 import org.firstinspires.ftc.robotcore.external.navigation.Quaternion
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
-import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc
 import pioneer.general.AllianceColor
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
 import kotlin.math.PI
-import kotlin.math.cos
 
 private val tagLibrary by lazy { AprilTagGameDatabase.getDecodeTagLibrary() }
 
 /**
  * Enum representing metadata for Decode season goal AprilTags.
  */
-enum class GoalTag(val id: Int, val alliance: AllianceColor) {
+enum class GoalTag(
+    val id: Int,
+    val alliance: AllianceColor,
+) {
     BLUE(20, AllianceColor.BLUE),
-    RED(24, AllianceColor.RED);
+    RED(24, AllianceColor.RED),
+    ;
 
     val tagName: String // Retrieves the tag-specific name
         get() = tagLibrary.lookupTag(id).name
@@ -45,7 +47,6 @@ enum class GoalTag(val id: Int, val alliance: AllianceColor) {
     val shootingOffset: Pose
         get() = Pose(y = 46.45 / 2) // Half the goal depth (46.45 cm)
 }
-
 
 /**
  * Processor for FTC Decode season goal AprilTags.
@@ -113,8 +114,7 @@ object GoalTagProcessor {
     }
 }
 
-
-    //X and Y distance from center of camera to AprilTag
+// X and Y distance from center of camera to AprilTag
 //    fun getRobotDistance(detections: List<AprilTagDetection>): List<Double>?{
 //        val tag =
 //            detections.firstNotNullOfOrNull { detection ->
@@ -138,7 +138,7 @@ object GoalTagProcessor {
 //
 //    }
 
-    //Not sure if needed
+// Not sure if needed
 //    fun getTagData(detections: List<AprilTagDetection>): Pose? {
 //        val tag = detections.firstNotNullOfOrNull {detection ->
 //            when (detection.id) {
@@ -149,4 +149,4 @@ object GoalTagProcessor {
 //        }
 //        return tag?.pose
 //    }
-//}
+// }

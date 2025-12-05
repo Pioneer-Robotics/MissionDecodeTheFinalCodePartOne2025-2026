@@ -17,7 +17,6 @@ class Flywheel(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.FLYWHEEL,
 ) : HardwareComponent {
-
     private lateinit var flywheel: DcMotorEx
 
     val motor: DcMotorEx
@@ -33,12 +32,13 @@ class Flywheel(
         get() = flywheel.getCurrent(CurrentUnit.MILLIAMPS)
 
     override fun init() {
-        flywheel = hardwareMap.get(DcMotorEx::class.java, motorName).apply {
-            mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-            mode = DcMotor.RunMode.RUN_USING_ENCODER
-            zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
-            direction = DcMotorSimple.Direction.FORWARD
-        }
+        flywheel =
+            hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+                mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+                mode = DcMotor.RunMode.RUN_USING_ENCODER
+                zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+                direction = DcMotorSimple.Direction.FORWARD
+            }
         FileLogger.info(name, flywheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString())
         flywheel.setPIDFCoefficients(
             DcMotor.RunMode.RUN_USING_ENCODER,
@@ -47,18 +47,26 @@ class Flywheel(
                 3.0,
                 0.0,
                 0.0,
-            )
+            ),
         )
     }
 
-    //https://www.desmos.com/calculator/uofqeqqyn1
-    fun estimateVelocity(target: Pose, pose: Pose): Double{
-        val tempTargetHeight = 0 //TODO Replace with GoalTag info when merged with CV branch
+    // https://www.desmos.com/calculator/uofqeqqyn1
+    fun estimateVelocity(
+        target: Pose,
+        pose: Pose,
+    ): Double {
+        val tempTargetHeight = 0 // TODO Replace with GoalTag info when merged with CV branch
         val heightDiff = tempTargetHeight - Constants.Turret.HEIGHT
         val groundDistance = pose distanceTo pose
-        val v0 = (groundDistance)/(cos(Constants.Turret.THETA)* sqrt((2.0*(heightDiff - tan(Constants.Turret.THETA)*(groundDistance)))/(-980)))
+        val v0 =
+            (groundDistance) / (
+                cos(
+                    Constants.Turret.THETA,
+                ) * sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * (groundDistance))) / (-980))
+            )
 
-        val flywheelVelocity = 1.58901*v0 + 17.2812
+        val flywheelVelocity = 1.58901 * v0 + 17.2812
         return flywheelVelocity
     }
 }

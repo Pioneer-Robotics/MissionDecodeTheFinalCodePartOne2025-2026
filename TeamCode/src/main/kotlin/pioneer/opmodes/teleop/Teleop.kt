@@ -1,12 +1,9 @@
 package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
 import pioneer.BotType
-import pioneer.general.AllianceColor
-import pioneer.helpers.DashboardPlotter
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode

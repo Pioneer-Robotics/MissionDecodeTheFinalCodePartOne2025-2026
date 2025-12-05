@@ -1,12 +1,12 @@
 package pioneer.vision
 
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
-import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
+import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Constants
 
 /**
@@ -24,7 +24,7 @@ class AprilTag(
     private val distanceUnit: DistanceUnit = Constants.Camera.XYZ_UNITS,
     private val angleUnit: AngleUnit = Constants.Camera.RPY_UNITS,
     private val draw: Boolean = false,
-): Processor {
+) : Processor {
     init {
         require(xyz.size == 3) { "xyz must have exactly 3 elements: [x, y, z]" }
         require(rpy.size == 3) { "rpy must have exactly 3 elements: [roll, pitch, yaw]" }

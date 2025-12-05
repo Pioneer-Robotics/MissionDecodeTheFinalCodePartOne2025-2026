@@ -3,12 +3,13 @@ package pioneer.decode
 class Motif(
     val aprilTagId: Int,
 ) {
-    private val artifacts: List<Artifact> = when (aprilTagId) {
-        21 -> listOf(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-        22 -> listOf(Artifact.PURPLE, Artifact.GREEN, Artifact.PURPLE)
-        23 -> listOf(Artifact.PURPLE, Artifact.PURPLE, Artifact.GREEN)
-        else -> emptyList()
-    }
+    private val artifacts: List<Artifact> =
+        when (aprilTagId) {
+            21 -> listOf(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+            22 -> listOf(Artifact.PURPLE, Artifact.GREEN, Artifact.PURPLE)
+            23 -> listOf(Artifact.PURPLE, Artifact.PURPLE, Artifact.GREEN)
+            else -> emptyList()
+        }
 
     private var currentIndex: Int = 0
 

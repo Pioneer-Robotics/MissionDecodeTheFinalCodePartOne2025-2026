@@ -3,17 +3,15 @@ package pioneer.hardware
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.decode.Artifact
-import kotlin.math.abs
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
+import pioneer.decode.Artifact
 import pioneer.helpers.Chrono
 import pioneer.helpers.PIDController
 import kotlin.math.PI
-import kotlin.math.max
+import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.time.DurationUnit
-
 
 /*
 Positive ROT: CW due to under-mounted motor
@@ -24,7 +22,7 @@ INTAKE (INITIALIZED SPINDEXER POSITION):
     \       /
      \  1  /
       \   /
-        *
+ *
     2   |   3
         |
         |
@@ -40,22 +38,22 @@ OUTTAKE:
 
 */
 
-
 class Spindexer(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.SPINDEXER_MOTOR,
     private val intakeSensorName: String = Constants.HardwareNames.INTAKE_SENSOR,
     private val _artifacts: Array<Artifact?> = Array(3) { null },
 ) : HardwareComponent {
-
     // Motor positions in radians
-    enum class MotorPosition(val radians: Double) {
+    enum class MotorPosition(
+        val radians: Double,
+    ) {
         INTAKE_1(0 * PI / 6),
         OUTTAKE_1(3 * PI / 3), // Shift down (+2)
         INTAKE_2(2 * PI / 3),
         OUTTAKE_2(5 * PI / 3), // Shift down (+2)
         INTAKE_3(4 * PI / 3),
-        OUTTAKE_3(1 * PI / 3); // Shift down (+2) (wrapped)
+        OUTTAKE_3(1 * PI / 3), // Shift down (+2) (wrapped)
     }
 
     // Indirect reference to internal artifacts array to prevent modification
@@ -66,18 +64,22 @@ class Spindexer(
     var motorState: MotorPosition = MotorPosition.INTAKE_1
 
     val isOuttakePosition: Boolean
-        get() = motorState in listOf(
-            MotorPosition.OUTTAKE_1,
-            MotorPosition.OUTTAKE_2,
-            MotorPosition.OUTTAKE_3
-        )
+        get() =
+            motorState in
+                listOf(
+                    MotorPosition.OUTTAKE_1,
+                    MotorPosition.OUTTAKE_2,
+                    MotorPosition.OUTTAKE_3,
+                )
 
     val isIntakePosition: Boolean
-        get() = motorState in listOf(
-            MotorPosition.INTAKE_1,
-            MotorPosition.INTAKE_2,
-            MotorPosition.INTAKE_3
-        )
+        get() =
+            motorState in
+                listOf(
+                    MotorPosition.INTAKE_1,
+                    MotorPosition.INTAKE_2,
+                    MotorPosition.INTAKE_3,
+                )
 
     // Getter to check if motor has reached target position
     val reachedTarget: Boolean
@@ -111,11 +113,12 @@ class Spindexer(
     private var lastPower = 0.0
     private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
     private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
-    private val motorPID = PIDController(
-        Constants.Spindexer.KP,
-        Constants.Spindexer.KI,
-        Constants.Spindexer.KD
-    )
+    private val motorPID =
+        PIDController(
+            Constants.Spindexer.KP,
+            Constants.Spindexer.KI,
+            Constants.Spindexer.KD,
+        )
     private val artifactVisibleTimer = ElapsedTime()
     private val artifactLostTimer = ElapsedTime()
     private var artifactSeen = false
@@ -145,15 +148,17 @@ class Spindexer(
         }
 
     override fun init() {
-        motor = hardwareMap.get(DcMotorEx::class.java, motorName).apply {
-            mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-            mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        }
+        motor =
+            hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+                mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+                mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            }
 
-        intakeSensor = RevColorSensor(hardwareMap, intakeSensorName).apply {
-            init()
-            gain = 20.0f
-        }
+        intakeSensor =
+            RevColorSensor(hardwareMap, intakeSensorName).apply {
+                init()
+                gain = 20.0f
+            }
     }
 
     /**
@@ -238,14 +243,20 @@ class Spindexer(
         }
     }
 
-    private fun wrapTicks(error: Int, ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV): Int {
+    private fun wrapTicks(
+        error: Int,
+        ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV,
+    ): Int {
         var e = error % ticksPerRev
         if (e > ticksPerRev / 2) e -= ticksPerRev
         if (e < -ticksPerRev / 2) e += ticksPerRev
         return e
     }
 
-    private fun rampPower(desired: Double, dt: Double): Double {
+    private fun rampPower(
+        desired: Double,
+        dt: Double,
+    ): Double {
         val maxDelta = Constants.Spindexer.MAX_POWER_RATE * dt / 1000
         val delta = desired - lastPower
         val clipped = delta.coerceIn(-maxDelta, maxDelta)
@@ -276,8 +287,7 @@ class Spindexer(
 
     private fun checkForArtifact() {
         // Check for artifact if in intake position and reached target
-        if (motorState in intakePositions)
-        {
+        if (motorState in intakePositions) {
             if (scanAndStoreArtifact()) {
                 // Artifact detected and stored, move to next open intake or switch mode if full
                 if (!moveToNextOpenIntake()) switchMode()
@@ -285,12 +295,12 @@ class Spindexer(
         }
     }
 
-    private fun findOuttakeIndex(target: Artifact?): Int {
-        return target?.let {
-            _artifacts.indexOfFirst { it == target }
+    private fun findOuttakeIndex(target: Artifact?): Int =
+        target?.let {
+            _artifacts
+                .indexOfFirst { it == target }
                 .takeIf { it != -1 }
         } ?: _artifacts.indexOfFirst { it != null }
-    }
 
     /**
      * Switches the motor state between intake and outtake for the current position.
@@ -299,11 +309,12 @@ class Spindexer(
         val index = positionIndex ?: return
 
         // Switch motor state to nearest opposite position
-        motorState = if (motorState in intakePositions) {
-            outtakePositions[(index - 1).mod(outtakePositions.size)]
-        } else {
-            intakePositions[(index + 1).mod(intakePositions.size)]
-        }
+        motorState =
+            if (motorState in intakePositions) {
+                outtakePositions[(index - 1).mod(outtakePositions.size)]
+            } else {
+                intakePositions[(index + 1).mod(intakePositions.size)]
+            }
     }
 
     /**
@@ -343,7 +354,6 @@ class Spindexer(
         val artifact = scanArtifact()
 
         if (artifact != null) {
-
             // If this is the first time we see it, start the visible timer
             if (!artifactSeen) {
                 artifactVisibleTimer.reset()
@@ -364,7 +374,6 @@ class Spindexer(
 
                 return true
             }
-
         } else {
             // Artifact disappeared
 

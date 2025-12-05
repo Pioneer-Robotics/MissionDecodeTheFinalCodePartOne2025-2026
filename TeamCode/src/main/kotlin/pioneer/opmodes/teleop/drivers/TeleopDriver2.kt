@@ -5,7 +5,6 @@ import pioneer.Bot
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.general.AllianceColor
-import pioneer.hardware.Spindexer
 import pioneer.hardware.Turret
 import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
@@ -20,8 +19,9 @@ class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
-
-    enum class FlywheelSpeed(val velocity: Double) {
+    enum class FlywheelSpeed(
+        val velocity: Double,
+    ) {
         SHORT_RANGE(800.0),
         LONG_RANGE(1000.0),
     }
@@ -32,6 +32,7 @@ class TeleopDriver2(
     private val changeFlywheelSpeedToggle = Toggle(false)
 
     enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
+
     var flywheelVelocityEnum = FlywheelSpeed.SHORT_RANGE
     var shootState = ShootState.READY
     var targetGoal = Pose()
@@ -113,7 +114,8 @@ class TeleopDriver2(
         if (!flywheelToggle.state) return
         if (gamepad.square &&
             bot.spindexer?.reachedTarget == true &&
-            bot.spindexer?.isOuttakePosition == true) {
+            bot.spindexer?.isOuttakePosition == true
+        ) {
             bot.launcher?.triggerLaunch()
             bot.spindexer?.popCurrentArtifact()
         }
@@ -122,11 +124,12 @@ class TeleopDriver2(
     private fun shootArtifact(artifact: Artifact? = null) {
         // Can't shoot when flywheel isn't moving
         // Start artifact launch sequence
-        val moved = if (artifact != null) {
-            bot.spindexer?.moveToNextOuttake(artifact)
-        } else {
-            bot.spindexer?.moveToNextOuttake()
-        }
+        val moved =
+            if (artifact != null) {
+                bot.spindexer?.moveToNextOuttake(artifact)
+            } else {
+                bot.spindexer?.moveToNextOuttake()
+            }
 //        if (moved == true) shootState = ShootState.MOVING_TO_POSITION
     }
 
@@ -156,11 +159,11 @@ class TeleopDriver2(
             turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * chrono.dt * 2.5
             turretAngle.coerceIn(
                 -PI,
-                PI
+                PI,
             ) // FIX: This will break if the turret has a different range. Try to hand off this to the Turret class
         }
 
-        if (gamepad.right_stick_button){
+        if (gamepad.right_stick_button) {
             turretAngle = 0.0
         }
         bot.turret?.gotoAngle(turretAngle)

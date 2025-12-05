@@ -1,6 +1,5 @@
 package pioneer.helpers
 
-import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
 
@@ -8,7 +7,7 @@ import kotlin.time.TimeSource
  * A utility class for measuring elapsed time. This class provides functionality to track time intervals
  * and optionally updates the elapsed time automatically on each access.
  *
- * @property autoUpdate If true, the elapsed time (`dt`) is updated automatically on each access. 
+ * @property autoUpdate If true, the elapsed time (`dt`) is updated automatically on each access.
  *                      This should only be used when there is a single consumer of `dt`.
  * @property source The time source used for measuring elapsed time. Defaults to `TimeSource.Monotonic`.
  */
