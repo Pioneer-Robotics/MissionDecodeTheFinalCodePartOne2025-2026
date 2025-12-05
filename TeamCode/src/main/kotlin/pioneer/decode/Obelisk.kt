@@ -4,9 +4,9 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import pioneer.general.AllianceColor
 
 object Obelisk {
-    private val validMotifTagIds = setOf(21, 22, 23)
+    private val validTags = setOf(21, 22, 23)
 
-    fun isValidMotifTag(aprilTagId: Int): Boolean = aprilTagId in validMotifTagIds
+    fun isValidMotifTag(aprilTagId: Int): Boolean = aprilTagId in validTags
 
     /**
      * Filters the AprilTag detections to find the correct motif tag based on alliance color.
@@ -23,6 +23,7 @@ object Obelisk {
             when (alliance) {
                 AllianceColor.BLUE -> validTags.maxByOrNull { it.ftcPose.x }?.id
                 AllianceColor.RED -> validTags.minByOrNull { it.ftcPose.x }?.id
+                AllianceColor.NEUTRAL -> null
             }
         return motifTagId?.let { Motif(it) }
     }

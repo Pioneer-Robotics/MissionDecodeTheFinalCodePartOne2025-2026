@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.VisionProcessor
+
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
@@ -21,6 +22,8 @@ class Camera(
     val processors: Array<VisionProcessor> = emptyArray(),
 ) : HardwareComponent {
 
+    override val name = "Camera"
+
     private lateinit var portal: VisionPortal
 
     override fun init() {
@@ -28,7 +31,8 @@ class Camera(
         VisionPortal
             .Builder()
             .setCamera(hardwareMap.get(WebcamName::class.java, cameraName))
-            .setCameraResolution(Size(640, 480))
+            .setCameraResolution(Size(1280, 720))
+            .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
             .enableLiveView(true)
             .apply {
                 if (processors.isNotEmpty()) {

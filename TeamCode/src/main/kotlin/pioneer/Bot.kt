@@ -13,6 +13,7 @@ import pioneer.hardware.Turret
 import pioneer.hardware.Spindexer
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
+import pioneer.vision.AprilTag
 
 enum class BotType {
     MECANUM_BOT,
@@ -83,7 +84,7 @@ class Bot private constructor(
                         .add(Pinpoint(hardwareMap))
                         .add(LaunchServos(hardwareMap))
                         .add(Flywheel(hardwareMap))
-                        .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                        .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
                         .add(BatteryMonitor(hardwareMap))
                         .build()
                 BotType.COMP_BOT ->

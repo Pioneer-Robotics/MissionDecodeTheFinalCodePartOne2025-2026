@@ -150,7 +150,7 @@ object Constants {
         // Camera orientation constants (degrees)
         private const val DEG_TO_RAD = PI / 180.0
         private const val YAW_DEG = 0.0
-        private const val PITCH_DEG = 0.0
+        private const val PITCH_DEG = -90.0 // Facing Forward
         private const val ROLL_DEG = 0.0
 
         //Lens Intrinsics

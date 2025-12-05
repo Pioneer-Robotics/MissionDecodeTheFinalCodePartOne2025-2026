@@ -1,8 +1,13 @@
 package pioneer.helpers
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Quaternion
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
+import kotlin.math.atan2
 
 object MathUtils {
     /**
@@ -36,6 +41,10 @@ object MathUtils {
         return List(num) { i -> start + i * step }
     }
 
+    fun inToCM(inch: Double): Double {
+        return (inch * 2.54)
+    }
+
     /**
      * Rotates a 2D vector by a given heading angle.
      * @param x X component of the vector
@@ -50,5 +59,22 @@ object MathUtils {
             x * cos - y * sin,
             x * sin + y * cos
         )
+    }
+}
+
+    fun quaternionToEuler(q: Quaternion): YawPitchRollAngles {
+        val qw = q.w.toDouble()
+        val qx = q.x.toDouble()
+        val qy = q.y.toDouble()
+        val qz = q.z.toDouble()
+
+        val yaw = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz))
+        val pitch = atan2(
+            sqrt(1 + 2 * (qw * qy - qx * qz)),
+            sqrt(1 - 2 * (qw * qy - qx * qz))
+        ) - PI / 2
+        val roll = atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy))
+
+        return YawPitchRollAngles(AngleUnit.RADIANS, yaw, pitch, roll, 0)
     }
 }
