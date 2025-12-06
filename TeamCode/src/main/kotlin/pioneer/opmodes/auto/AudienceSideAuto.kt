@@ -24,7 +24,7 @@ class AudienceSideAuto : BaseOpMode() {
         DRIVE_1,
         SHOOT,
         DRIVE_2,
-        STOP
+        STOP,
     }
 
     enum class LaunchState {
@@ -67,7 +67,7 @@ class AudienceSideAuto : BaseOpMode() {
     override fun onLoop() {
         bot.turret?.autoTrack(
             bot.pinpoint?.pose ?: Pose(),
-            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.pose + (P.shootingOffset) else GoalTag.RED.pose + P.shootingOffset // TODO Use GoalTag shooting offset
+            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.pose + (P.shootingOffset) else GoalTag.RED.pose + P.shootingOffset, // TODO Use GoalTag shooting offset
         )
         when (state) {
             State.INIT -> {
@@ -95,7 +95,7 @@ class AudienceSideAuto : BaseOpMode() {
     fun state_drive_1() {
         if (bot.follower.path == null) {
             bot.flywheel?.velocity = 1000.0
-            //FIXME: pose transpose
+            // FIXME: pose transpose
             bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(43.0, -147.0))
         }
 
@@ -150,7 +150,6 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     fun state_stop() {
-
         stop()
     }
 }

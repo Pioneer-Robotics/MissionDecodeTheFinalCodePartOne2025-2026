@@ -56,5 +56,5 @@ class Points(
     val COLLECT_AUDIENCE = Pose(collectX, collectY(2), collectTheta).T(color)
 
     // Half the goal depth (46.45 cm)
-    val shootingOffset: Pose = Pose(x = (46.45 / 2)/sqrt(2.0), y = (46.45 / 2)/sqrt(2.0)).T(color)
+    val shootingOffset: Pose = Pose(x = (46.45 / 2) / sqrt(2.0), y = (46.45 / 2) / sqrt(2.0)).T(color)
 }

@@ -181,7 +181,13 @@ class TeleopDriver2(
             }
             bot.turret?.autoTrack(
                 bot.pinpoint?.pose ?: Pose(),
-                if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.pose + (P.shootingOffset) else GoalTag.RED.pose + P.shootingOffset // TODO Use GoalTag shooting offset
+                if (bot.allianceColor ==
+                    AllianceColor.BLUE
+                ) {
+                    GoalTag.BLUE.pose + (P.shootingOffset)
+                } else {
+                    GoalTag.RED.pose + P.shootingOffset
+                }, // TODO Use GoalTag shooting offset
             )
         }
     }

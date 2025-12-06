@@ -1,7 +1,6 @@
 package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.general.AllianceColor
 import pioneer.hardware.BatteryMonitor
 import pioneer.hardware.Camera
@@ -100,7 +99,7 @@ class Bot private constructor(
                         .add(Turret(hardwareMap))
                         .add(Spindexer(hardwareMap))
                         .add(Launcher(hardwareMap))
-                         .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
+                        .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
                         .add(BatteryMonitor(hardwareMap))
                         .build()
                 BotType.CUSTOM -> throw IllegalArgumentException("Use Bot.builder() to create a custom bot")
