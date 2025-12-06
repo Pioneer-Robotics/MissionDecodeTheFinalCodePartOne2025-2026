@@ -40,34 +40,34 @@ class AudienceSideAuto : BaseOpMode() {
     private var motifIndex = 0
 
     override fun onInit() {
-        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
+        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap).apply {
+            spindexer?.apply {
+                setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+                motorState = MotorPosition.OUTTAKE_1
+            }
+            pinpoint?.reset(Points(allianceColor).START_FAR)
+            follower.path = null
+        }
+        P = Points(bot.allianceColor)
     }
 
     override fun init_loop() {
-        bot.spindexer?.apply {
-            setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-            motorState = MotorPosition.OUTTAKE_1
-        }
-
-        P = Points(bot.allianceColor)
-        bot.pinpoint?.reset(P.START_FAR)
-        bot.follower.path = null
-
         allianceToggle.toggle(gamepad1.touchpad)
         if (allianceToggle.justChanged) {
             bot.allianceColor = bot.allianceColor.next()
         }
 
-        val processor = bot.camera?.getProcessor<AprilTagProcessor>()
-        val motif = Obelisk.detectMotif(processor!!.detections, bot.allianceColor)
-        if (motif != null) {
-            motifOrder = motif
+        bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
+            Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
+                motifOrder = detectedMotif
+            }
         }
 
-        telemetry.addData("Alliance Color", bot.allianceColor)
-        telemetry.addData("Detected Motif", motif?.toString())
-        telemetry.addData("Motif Order", motifOrder.toString())
-        telemetry.update()
+        telemetry.apply {
+            addData("Alliance Color", bot.allianceColor)
+            addData("Detected Motif", motifOrder.toString())
+            update()
+        }
     }
 
     override fun onLoop() {
