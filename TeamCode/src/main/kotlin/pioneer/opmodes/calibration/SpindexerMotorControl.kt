@@ -1,12 +1,14 @@
 package pioneer.opmodes.calibration
 
 import com.acmerobotics.dashboard.FtcDashboard
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.hardware.Spindexer
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 
+@Disabled
 @TeleOp(name = "Spindexer Motor Control", group = "Calibration")
 class SpindexerMotorControl : OpMode() {
     lateinit var spindexer: Spindexer

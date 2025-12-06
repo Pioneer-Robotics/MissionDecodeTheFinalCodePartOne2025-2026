@@ -1,12 +1,14 @@
 package pioneer.opmodes.other
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import pioneer.Bot
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
 import pioneer.opmodes.BaseOpMode
 import pioneer.vision.AprilTag
 
+@Disabled
 @TeleOp(name = "Obelisk Test")
 class ObeliskTest : BaseOpMode() {
     private var alliance = AllianceColor.BLUE

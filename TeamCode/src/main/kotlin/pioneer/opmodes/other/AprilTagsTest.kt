@@ -1,5 +1,6 @@
 package pioneer.opmodes.other
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
@@ -10,6 +11,7 @@ import pioneer.opmodes.BaseOpMode
 import pioneer.vision.AprilTag
 import kotlin.math.*
 
+@Disabled
 @TeleOp(name = "April Tags Test")
 class AprilTagsTest : BaseOpMode() {
     private val processor: AprilTagProcessor = AprilTag(draw = true).processor

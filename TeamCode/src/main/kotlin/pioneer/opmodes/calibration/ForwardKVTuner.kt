@@ -2,11 +2,13 @@ package pioneer.opmodes.calibration
 
 import com.acmerobotics.dashboard.FtcDashboard
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 
+@Disabled
 @Autonomous(name = "Forward KV Tuner", group = "Calibration")
 class ForwardKVTuner : BaseOpMode() {
     override fun onInit() {

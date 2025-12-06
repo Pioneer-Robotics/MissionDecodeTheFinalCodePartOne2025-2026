@@ -1,6 +1,7 @@
 package pioneer.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import pioneer.Bot
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.Pose
@@ -8,6 +9,7 @@ import pioneer.localization.localizers.Pinpoint
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
 
+@Disabled
 @Autonomous(name = "Heading Pathing Test", group = "Testing")
 class HeadingPathingTest : BaseOpMode() {
     enum class State {

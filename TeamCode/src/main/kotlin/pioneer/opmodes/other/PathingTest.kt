@@ -1,6 +1,7 @@
 package pioneer.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.helpers.DashboardPlotter
@@ -8,7 +9,9 @@ import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.HermitePath
 import kotlin.math.hypot
+import kotlin.math.hypot
 
+@Disabled
 @Autonomous(name = "Pathing Test", group = "Testing")
 class PathingTest : BaseOpMode() {
     enum class State {

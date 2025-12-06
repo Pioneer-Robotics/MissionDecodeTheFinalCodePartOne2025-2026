@@ -1,11 +1,13 @@
 package pioneer.opmodes.calibration
 
 import android.icu.text.DecimalFormat
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.decode.Artifact
 import pioneer.hardware.RevColorSensor
 
+@Disabled
 @TeleOp(name = "Color Sensor Gain Calibration")
 class ColorSensorGain : OpMode() {
     private lateinit var sensor: RevColorSensor
