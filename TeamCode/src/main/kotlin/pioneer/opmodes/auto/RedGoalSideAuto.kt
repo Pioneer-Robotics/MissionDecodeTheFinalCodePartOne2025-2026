@@ -5,7 +5,6 @@ import pioneer.Bot
 import pioneer.BotType
 import pioneer.decode.Artifact
 import pioneer.decode.Points
-import pioneer.general.AllianceColor
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
 

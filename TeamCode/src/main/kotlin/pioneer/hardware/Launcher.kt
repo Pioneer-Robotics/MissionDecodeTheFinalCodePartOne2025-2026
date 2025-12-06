@@ -12,7 +12,6 @@ class Launcher(
     private val hardwareMap: HardwareMap,
     private val servoName: String = Constants.HardwareNames.LAUNCH_SERVO,
 ) : HardwareComponent {
-
     companion object {
         private const val SERVO_CYCLE_TIME_MS = 670L
         private const val RESET_THRESHOLD_MS = 750.0
@@ -33,7 +32,7 @@ class Launcher(
 
     fun triggerLaunch() {
         if (!isTriggered.compareAndSet(false, true)) return
-        
+
         launchServo.position = Constants.ServoPositions.LAUNCHER_TRIGGERED
 
         scheduler.schedule({

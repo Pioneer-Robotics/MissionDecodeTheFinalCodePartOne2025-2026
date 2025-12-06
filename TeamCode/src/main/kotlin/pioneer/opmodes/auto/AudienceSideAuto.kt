@@ -19,7 +19,6 @@ import pioneer.pathing.paths.LinearPath
 
 @Autonomous(name = "Audience Side Auto", group = "Autonomous")
 class AudienceSideAuto : BaseOpMode() {
-    
     enum class State {
         DRIVE_1,
         SHOOT,
@@ -49,22 +48,22 @@ class AudienceSideAuto : BaseOpMode() {
             setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
             motorState = MotorPosition.OUTTAKE_1
         }
-        
+
         P = Points(bot.allianceColor)
         bot.pinpoint?.reset(P.START_FAR)
         bot.follower.path = null
-        
+
         allianceToggle.toggle(gamepad1.touchpad)
         if (allianceToggle.justChanged) {
             bot.allianceColor = bot.allianceColor.next()
         }
-        
+
         val processor = bot.camera?.getProcessor<AprilTagProcessor>()
         val motif = Obelisk.detectMotif(processor!!.detections, bot.allianceColor)
         if (motif != null) {
             motifOrder = motif
         }
-        
+
         telemetry.addData("Alliance Color", bot.allianceColor)
         telemetry.addData("Detected Motif", motif?.toString())
         telemetry.addData("Motif Order", motifOrder.toString())
@@ -73,14 +72,14 @@ class AudienceSideAuto : BaseOpMode() {
 
     override fun onLoop() {
         updateTurretTracking()
-        
+
         when (state) {
             State.DRIVE_1 -> state_drive_1()
             State.SHOOT -> state_shoot()
             State.DRIVE_2 -> state_drive_2()
             State.STOP -> state_stop()
         }
-        
+
         updateTelemetry()
     }
 
@@ -149,7 +148,7 @@ class AudienceSideAuto : BaseOpMode() {
             if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.shootingPose else GoalTag.RED.shootingPose,
         )
     }
-    
+
     private fun updateTelemetry() {
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
         telemetry.addData("State", state)
