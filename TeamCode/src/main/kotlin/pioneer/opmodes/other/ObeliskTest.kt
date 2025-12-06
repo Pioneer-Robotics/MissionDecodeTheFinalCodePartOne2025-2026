@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
+import pioneer.hardware.Camera
 import pioneer.opmodes.BaseOpMode
 import pioneer.vision.AprilTag
 
