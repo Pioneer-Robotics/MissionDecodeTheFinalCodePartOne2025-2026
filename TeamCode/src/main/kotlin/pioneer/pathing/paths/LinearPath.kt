@@ -13,6 +13,7 @@ class LinearPath(
 ) : Path {
     // Constructor overloads
     constructor(startX: Double, startY: Double, endX: Double, endY: Double) : this(Pose(startX, startY), Pose(endX, endY))
+
     override fun getLength(): Double = startPose.distanceTo(endPose)
 
     override fun getLengthSoFar(t: Double): Double = getLength() * t

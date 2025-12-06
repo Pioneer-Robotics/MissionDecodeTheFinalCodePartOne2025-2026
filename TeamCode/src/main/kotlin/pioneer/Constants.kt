@@ -99,7 +99,6 @@ object Follower {
     /** The maximum drive velocity in cm per second. */
     const val MAX_DRIVE_VELOCITY = 100.0
 
-
     /** The maximum drive acceleration in cm per second squared. */
     const val MAX_DRIVE_ACCELERATION = 50.0
 
@@ -114,17 +113,23 @@ object Follower {
 
     // X-axis PID coefficients for the trajectory follower
     @JvmField var X_KP = 0.0
+
     @JvmField var X_KI = 0.0
+
     @JvmField var X_KD = 0.0
 
     // Y-axis PID coefficients for the trajectory follower
     @JvmField var Y_KP = 0.0
+
     @JvmField var Y_KI = 0.0
+
     @JvmField var Y_KD = 0.0
 
     // Theta PID coefficients for the trajectory follower
     @JvmField var THETA_KP = 0.0
+
     @JvmField var THETA_KI = 0.0
+
     @JvmField var THETA_KD = 0.0
 }
 

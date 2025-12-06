@@ -43,12 +43,16 @@ object MathUtils {
      * @param heading Angle in radians to rotate the vector
      * @return Pair of rotated (x, y) components
      */
-    fun rotateVector(x: Double, y: Double, heading: Double): Pair<Double, Double> {
+    fun rotateVector(
+        x: Double,
+        y: Double,
+        heading: Double,
+    ): Pair<Double, Double> {
         val cos = cos(heading)
         val sin = sin(heading)
         return Pair(
             x * cos - y * sin,
-            x * sin + y * cos
+            x * sin + y * cos,
         )
     }
 }

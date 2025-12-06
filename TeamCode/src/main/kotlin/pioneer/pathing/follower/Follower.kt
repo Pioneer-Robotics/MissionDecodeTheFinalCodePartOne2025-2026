@@ -102,7 +102,7 @@ class Follower(
                 ay = targetState.a * tangent.y + targetState.v.pow(2) * curvature * tangent.x,
                 theta = headingTarget.x,
                 omega = headingTarget.v,
-                alpha = headingTarget.a
+                alpha = headingTarget.a,
             )
 
         // Calculate the error and convert to robot-centric coordinates
@@ -110,7 +110,7 @@ class Follower(
             Pose(
                 x = targetPose.x - localizer.pose.x,
                 y = targetPose.y - localizer.pose.y,
-                theta = MathUtils.normalizeRadians(headingTarget.x - localizer.pose.theta)
+                theta = MathUtils.normalizeRadians(headingTarget.x - localizer.pose.theta),
             )
 
         // Calculate the PID outputs
@@ -120,17 +120,19 @@ class Follower(
 
         // Apply corrections to velocity directly
         // Rotate to convert to robot-centric coordinates
-        val (vxRobot, vyRobot) = MathUtils.rotateVector(
-            x = targetPose.vx + xCorrection,
-            y = targetPose.vy + yCorrection,
-            heading = -localizer.pose.theta
-        )
+        val (vxRobot, vyRobot) =
+            MathUtils.rotateVector(
+                x = targetPose.vx + xCorrection,
+                y = targetPose.vy + yCorrection,
+                heading = -localizer.pose.theta,
+            )
 
-        val correctedPose = targetPose.copy(
-            vx = vxRobot,
-            vy = vyRobot,
-            omega = targetPose.omega + turnCorrection
-        )
+        val correctedPose =
+            targetPose.copy(
+                vx = vxRobot,
+                vy = vyRobot,
+                omega = targetPose.omega + turnCorrection,
+            )
 
         mecanumBase.setDriveVA(correctedPose)
     }
@@ -140,7 +142,7 @@ class Follower(
         elapsedTime.reset()
         // Reset the PID controllers
         xPID.reset()
-                yPID.reset()
+        yPID.reset()
         headingPID.reset()
     }
 
@@ -171,22 +173,25 @@ class Follower(
                 FollowerConstants.MAX_DRIVE_ACCELERATION
             }
             return MotionProfileGenerator.generateMotionProfile(
-                    startState,
-                    endState,
-                    velocityConstraint,
-                    accelerationConstraint,
-                )
+                startState,
+                endState,
+                velocityConstraint,
+                accelerationConstraint,
+            )
         } else {
             return null
         }
     }
 
-    private fun calculateHeadingProfile(): MotionProfile? {
-        return if (path != null) MotionProfileGenerator.generateMotionProfile(
-            MotionState(localizer.pose.theta, 0.0, 0.0),
-            MotionState(path!!.endPose.theta, 0.0, 0.0),
-            { FollowerConstants.MAX_ANGULAR_VELOCITY },
-            { FollowerConstants.MAX_ANGULAR_ACCELERATION },
-        ) else null
-    }
+    private fun calculateHeadingProfile(): MotionProfile? =
+        if (path != null) {
+            MotionProfileGenerator.generateMotionProfile(
+                MotionState(localizer.pose.theta, 0.0, 0.0),
+                MotionState(path!!.endPose.theta, 0.0, 0.0),
+                { FollowerConstants.MAX_ANGULAR_VELOCITY },
+                { FollowerConstants.MAX_ANGULAR_ACCELERATION },
+            )
+        } else {
+            null
+        }
 }
