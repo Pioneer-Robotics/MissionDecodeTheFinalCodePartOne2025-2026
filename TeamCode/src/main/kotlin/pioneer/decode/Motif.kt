@@ -1,5 +1,7 @@
 package pioneer.decode
 
+import kotlin.collections.contentDeepToString
+
 class Motif(
     val aprilTagId: Int,
 ) {
@@ -45,5 +47,9 @@ class Motif(
 
     fun reset() {
         currentIndex = 0
+    }
+
+    override fun toString(): String {
+        return getPattern().toString()
     }
 }

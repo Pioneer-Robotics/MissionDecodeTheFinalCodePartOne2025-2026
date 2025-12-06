@@ -8,6 +8,7 @@ import pioneer.general.AllianceColor
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
 import kotlin.math.PI
+import kotlin.math.sqrt
 
 private val tagLibrary by lazy { AprilTagGameDatabase.getDecodeTagLibrary() }
 
@@ -43,9 +44,6 @@ enum class GoalTag(
 
     val height: Double
         get() = position[2].toDouble()
-
-    val shootingOffset: Pose
-        get() = Pose(y = 46.45 / 2) // Half the goal depth (46.45 cm)
 }
 
 /**

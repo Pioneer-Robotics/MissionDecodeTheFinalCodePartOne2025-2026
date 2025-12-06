@@ -31,7 +31,7 @@ class Camera(
     }
 
     // Helper function to get a specific processor by type
-    private inline fun <reified T : VisionProcessor> getProcessor(): T? = processors.filterIsInstance<T>().firstOrNull()
+    inline fun <reified T : VisionProcessor> getProcessor(): T? = processors.filterIsInstance<T>().firstOrNull()
 
     fun close() {
         portal.close()

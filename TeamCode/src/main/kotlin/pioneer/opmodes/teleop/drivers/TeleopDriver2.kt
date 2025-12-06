@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
+import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import pioneer.hardware.Turret
 import pioneer.helpers.Chrono
@@ -30,6 +31,8 @@ class TeleopDriver2(
     private val isAutoTracking = Toggle(false)
     private val flywheelToggle = Toggle(false)
     private val changeFlywheelSpeedToggle = Toggle(false)
+
+    var P = Points(bot.allianceColor)
 
     enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
 
@@ -176,7 +179,10 @@ class TeleopDriver2(
             } else {
                 targetGoal = GoalTag.BLUE.pose
             }
-            bot.turret?.autoTrack(bot.pinpoint?.pose ?: Pose(), targetGoal)
+            bot.turret?.autoTrack(
+                bot.pinpoint?.pose ?: Pose(),
+                if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.pose + (P.shootingOffset) else GoalTag.RED.pose + P.shootingOffset // TODO Use GoalTag shooting offset
+            )
         }
     }
 }

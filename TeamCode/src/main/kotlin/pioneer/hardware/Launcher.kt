@@ -40,6 +40,6 @@ class Launcher(
                 isTriggered.set(false)
                 resetTimer.reset()
             }
-        }, 1000, TimeUnit.MILLISECONDS)
+        }, 670, TimeUnit.MILLISECONDS)
     }
 }

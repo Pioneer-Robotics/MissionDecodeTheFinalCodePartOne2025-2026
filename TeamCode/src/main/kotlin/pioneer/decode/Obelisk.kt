@@ -15,7 +15,7 @@ object Obelisk {
      * Will work on close or far starting positions
      */
     fun detectMotif(
-        detections: List<AprilTagDetection>,
+        detections: ArrayList<AprilTagDetection>,
         alliance: AllianceColor,
     ): Motif? {
         val validTags = detections.filter { it.ftcPose != null && isValidMotifTag(it.id) }

@@ -69,7 +69,7 @@ class TeleopDriver1(
     }
 
     private fun updateFieldCentric() {
-        fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
+        fieldCentricToggle.toggle(gamepad.touchpad)
     }
 
     private fun updateIntake() {
@@ -98,7 +98,7 @@ class TeleopDriver1(
     }
 
     private fun handleCancelLastIntake() {
-        if (gamepad.guide) {
+        if (gamepad.cross) {
             bot.spindexer?.cancelLastIntake()
         }
     }

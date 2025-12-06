@@ -193,7 +193,7 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.1
+        const val LAUNCHER_REST = 0.067
         const val LAUNCHER_TRIGGERED = 0.315
     }
 }
