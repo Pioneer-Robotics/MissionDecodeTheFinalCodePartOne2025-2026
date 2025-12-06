@@ -10,7 +10,6 @@ import pioneer.pathing.paths.LinearPath
 
 @Autonomous(name = "Goal Side Auto", group = "Autonomous")
 class GoalSideAuto : BaseOpMode() {
-
     enum class AutoOptions {
         PRELOAD_ONLY,
         FIRST_ROW,
