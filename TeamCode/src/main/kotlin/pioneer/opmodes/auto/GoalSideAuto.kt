@@ -46,11 +46,12 @@ class GoalSideAuto : BaseOpMode() {
     private var launchState = LaunchState.READY
 
     override fun onInit() {
-        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap).apply {
-            pinpoint?.reset(Points(allianceColor).START_GOAL.copy(theta = 0.1))
-            spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-            follower.path = null
-        }
+        bot =
+            Bot.fromType(BotType.COMP_BOT, hardwareMap).apply {
+                pinpoint?.reset(Points(allianceColor).START_GOAL.copy(theta = 0.1))
+                spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+                follower.path = null
+            }
         P = Points(bot.allianceColor)
     }
 

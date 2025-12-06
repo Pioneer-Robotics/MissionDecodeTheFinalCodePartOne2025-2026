@@ -40,14 +40,15 @@ class AudienceSideAuto : BaseOpMode() {
     private var motifIndex = 0
 
     override fun onInit() {
-        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap).apply {
-            spindexer?.apply {
-                setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-                motorState = MotorPosition.OUTTAKE_1
+        bot =
+            Bot.fromType(BotType.COMP_BOT, hardwareMap).apply {
+                spindexer?.apply {
+                    setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+                    motorState = MotorPosition.OUTTAKE_1
+                }
+                pinpoint?.reset(Points(allianceColor).START_FAR)
+                follower.path = null
             }
-            pinpoint?.reset(Points(allianceColor).START_FAR)
-            follower.path = null
-        }
         P = Points(bot.allianceColor)
     }
 
