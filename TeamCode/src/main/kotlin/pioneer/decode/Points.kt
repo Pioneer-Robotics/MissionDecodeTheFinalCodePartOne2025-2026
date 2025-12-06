@@ -39,8 +39,10 @@ class Points(
     // Key positions on the field
     // Written in ACTION_POSITION format
     val START_GOAL = Pose(130.0, 137.0, theta = 3 * PI / 4).T(color)
+    val START_FAR = Pose(43.0, -157.0, theta = 0.0).T(color)
 
     val SHOOT_GOAL_CLOSE = Pose(60.0, 60.0, theta = 0.0).T(color)
+    val SHOOT_GOAL_FAR = Pose(43.0, -147.0, theta = 0.0).T(color)
 
     private fun collectY(i: Int) = 30 - (i * 60.0) // 30, -30, -90
 
@@ -55,6 +57,4 @@ class Points(
     val COLLECT_MID = Pose(collectX, collectY(1), collectTheta).T(color)
     val COLLECT_AUDIENCE = Pose(collectX, collectY(2), collectTheta).T(color)
 
-    // Half the goal depth (46.45 cm)
-    val shootingOffset: Pose = Pose(x = (46.45 / 2) / sqrt(2.0), y = (46.45 / 2) / sqrt(2.0)).T(color)
 }

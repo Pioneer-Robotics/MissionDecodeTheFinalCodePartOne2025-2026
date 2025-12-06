@@ -184,10 +184,10 @@ class TeleopDriver2(
                 if (bot.allianceColor ==
                     AllianceColor.BLUE
                 ) {
-                    GoalTag.BLUE.pose + (P.shootingOffset)
+                    GoalTag.BLUE.shootingPose
                 } else {
-                    GoalTag.RED.pose + P.shootingOffset
-                }, // TODO Use GoalTag shooting offset
+                    GoalTag.RED.shootingPose
+                },
             )
         }
     }

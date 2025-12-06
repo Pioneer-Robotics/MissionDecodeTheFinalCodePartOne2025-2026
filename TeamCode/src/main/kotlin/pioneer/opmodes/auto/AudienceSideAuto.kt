@@ -37,7 +37,7 @@ class AudienceSideAuto : BaseOpMode() {
     lateinit var P: Points
     var launchState = LaunchState.READY
     val allianceToggle = Toggle(false)
-    var motifOrder: Motif = Motif(21)
+    var motifOrder: Motif = Motif(21) // default to a valid motif
     var motifIndex = 0
 
     override fun onInit() {
@@ -45,8 +45,10 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     override fun init_loop() {
-        bot.spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-        bot.spindexer?.motorState = MotorPosition.OUTTAKE_1 // TODO: check this
+        bot.spindexer?.apply {
+            setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+            motorState = MotorPosition.OUTTAKE_1
+        }
         P = Points(bot.allianceColor)
         allianceToggle.toggle(gamepad1.touchpad)
         if (allianceToggle.justChanged) {
@@ -67,12 +69,11 @@ class AudienceSideAuto : BaseOpMode() {
     override fun onLoop() {
         bot.turret?.autoTrack(
             bot.pinpoint?.pose ?: Pose(),
-            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.pose + (P.shootingOffset) else GoalTag.RED.pose + P.shootingOffset, // TODO Use GoalTag shooting offset
+            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.shootingPose else GoalTag.RED.shootingPose,
         )
         when (state) {
             State.INIT -> {
-                bot.pinpoint!!.reset(Pose(43.0, -157.0))
-//                bot.spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+                bot.pinpoint!!.reset(P.START_FAR)
                 bot.follower.path = null
                 state = State.DRIVE_1
             }
@@ -88,15 +89,10 @@ class AudienceSideAuto : BaseOpMode() {
         telemetry.addData("Motif Index", motifIndex)
     }
 
-    override fun onStop() {
-        super.onStop()
-    }
-
     fun state_drive_1() {
         if (bot.follower.path == null) {
             bot.flywheel?.velocity = 1000.0
-            // FIXME: pose transpose
-            bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(43.0, -147.0))
+            bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR)
         }
 
         if (bot.follower.done) {
@@ -139,7 +135,6 @@ class AudienceSideAuto : BaseOpMode() {
         if (bot.follower.path == null) {
             bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE)
             bot.spindexer?.moveToNextOpenIntake()
-            // TODO: set turret and everything to 0
         }
 
         if (bot.follower.done) {
@@ -151,5 +146,16 @@ class AudienceSideAuto : BaseOpMode() {
 
     fun state_stop() {
         stop()
+    }
+
+    override fun onStop() {
+        // Final Cleanup
+        bot.apply {
+            flywheel?.velocity = 0.0
+            turret?.gotoAngle(0.0, 0.0)
+            spindexer?.motorState = MotorPosition.INTAKE_1
+            updateAll(dt) // force one last update
+        }
+        super.onStop()
     }
 }
