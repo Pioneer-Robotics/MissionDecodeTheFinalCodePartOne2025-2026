@@ -1,7 +1,7 @@
 package pioneer.opmodes.other
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
