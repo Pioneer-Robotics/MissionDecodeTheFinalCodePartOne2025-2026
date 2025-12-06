@@ -7,6 +7,11 @@ updates:
       interval: "daily"
     labels:
       - "dependencies"
+    ignore:
+      - dependency-name: "gradle"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "org.jlleitschuh.gradle.ktlint"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
     groups:
       # Group PR for all FTC SDK dependencies
       ftc-sdk:

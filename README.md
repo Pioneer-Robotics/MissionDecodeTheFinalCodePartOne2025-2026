@@ -8,26 +8,13 @@ For detailed information, refer to the [FTC Robot Controller repository README](
 
 For official Java documentation, visit the [FTC JavaDocs](https://javadoc.io/doc/org.firstinspires.ftc).
 
-## Keeping the Repository Updated
+## Keeping Repository Updated
 
-To stay aligned with the upstream FTC repository:
+@Dependabot will open PR's if any updates are posted.
 
-1. Add the upstream repository:
-  ```bash
-  git remote add upstream https://github.com/FIRST-Tech-Challenge/FtcRobotController
-  ```
+## Adding New Dependencies
 
-2. Fetch the latest updates:
-  ```bash
-  git fetch upstream
-  ```
-
-3. Merge the updates:
-  ```bash
-  git merge upstream/master
-  ```
-
-4. Address any merge conflicts as necessary.
+See [`gradle/libs.versions.toml`](gradle/libs.versions.toml)
 
 ## Formatting Kotlin Code
 

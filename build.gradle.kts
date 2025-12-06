@@ -5,15 +5,15 @@
  */
 
 buildscript {
-    ext.kotlin_version = '2.2.21'
+    val kotlin_version = "2.2.21"
     repositories {
         mavenCentral()
         google()
     }
     dependencies {
         // Note for FTC Teams: Do not modify this yourself.
-        classpath 'com.android.tools.build:gradle:8.7.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath("com.android.tools.build:gradle:8.7.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
     }
 }
 
@@ -23,7 +23,7 @@ allprojects {
     repositories {
         mavenCentral()
         google()
-        maven { url = 'https://maven.brott.dev/' }
+        maven { url = uri("https://maven.brott.dev/") }
     }
 }
 
