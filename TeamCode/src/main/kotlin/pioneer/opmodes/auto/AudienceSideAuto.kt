@@ -19,8 +19,8 @@ import pioneer.pathing.paths.LinearPath
 
 @Autonomous(name = "Audience Side Auto", group = "Autonomous")
 class AudienceSideAuto : BaseOpMode() {
+    
     enum class State {
-        INIT,
         DRIVE_1,
         SHOOT,
         DRIVE_2,
@@ -33,12 +33,12 @@ class AudienceSideAuto : BaseOpMode() {
         LAUNCHING,
     }
 
-    var state = State.INIT
-    lateinit var P: Points
-    var launchState = LaunchState.READY
-    val allianceToggle = Toggle(false)
-    var motifOrder: Motif = Motif(21) // default to a valid motif
-    var motifIndex = 0
+    private var state = State.DRIVE_1
+    private var launchState = LaunchState.READY
+    private lateinit var P: Points
+    private val allianceToggle = Toggle(false)
+    private var motifOrder: Motif = Motif(21)
+    private var motifIndex = 0
 
     override fun onInit() {
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
@@ -49,47 +49,42 @@ class AudienceSideAuto : BaseOpMode() {
             setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
             motorState = MotorPosition.OUTTAKE_1
         }
+        
         P = Points(bot.allianceColor)
+        bot.pinpoint?.reset(P.START_FAR)
+        bot.follower.path = null
+        
         allianceToggle.toggle(gamepad1.touchpad)
         if (allianceToggle.justChanged) {
             bot.allianceColor = bot.allianceColor.next()
         }
-        telemetry.addData("Alliance Color", bot.allianceColor)
+        
         val processor = bot.camera?.getProcessor<AprilTagProcessor>()
         val motif = Obelisk.detectMotif(processor!!.detections, bot.allianceColor)
         if (motif != null) {
             motifOrder = motif
         }
+        
+        telemetry.addData("Alliance Color", bot.allianceColor)
         telemetry.addData("Detected Motif", motif?.toString())
         telemetry.addData("Motif Order", motifOrder.toString())
-
         telemetry.update()
     }
 
     override fun onLoop() {
-        bot.turret?.autoTrack(
-            bot.pinpoint?.pose ?: Pose(),
-            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.shootingPose else GoalTag.RED.shootingPose,
-        )
+        updateTurretTracking()
+        
         when (state) {
-            State.INIT -> {
-                bot.pinpoint!!.reset(P.START_FAR)
-                bot.follower.path = null
-                state = State.DRIVE_1
-            }
             State.DRIVE_1 -> state_drive_1()
             State.SHOOT -> state_shoot()
             State.DRIVE_2 -> state_drive_2()
             State.STOP -> state_stop()
         }
-        telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
-        telemetry.addData("State", state)
-        telemetry.addData("Launch State", launchState)
-        telemetry.addData("Flywheel Velocity", bot.flywheel?.velocity)
-        telemetry.addData("Motif Index", motifIndex)
+        
+        updateTelemetry()
     }
 
-    fun state_drive_1() {
+    private fun state_drive_1() {
         if (bot.follower.path == null) {
             bot.flywheel?.velocity = 1000.0
             bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR)
@@ -100,7 +95,7 @@ class AudienceSideAuto : BaseOpMode() {
         }
     }
 
-    fun state_shoot() {
+    private fun state_shoot() {
         bot.flywheel?.velocity?.let {
             if (it > 980.0) {
                 when (launchState) {
@@ -131,7 +126,7 @@ class AudienceSideAuto : BaseOpMode() {
         }
     }
 
-    fun state_drive_2() {
+    private fun state_drive_2() {
         if (bot.follower.path == null) {
             bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE)
             bot.spindexer?.moveToNextOpenIntake()
@@ -144,17 +139,31 @@ class AudienceSideAuto : BaseOpMode() {
         }
     }
 
-    fun state_stop() {
+    private fun state_stop() {
         stop()
     }
 
+    private fun updateTurretTracking() {
+        bot.turret?.autoTrack(
+            bot.pinpoint?.pose ?: Pose(),
+            if (bot.allianceColor == AllianceColor.BLUE) GoalTag.BLUE.shootingPose else GoalTag.RED.shootingPose,
+        )
+    }
+    
+    private fun updateTelemetry() {
+        telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
+        telemetry.addData("State", state)
+        telemetry.addData("Launch State", launchState)
+        telemetry.addData("Flywheel Velocity", bot.flywheel?.velocity)
+        telemetry.addData("Motif Index", motifIndex)
+    }
+
     override fun onStop() {
-        // Final Cleanup
         bot.apply {
             flywheel?.velocity = 0.0
             turret?.gotoAngle(0.0, 0.0)
             spindexer?.motorState = MotorPosition.INTAKE_1
-            updateAll(dt) // force one last update
+            updateAll(dt)
         }
         super.onStop()
     }

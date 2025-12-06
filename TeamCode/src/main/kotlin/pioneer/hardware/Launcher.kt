@@ -9,18 +9,22 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class Launcher(
-    val hardwareMap: HardwareMap,
-    val servoName: String = Constants.HardwareNames.LAUNCH_SERVO,
+    private val hardwareMap: HardwareMap,
+    private val servoName: String = Constants.HardwareNames.LAUNCH_SERVO,
 ) : HardwareComponent {
-    lateinit var launchServo: Servo
 
-    val resetTimer = ElapsedTime()
+    companion object {
+        private const val SERVO_CYCLE_TIME_MS = 670L
+        private const val RESET_THRESHOLD_MS = 750.0
+    }
 
-    val isReset: Boolean
-        get() = resetTimer.milliseconds() > 750
-
+    private lateinit var launchServo: Servo
+    private val resetTimer = ElapsedTime()
     private val scheduler = Executors.newSingleThreadScheduledExecutor()
     private val isTriggered = AtomicBoolean(false)
+
+    val isReset: Boolean
+        get() = resetTimer.milliseconds() > RESET_THRESHOLD_MS
 
     override fun init() {
         launchServo = hardwareMap.get(Servo::class.java, servoName)
@@ -28,18 +32,18 @@ class Launcher(
     }
 
     fun triggerLaunch() {
-        launchServo.position = Constants.ServoPositions.LAUNCHER_TRIGGERED
         if (!isTriggered.compareAndSet(false, true)) return
+        
+        launchServo.position = Constants.ServoPositions.LAUNCHER_TRIGGERED
 
         scheduler.schedule({
             try {
                 launchServo.position = Constants.ServoPositions.LAUNCHER_REST
             } catch (_: Exception) {
-                // ignore hardware exceptions but ensure flag reset
             } finally {
                 isTriggered.set(false)
                 resetTimer.reset()
             }
-        }, 670, TimeUnit.MILLISECONDS)
+        }, SERVO_CYCLE_TIME_MS, TimeUnit.MILLISECONDS)
     }
 }
