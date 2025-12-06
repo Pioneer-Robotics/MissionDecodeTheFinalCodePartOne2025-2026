@@ -2,18 +2,20 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import pioneer.Bot
-import pioneer.constants.Drive
-import pioneer.helpers.Chrono
+import pioneer.Constants
+import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 
 class TeleopDriver1(
     var gamepad: Gamepad,
     val bot: Bot,
 ) {
-    private val chrono = Chrono()
-
-    var drivePower = Drive.DEFAULT_POWER
+    var drivePower = Constants.Drive.DEFAULT_POWER
     val fieldCentric: Boolean
         get() = fieldCentricToggle.state
 
@@ -21,21 +23,28 @@ class TeleopDriver1(
     private var incDrivePower: Toggle = Toggle(false)
     private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
-
-    // Other variables
-    var flywheelSpeed = 0.7
+    private var intakeToggle: Toggle = Toggle(false)
 
     fun update() {
         drive()
         updateDrivePower()
         updateFieldCentric()
-        updateFlywheelSpeed()
-        flywheel()
-        updateLaunchServos()
+        updateIntake()
+        moveSpindexerManual()
+        handleCancelLastIntake()
+        handleSpindexerReset()
+        handleResetPose()
+        bot.spindexer?.update()
     }
 
     private fun drive() {
-        val direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
+        var direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
+        if (fieldCentric) {
+            var angle = atan2(direction.y, direction.x) - bot.pinpoint?.pose!!.theta
+            angle += if (bot.allianceColor == AllianceColor.BLUE) PI / 2 else -PI / 2
+            val mag = direction.getLength()
+            direction = Pose(mag * cos(angle), mag * sin(angle))
+        }
         bot.mecanumBase?.setDrivePower(
             Pose(
                 vx = direction.x,
@@ -43,7 +52,7 @@ class TeleopDriver1(
                 omega = gamepad.right_stick_x.toDouble(),
             ),
             drivePower,
-            Drive.MAX_MOTOR_VELOCITY_TPS,
+            Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
         )
     }
 
@@ -60,33 +69,53 @@ class TeleopDriver1(
     }
 
     private fun updateFieldCentric() {
-        fieldCentricToggle.toggle(gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5)
+        fieldCentricToggle.toggle(gamepad.touchpad)
     }
 
-    private fun updateFlywheelSpeed() {
-        if (flywheelSpeed < 1.0 && gamepad.dpad_right) {
-            flywheelSpeed += 0.25 * chrono.dt / 1000
-        }
-        if (flywheelSpeed > 0.0 && gamepad.dpad_left) {
-            flywheelSpeed -= 0.25 * chrono.dt / 1000
-        }
-        flywheelSpeed.coerceIn(0.0, 1.0)
-    }
-
-    private fun flywheel() {
-        if (gamepad.circle) {
-            bot.flywheel?.velocity = -flywheelSpeed
+    private fun updateIntake() {
+        intakeToggle.toggle(gamepad.circle)
+        if (gamepad.dpad_down) {
+            bot.intake?.reverse()
         } else {
-            bot.flywheel?.velocity = 0.0
+            if (intakeToggle.state) {
+                bot.intake?.forward()
+            } else {
+                bot.intake?.stop()
+            }
+        }
+        if (intakeToggle.justChanged && intakeToggle.state) {
+            bot.spindexer?.moveToNextOpenIntake()
         }
     }
 
-    private fun updateLaunchServos() {
-        if (gamepad.dpad_up) {
-            bot.launchServos?.triggerLaunch()
-        } else if (gamepad.dpad_down) {
-            bot.launchServos?.triggerRetract()
+    private fun moveSpindexerManual() {
+        if (gamepad.right_trigger > 0.25) {
+            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
         }
-        bot.launchServos?.update()
+        if (gamepad.left_trigger > 0.25) {
+            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
+        }
+    }
+
+    private fun handleCancelLastIntake() {
+        if (gamepad.cross) {
+            bot.spindexer?.cancelLastIntake()
+        }
+    }
+
+    private fun handleSpindexerReset() {
+        if (gamepad.share) {
+            bot.spindexer?.reset()
+        }
+    }
+
+    private fun handleResetPose() {
+        if (gamepad.options) {
+            if (bot.allianceColor == AllianceColor.RED) {
+                bot.pinpoint?.reset(Pose(-80.0, -95.0, theta = 0.1))
+            } else {
+                bot.pinpoint?.reset(Pose(80.0, -95.0, theta = 0.1))
+            }
+        }
     }
 }

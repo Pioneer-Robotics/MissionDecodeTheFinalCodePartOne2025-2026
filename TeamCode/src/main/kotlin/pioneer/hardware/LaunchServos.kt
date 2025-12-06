@@ -3,15 +3,13 @@ package pioneer.hardware
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
-import pioneer.constants.HardwareNames
+import pioneer.Constants
 
 class LaunchServos(
     private val hardwareMap: HardwareMap,
-    private val leftName: String = HardwareNames.LAUNCH_SERVO_L,
-    private val rightName: String = HardwareNames.LAUNCH_SERVO_R,
+    private val leftName: String = Constants.HardwareNames.LAUNCH_SERVO_L,
+    private val rightName: String = Constants.HardwareNames.LAUNCH_SERVO_R,
 ) : HardwareComponent {
-    override val name = "LaunchServos"
-
     private lateinit var servo1: CRServo
     private lateinit var servo2: CRServo
 
@@ -38,7 +36,7 @@ class LaunchServos(
         timer.reset()
     }
 
-    fun update() {
+    override fun update() {
         if (timer.milliseconds() < 250) {
             if (launch) {
                 setPower(1.0)

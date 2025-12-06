@@ -18,7 +18,7 @@ class LinearPath(
 
     override fun getLengthSoFar(t: Double): Double = getLength() * t
 
-    override fun getTFromLength(length: Double): Double = length / getLength()
+    override fun getTFromLength(length: Double): Double = if (getLength() > 0) length / getLength() else 1.0
 
     override fun getPoint(t: Double): Pose {
         val x = startPose.x + (endPose.x - startPose.x) * t
