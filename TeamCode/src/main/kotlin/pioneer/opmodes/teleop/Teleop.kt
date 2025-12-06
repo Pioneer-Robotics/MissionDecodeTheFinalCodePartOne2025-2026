@@ -1,10 +1,11 @@
 package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.DcMotorEx
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
 import pioneer.BotType
-import pioneer.helpers.DashboardPlotter
+import pioneer.helpers.Toggle
+import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.opmodes.teleop.drivers.TeleopDriver1
 import pioneer.opmodes.teleop.drivers.TeleopDriver2
@@ -13,16 +14,22 @@ import pioneer.opmodes.teleop.drivers.TeleopDriver2
 class Teleop : BaseOpMode() {
     private lateinit var driver1: TeleopDriver1
     private lateinit var driver2: TeleopDriver2
-
-    private lateinit var flywheelEncoder: DcMotorEx
+    private val allianceToggle = Toggle(false)
 
     override fun onInit() {
-        bot = Bot.fromType(BotType.GOBILDA_STARTER_BOT, hardwareMap)
+        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
 
         driver1 = TeleopDriver1(gamepad1, bot)
         driver2 = TeleopDriver2(gamepad2, bot)
+    }
 
-        flywheelEncoder = hardwareMap.get(DcMotorEx::class.java, "flywheelEncoder")
+    override fun init_loop() {
+        allianceToggle.toggle(gamepad1.touchpad)
+        if (allianceToggle.justChanged) {
+            bot.allianceColor = bot.allianceColor.next()
+        }
+        telemetry.addData("Alliance Color", bot.allianceColor)
+        telemetry.update()
     }
 
     override fun onLoop() {
@@ -35,15 +42,19 @@ class Teleop : BaseOpMode() {
     }
 
     private fun addTelemetryData() {
-        telemetry.addData("Drive Power", driver1.drivePower)
-        telemetry.addData("Flywheel Speed", driver1.flywheelSpeed)
-        telemetry.addData("Field Centric", driver1.fieldCentric)
+        telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
         telemetry.addData("Pose", bot.pinpoint!!.pose)
+        telemetry.addData("Target Goal", driver2.targetGoal)
+        telemetry.addData("Turret Mode", bot.turret?.mode)
+        telemetry.addData("Shoot State", driver2.shootState)
+        telemetry.addData("Flywheel Speed", driver2.flywheelVelocityEnum)
+        telemetry.addData("Flywheel TPS", bot.flywheel?.velocity)
+        telemetry.addData("Turret Angle", driver2.turretAngle)
+        telemetry.addData("Drive Power", driver1.drivePower)
+        telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy))
         telemetry.addData("Voltage", bot.batteryMonitor?.voltage)
-
-        bot.flywheel?.velocity?.let { telemetryPacket.put("Flywheel Motor Velocity", -it) }
-        telemetryPacket.put("Flywheel Velocity", -flywheelEncoder.velocity)
-        DashboardPlotter.plotBotPosition(telemetryPacket, bot.pinpoint?.pose)
+        telemetry.addData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS))
+        telemetryPacket.addLine("Flywheel TPS" + (bot.flywheel?.velocity ?: 0.0))
     }
 }

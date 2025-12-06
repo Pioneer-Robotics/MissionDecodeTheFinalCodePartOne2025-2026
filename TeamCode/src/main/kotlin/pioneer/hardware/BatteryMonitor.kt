@@ -10,8 +10,6 @@ import com.qualcomm.robotcore.hardware.VoltageSensor
 class BatteryMonitor(
     private val hardwareMap: HardwareMap,
 ) : HardwareComponent {
-    override val name = "BatteryMonitor"
-
     private lateinit var voltageSensors: List<VoltageSensor>
 
     override fun init() {

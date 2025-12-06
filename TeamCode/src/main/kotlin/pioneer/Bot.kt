@@ -1,18 +1,25 @@
 package pioneer
 
 import com.qualcomm.robotcore.hardware.HardwareMap
+import pioneer.general.AllianceColor
 import pioneer.hardware.BatteryMonitor
 import pioneer.hardware.Camera
 import pioneer.hardware.Flywheel
 import pioneer.hardware.HardwareComponent
+import pioneer.hardware.Intake
 import pioneer.hardware.LaunchServos
+import pioneer.hardware.Launcher
 import pioneer.hardware.MecanumBase
+import pioneer.hardware.Spindexer
+import pioneer.hardware.Turret
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
+import pioneer.vision.AprilTag
 
 enum class BotType {
     MECANUM_BOT,
     GOBILDA_STARTER_BOT,
+    COMP_BOT,
     CUSTOM,
 }
 
@@ -30,21 +37,33 @@ class Bot private constructor(
         hardwareComponents.values.forEach { it.init() }
     }
 
+    var allianceColor = AllianceColor.RED
+
     // Property-style access for known components
     val mecanumBase get() = get<MecanumBase>()
     val pinpoint get() = get<Pinpoint>()
     val launchServos get() = get<LaunchServos>()
     val flywheel get() = get<Flywheel>()
+    val turret get() = get<Turret>()
+    val intake get() = get<Intake>()
     val camera get() = get<Camera>()
     val batteryMonitor get() = get<BatteryMonitor>()
+    val spindexer get() = get<Spindexer>()
+    val launcher get() = get<Launcher>()
 
     // Follower is lazily initialized (only if accessed)
     // and will error if localizer or mecanumBase is missing
     val follower: Follower by lazy {
         Follower(
-            localizer = get<Pinpoint>()!!,
-            mecanumBase = get<MecanumBase>()!!,
+            localizer = pinpoint!!,
+            mecanumBase = mecanumBase!!,
         )
+    }
+
+    fun updateAll(dt: Double) {
+        hardwareComponents.values.forEach { it.update() }
+        pinpoint?.update(dt)
+        // TODO: Add other update methods (ie. localizer, follower)
     }
 
     // Companion for builder and fromType
@@ -68,7 +87,19 @@ class Bot private constructor(
                         .add(Pinpoint(hardwareMap))
                         .add(LaunchServos(hardwareMap))
                         .add(Flywheel(hardwareMap))
-                        .add(Camera(hardwareMap, processors = arrayOf(Camera.createAprilTagProcessor())))
+                        .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
+                        .add(BatteryMonitor(hardwareMap))
+                        .build()
+                BotType.COMP_BOT ->
+                    builder()
+                        .add(MecanumBase(hardwareMap))
+                        .add(Pinpoint(hardwareMap))
+                        .add(Flywheel(hardwareMap))
+                        .add(Intake(hardwareMap))
+                        .add(Turret(hardwareMap))
+                        .add(Spindexer(hardwareMap))
+                        .add(Launcher(hardwareMap))
+                        .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
                         .add(BatteryMonitor(hardwareMap))
                         .build()
                 BotType.CUSTOM -> throw IllegalArgumentException("Use Bot.builder() to create a custom bot")

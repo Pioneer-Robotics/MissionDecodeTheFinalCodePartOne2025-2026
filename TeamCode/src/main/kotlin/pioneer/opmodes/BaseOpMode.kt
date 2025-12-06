@@ -26,6 +26,9 @@ abstract class BaseOpMode : OpMode() {
     protected val dt: Double
         get() = chrono.dt
 
+    val elapsedTime: Double
+        get() = getRuntime()
+
     final override fun init() {
         onInit() // Call user-defined init method
         bot.initAll() // Initialize bot hardware
@@ -37,7 +40,7 @@ abstract class BaseOpMode : OpMode() {
 
     final override fun loop() {
         // Update bot systems
-        bot.pinpoint?.update(dt)
+        bot.updateAll(dt)
 
         // Call user-defined loop logic
         onLoop()
@@ -45,6 +48,7 @@ abstract class BaseOpMode : OpMode() {
         // Update path follower
         if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
             bot.follower.update(dt)
+            telemetry.addLine("Updated follower")
         }
 
         // Automatically handle telemetry updates
