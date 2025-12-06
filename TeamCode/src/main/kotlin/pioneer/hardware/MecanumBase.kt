@@ -4,18 +4,15 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import pioneer.constants.Drive
-import pioneer.constants.HardwareNames
+import pioneer.Constants
 import pioneer.helpers.Pose
 import kotlin.math.abs
 import kotlin.math.sign
 
 class MecanumBase(
     private val hardwareMap: HardwareMap,
-    private val motorConfig: Map<String, DcMotorSimple.Direction> = Drive.MOTOR_CONFIG,
+    private val motorConfig: Map<String, DcMotorSimple.Direction> = Constants.Drive.MOTOR_CONFIG,
 ) : HardwareComponent {
-    override val name = "MecanumBase"
-
     private lateinit var motors: Map<String, DcMotorEx>
 
     override fun init() {
@@ -27,10 +24,10 @@ class MecanumBase(
             }
     }
 
-    private val leftFront get() = motors.getValue(HardwareNames.DRIVE_LEFT_FRONT)
-    private val leftBack get() = motors.getValue(HardwareNames.DRIVE_LEFT_BACK)
-    private val rightFront get() = motors.getValue(HardwareNames.DRIVE_RIGHT_FRONT)
-    private val rightBack get() = motors.getValue(HardwareNames.DRIVE_RIGHT_BACK)
+    private val leftFront get() = motors.getValue(Constants.HardwareNames.DRIVE_LEFT_FRONT)
+    private val leftBack get() = motors.getValue(Constants.HardwareNames.DRIVE_LEFT_BACK)
+    private val rightFront get() = motors.getValue(Constants.HardwareNames.DRIVE_RIGHT_FRONT)
+    private val rightBack get() = motors.getValue(Constants.HardwareNames.DRIVE_RIGHT_BACK)
 
     private fun DcMotorEx.configureMotor(direction: DcMotorSimple.Direction) {
         mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -64,11 +61,16 @@ class MecanumBase(
      * Feedforward control for motion profiling
      */
     fun setDriveVA(pose: Pose) {
-        val ffX = calculateFeedforward(pose.vx, pose.ax, Drive.kV.x, Drive.kA.x, Drive.kS.x)
-        val ffY = calculateFeedforward(pose.vy, pose.ay, Drive.kV.y, Drive.kA.y, Drive.kS.y)
-        val ffTheta = calculateFeedforward(pose.omega, pose.alpha, Drive.kV.theta, Drive.kA.theta, Drive.kS.theta)
+        val ffX = calculateFeedforward(pose.vx, pose.ax, Constants.Drive.kV.x, Constants.Drive.kA.x, Constants.Drive.kS.x)
+        val ffY = calculateFeedforward(pose.vy, pose.ay, Constants.Drive.kV.y, Constants.Drive.kA.y, Constants.Drive.kS.y)
+        val ffTheta =
+            calculateFeedforward(pose.omega, pose.alpha, Constants.Drive.kV.theta, Constants.Drive.kA.theta, Constants.Drive.kS.theta)
 
-        val motorPowers = calculateMotorPowers(Pose(ffX, ffY, ffTheta))
+//        val ffX = calculateFeedforward(pose.vx, pose.ax, Constants.Drive.kV.x, Constants.Drive.kAX, Constants.Drive.kS.x)
+//        val ffY = calculateFeedforward(pose.vy, pose.ay, Constants.Drive.kV.y, Constants.Drive.kAY, Constants.Drive.kS.y)
+//        val ffTheta = calculateFeedforward(pose.omega, pose.alpha, Constants.Drive.kV.theta, Constants.Drive.kAT, Constants.Drive.kS.theta)
+
+        val motorPowers = calculateMotorPowers(Pose(vx = ffX, vy = ffY, omega = ffTheta))
         motors.values.forEachIndexed { index, motor ->
             motor.power = motorPowers[index].coerceIn(-1.0, 1.0)
         }

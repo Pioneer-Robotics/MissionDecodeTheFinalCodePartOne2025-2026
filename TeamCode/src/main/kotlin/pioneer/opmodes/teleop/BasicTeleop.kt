@@ -1,14 +1,14 @@
 package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import pioneer.constants.Drive
+import pioneer.Constants
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.opmodes.BaseOpMode
 
 @TeleOp(name = "Basic Teleop")
 class BasicTeleop : BaseOpMode() {
-    private var drivePower = Drive.DEFAULT_POWER
+    private var drivePower = Constants.Drive.DEFAULT_POWER
     private var incDrivePower: Toggle = Toggle(false)
     private var decDrivePower: Toggle = Toggle(false)
 
@@ -26,7 +26,7 @@ class BasicTeleop : BaseOpMode() {
                 omega = gamepad1.right_stick_x.toDouble(),
             ),
             drivePower,
-            Drive.MAX_MOTOR_VELOCITY_TPS,
+            Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
         )
     }
 

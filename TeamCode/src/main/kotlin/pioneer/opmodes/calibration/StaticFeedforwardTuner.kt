@@ -1,14 +1,16 @@
 package pioneer.opmodes.calibration
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import pioneer.Bot
 import pioneer.BotType
-import pioneer.constants.Drive
+import pioneer.Constants
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.hypot
 
+@Disabled
 @Autonomous(name = "Static Feedforward Tuner", group = "Calibration")
 class StaticFeedforwardTuner : BaseOpMode() {
     enum class State {
@@ -42,8 +44,8 @@ class StaticFeedforwardTuner : BaseOpMode() {
                     velocityTime = 0
                     bot.mecanumBase!!.setDrivePower(
                         Pose(vx = 0.0, vy = currentPower, omega = 0.0),
-                        Drive.DEFAULT_POWER,
-                        Drive.MAX_MOTOR_VELOCITY_TPS,
+                        Constants.Drive.DEFAULT_POWER,
+                        Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
                     )
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
@@ -73,8 +75,8 @@ class StaticFeedforwardTuner : BaseOpMode() {
                     velocityTime = 0
                     bot.mecanumBase!!.setDrivePower(
                         Pose(vx = currentPower, vy = 0.0, omega = 0.0),
-                        Drive.DEFAULT_POWER,
-                        Drive.MAX_MOTOR_VELOCITY_TPS,
+                        Constants.Drive.DEFAULT_POWER,
+                        Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
                     )
                     currentPower += step
                     telemetryPacket.put("Current Power", currentPower)
