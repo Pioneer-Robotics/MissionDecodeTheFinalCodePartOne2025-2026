@@ -16,10 +16,27 @@ plugins {
     id("com.android.application")
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.dokka)
 }
 
 // Include common definitions from above.
 apply { from("../build.common.gradle") }
+
+// Dokka configuration
+dokka {
+    dokkaPublications.html {
+        // Customize colors and styling
+        moduleName.set("Pioneer Robotics Documentation")
+        
+        pluginsConfiguration.html {
+            // Custom CSS for colors
+            // customStyleSheets.from("dokka-styles.css")
+            
+            // Footer text
+            footerMessage.set("© ${java.time.Year.now().value} Pioneer Robotics")
+        }
+    }
+}
 
 ktlint {
     android = true
@@ -62,3 +79,13 @@ dependencies {
 //kotlin {
 //    jvmToolchain(8)
 //}
+
+tasks.register("dokkaHtmlMultiModule") {
+    dependsOn(":TeamCode:dokkaGeneratePublicationHtml")
+    doLast {
+        copy {
+            from(layout.buildDirectory.dir("dokka/html"))
+            into(layout.projectDirectory.dir("../docs"))
+        }
+    }
+}
