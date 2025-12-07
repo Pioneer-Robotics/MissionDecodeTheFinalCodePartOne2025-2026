@@ -30,6 +30,14 @@ object MotionProfileGenerator {
         accelerationConstraint: AccelerationConstraint,
         resolution: Double = 0.1, // Length of each segment in cm
     ): MotionProfile {
+        if (abs(startState.x - endState.x) < 1e-3) {
+            return MotionProfile(
+                listOf(
+                    MotionSegment(startState, 0.0),
+                ),
+            )
+        }
+
         // Get the arc length between start and end states
         val length = endState.x - startState.x
         // Calculate the number of samples based on the resolution

@@ -13,8 +13,6 @@ class CompoundPath(
 ) : Path {
     override var startPose: Pose = paths.first().startPose
     override var endPose: Pose = paths.last().endPose
-    override var headingInterpolationMode: Path.HeadingInterpolationMode =
-        Path.HeadingInterpolationMode.LINEAR
 
     init {
         // Validate that the paths are connected end-to-end
@@ -26,12 +24,6 @@ class CompoundPath(
     }
 
     override fun getLength(): Double = paths.sumOf { it.getLength() }
-
-    override fun getHeading(t: Double): Double {
-        val pathIndex = (t * paths.size).toInt().coerceIn(0, paths.size - 1)
-        val localT = t * paths.size - pathIndex
-        return paths[pathIndex].getHeading(localT)
-    }
 
     override fun getPoint(t: Double): Pose {
         val pathIndex = (t * paths.size).toInt().coerceIn(0, paths.size - 1)

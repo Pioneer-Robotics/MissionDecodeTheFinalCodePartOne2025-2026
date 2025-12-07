@@ -33,6 +33,9 @@ abstract class BaseOpMode(
     protected val dt: Double
         get() = chrono.dt
 
+    val elapsedTime: Double
+        get() = getRuntime()
+
     final override fun init() {
         // Auto-load bot in TELEOP period
         if (period == Period.TELEOP) {
@@ -62,7 +65,7 @@ abstract class BaseOpMode(
 
     final override fun loop() {
         // Update bot systems
-        bot.pinpoint?.update(dt)
+        bot.updateAll(dt)
 
         // Call user-defined loop logic
         onLoop()
@@ -70,6 +73,7 @@ abstract class BaseOpMode(
         // Update path follower
         if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
             bot.follower.update(dt)
+            telemetry.addLine("Updated follower")
         }
 
         // Automatically handle telemetry updates

@@ -1,9 +1,11 @@
 package pioneer.opmodes.other
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.helpers.FileLogger
 
+@Disabled
 @TeleOp(name = "Clear Logs", group = "Utils")
 class ClearLogs : OpMode() {
     override fun init() {

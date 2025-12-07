@@ -1,8 +1,6 @@
 package pioneer.pathing.paths
 
-import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
-import pioneer.pathing.paths.Path.HeadingInterpolationMode
 
 /**
  * LinearPath class representing a straight line path in 2D space
@@ -16,36 +14,22 @@ class LinearPath(
     // Constructor overloads
     constructor(startX: Double, startY: Double, endX: Double, endY: Double) : this(Pose(startX, startY), Pose(endX, endY))
 
-    // Enum for heading interpolation mode
-    override var headingInterpolationMode: HeadingInterpolationMode = HeadingInterpolationMode.LINEAR
-
     override fun getLength(): Double = startPose.distanceTo(endPose)
 
     override fun getLengthSoFar(t: Double): Double = getLength() * t
 
-    override fun getTFromLength(length: Double): Double = length / getLength()
-
-    override fun getHeading(t: Double): Double {
-        when (headingInterpolationMode) {
-            HeadingInterpolationMode.LINEAR -> {
-                val delta = MathUtils.normalizeRadians(endPose.theta - startPose.theta)
-                return startPose.theta + delta * t
-            }
-        }
-    }
+    override fun getTFromLength(length: Double): Double = if (getLength() > 0) length / getLength() else 1.0
 
     override fun getPoint(t: Double): Pose {
         val x = startPose.x + (endPose.x - startPose.x) * t
         val y = startPose.y + (endPose.y - startPose.y) * t
-        val heading = getHeading(t)
-        return Pose(x, y, heading)
+        return Pose(x, y)
     }
 
     override fun getPose(t: Double): Pose =
         Pose(
             x = startPose.x + (endPose.x - startPose.x) * t,
             y = startPose.y + (endPose.y - startPose.y) * t,
-            theta = getHeading(t),
             vx = (endPose.x - startPose.x) / getLength(),
             vy = (endPose.y - startPose.y) / getLength(),
         )

@@ -13,38 +13,38 @@ jobs:
       contents: write
     
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
         ref: ${{ github.event.pull_request.head.ref || github.ref }}
         token: ${{ secrets.GITHUB_TOKEN }}
       
-    - uses: actions/setup-java@v5
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v5
-    
-    - name: Make gradlew executable
-      run: chmod +x ./gradlew
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
       
-    - name: Format (non-fork) or check (fork)
-      run: |
-        if [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" && "${{ github.event_name }}" == "pull_request" ]]; then
-          ./gradlew ktlintCheck --no-daemon
-        else
-          ./gradlew ktlintFormat --no-daemon
-        fi
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
       
-    - name: Commit formatting changes
-      if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
-      run: |
-        if [[ -n $(git status --porcelain) ]]; then
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git add .
-          git commit -m "style: apply ktlint formatting [bot]"
-          git push
-        fi
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      
+      - name: Run ktlint
+        run: |
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
+            ./gradlew ktlintCheck --no-daemon
+          else
+            ./gradlew ktlintFormat --no-daemon
+          fi
+      
+      - name: Commit formatting changes
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git add .
+            git commit -m "style: apply ktlint formatting [bot]"
+            git push
+          fi

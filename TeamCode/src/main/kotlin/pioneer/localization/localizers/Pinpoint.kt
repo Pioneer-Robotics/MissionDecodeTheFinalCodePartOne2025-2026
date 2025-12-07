@@ -6,9 +6,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
+import pioneer.Constants
 import pioneer.helpers.Pose
 import pioneer.localization.Localizer
-import pioneer.constants.Pinpoint as PinpointConstants
 
 /**
  * GoBILDA Pinpoint localizer with coordinate conversion.
@@ -31,9 +31,9 @@ class Pinpoint(
     override fun init() {
         pinpoint = hardwareMap.get(GoBildaPinpointDriver::class.java, pinpointName)
 
-        pinpoint.setOffsets(PinpointConstants.X_POD_OFFSET_MM, PinpointConstants.Y_POD_OFFSET_MM, DistanceUnit.MM)
-        pinpoint.setEncoderResolution(PinpointConstants.ENCODER_RESOLUTION)
-        pinpoint.setEncoderDirections(PinpointConstants.X_ENCODER_DIRECTION, PinpointConstants.Y_ENCODER_DIRECTION)
+        pinpoint.setOffsets(Constants.Pinpoint.X_POD_OFFSET_MM, Constants.Pinpoint.Y_POD_OFFSET_MM, DistanceUnit.MM)
+        pinpoint.setEncoderResolution(Constants.Pinpoint.ENCODER_RESOLUTION)
+        pinpoint.setEncoderDirections(Constants.Pinpoint.X_ENCODER_DIRECTION, Constants.Pinpoint.Y_ENCODER_DIRECTION)
         pinpoint.recalibrateIMU()
         // Coordinate conversion: robot_y → pinpoint_x, -robot_x → pinpoint_y, -robot_θ → pinpoint_θ
         pinpoint.setPosition(Pose2D(DistanceUnit.CM, startPose.y, -startPose.x, AngleUnit.RADIANS, -startPose.theta))
@@ -68,6 +68,6 @@ class Pinpoint(
     override fun reset(pose: Pose) {
         this.pose = pose
         // Coordinate conversion back to Pinpoint system
-        pinpoint.setPosition(Pose2D(DistanceUnit.CM, pose.y, -pose.x, AngleUnit.RADIANS, -pose.theta))
+        pinpoint.setPosition(Pose2D(DistanceUnit.CM, pose.y, -pose.x, AngleUnit.RADIANS, pose.theta))
     }
 }
