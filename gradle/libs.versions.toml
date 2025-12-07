@@ -3,6 +3,7 @@ ftc = "11.0.0"
 androidx-appcompat = "1.2.0"
 dashboard = "0.5.1"
 junit = "4.13.2"
+dokka = "2.1.0"
 
 [libraries]
 ftc-inspection = { module = "org.firstinspires.ftc:Inspection", version.ref = "ftc" }
@@ -16,3 +17,6 @@ ftc-vision = { module = "org.firstinspires.ftc:Vision", version.ref = "ftc" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 acmerobotics-dashboard = { module = "com.acmerobotics.dashboard:dashboard", version.ref = "dashboard" }
 junit = { module = "junit:junit", version.ref = "junit" }
+
+[plugins]
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
