@@ -1,6 +1,8 @@
 //
 // build.gradle in TeamCode
 //
+
+import java.time.Year
 // Most of the definitions for building your module reside in a common, shared
 // file 'build.common.gradle'. Being factored in this way makes it easier to
 // integrate updates to the FTC into your code. If you really need to customize
@@ -33,7 +35,7 @@ dokka {
             // customStyleSheets.from("dokka-styles.css")
             
             // Footer text
-            footerMessage.set("© ${java.time.Year.now().value} Pioneer Robotics")
+            footerMessage.set("© ${Year.now().value} Pioneer Robotics")
         }
     }
 }
