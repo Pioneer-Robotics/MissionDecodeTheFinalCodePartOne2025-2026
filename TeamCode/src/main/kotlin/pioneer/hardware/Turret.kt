@@ -8,6 +8,7 @@ import pioneer.Constants
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
 import kotlin.math.PI
+import kotlin.math.abs
 
 class Turret(
     private val hardwareMap: HardwareMap,
@@ -25,6 +26,19 @@ class Turret(
 
     var mode: Mode = Mode.MANUAL
 
+    var offsetTicks = 0
+
+    val currentTicks: Int
+        get() {
+            check(::turret.isInitialized)
+            return turret.currentPosition - offsetTicks
+        }
+
+    val reachedTarget: Boolean
+        get() {
+            return abs(currentAngle - targetAngle) < Constants.Turret.ANGLE_TOLERANCE_RADIANS
+        }
+
     init {
         require(motorRange.first < motorRange.second) {
             "Motor range must be valid: ${motorRange.first} to ${motorRange.second}"
@@ -41,10 +55,15 @@ class Turret(
     }
 
     val currentAngle: Double
-        get() = turret.currentPosition / ticksPerRadian
+        get() = currentTicks / ticksPerRadian
 
     val targetAngle: Double
         get() = turret.targetPosition / ticksPerRadian
+
+    fun resetMotorPosition(resetTicks: Int = 0) {
+        turret.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        offsetTicks = resetTicks
+    }
 
     fun gotoAngle(
         angle: Double,
@@ -57,7 +76,6 @@ class Turret(
             MathUtils
                 .normalizeRadians(angle, motorRange)
 
-        val currentTicks = turret.currentPosition
         val currentAngle = currentTicks / ticksPerRadian
 
         val delta = desiredAngle - currentAngle

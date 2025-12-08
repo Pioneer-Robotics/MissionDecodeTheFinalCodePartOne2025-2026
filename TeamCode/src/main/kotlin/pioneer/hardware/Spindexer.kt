@@ -101,7 +101,7 @@ class Spindexer(
 
     // Motor position accessors
     val currentMotorPosition: Int
-        get() = motor.currentPosition
+        get() = motor.currentPosition - offsetTicks
 
     val targetMotorPosition: Int
         get() = (motorState.radians * ticksPerRadian).toInt()
@@ -109,7 +109,10 @@ class Spindexer(
     val currentScannedArtifact: Artifact?
         get() = scanArtifact()
 
+    var checkingForNewArtifacts = true
+
     // Private variables
+    private var offsetTicks = 0
     private var lastPower = 0.0
     private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
     private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
@@ -124,7 +127,7 @@ class Spindexer(
     private var artifactSeen = false
     private var artifactWasSeenRecently = false
     private var lastStoredIndex = 0
-    private val manualMoveTimer = ElapsedTime()
+    private var manualMove = false
     private val intakePositions =
         listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
     private val outtakePositions =
@@ -148,6 +151,7 @@ class Spindexer(
         }
 
     override fun init() {
+        checkingForNewArtifacts = true
         motor =
             hardwareMap.get(DcMotorEx::class.java, motorName).apply {
                 mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -168,7 +172,7 @@ class Spindexer(
     override fun update() {
         chrono.update()
         runMotorToState()
-        checkForArtifact()
+        if (checkingForNewArtifacts) checkForArtifact()
     }
 
     /**
@@ -176,6 +180,7 @@ class Spindexer(
      * @return true if moved to the next open intake, false otherwise.
      */
     fun moveToNextOpenIntake(): Boolean {
+        manualMove = false
         _artifacts.indexOfFirst { it == null }.takeIf { it != -1 }?.let {
             motorState = intakePositions[it]
             return true
@@ -188,6 +193,7 @@ class Spindexer(
      * @param artifact Optional artifact to prioritize moving to its outtake position.
      */
     fun moveToNextOuttake(artifact: Artifact? = null): Boolean {
+        manualMove = false
         // No artifacts to outtake
         if (isEmpty) return false
 
@@ -233,7 +239,7 @@ class Spindexer(
 
     fun moveManual(power: Double) {
         motor.power = power
-        manualMoveTimer.reset()
+        manualMove = true
     }
 
     fun setArtifacts(vararg artifacts: Artifact?) {
@@ -241,6 +247,12 @@ class Spindexer(
         artifacts.forEachIndexed { index, artifact ->
             _artifacts[index] = artifact
         }
+    }
+
+    fun resetMotorPosition(resetTicks: Int = 0) {
+        motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        offsetTicks = resetTicks
+        motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
     }
 
     private fun wrapTicks(
@@ -265,7 +277,7 @@ class Spindexer(
     }
 
     private fun runMotorToState() {
-        if (manualMoveTimer.milliseconds() < 250) return
+        if (manualMove) return
 
         val rawError = targetMotorPosition - currentMotorPosition
         val error = wrapTicks(rawError)
@@ -277,7 +289,7 @@ class Spindexer(
         power = rampPower(power, chrono.dt)
 
         // Static constant
-        val adjustedKS = 0.04 + 0.025 * numStoredArtifacts
+        val adjustedKS = Constants.Spindexer.KS_START + Constants.Spindexer.KS_STEP * numStoredArtifacts
         power += if (abs(error) > 100) adjustedKS * sign(error.toDouble()) else 0.0
 
         // Apply power (inverted due to motor orientation)

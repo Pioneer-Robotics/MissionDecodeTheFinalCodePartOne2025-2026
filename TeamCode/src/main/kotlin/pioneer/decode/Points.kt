@@ -41,7 +41,7 @@ class Points(
     val START_FAR = Pose(43.0, -157.0, theta = 0.0).T(color)
 
     val SHOOT_GOAL_CLOSE = Pose(60.0, 60.0, theta = 0.0).T(color)
-    val SHOOT_GOAL_FAR = Pose(43.0, -147.0, theta = 0.0).T(color)
+    val SHOOT_GOAL_FAR = Pose(43.0, -145.0, theta = 0.0).T(color)
 
     private fun collectY(i: Int) = 30 - (i * 60.0) // 30, -30, -90
 
