@@ -43,7 +43,7 @@ abstract class BaseOpMode(
                 // Reinitialize bot from saved object
                 omdt.bot?.let { savedBot ->
                     bot = savedBot
-                    bot.initAll() // Re-initialize hardware
+                    // bot.initAll() // Re-initialize hardware (TODO: needs testing)
                 }
             }
         }

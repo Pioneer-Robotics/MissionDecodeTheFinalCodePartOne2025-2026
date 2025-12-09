@@ -32,7 +32,7 @@ class Points(
         when (c) {
             AllianceColor.RED -> this
             AllianceColor.BLUE -> Pose(-this.x, this.y, -this.theta)
-            AllianceColor.NEUTRAL -> this
+            AllianceColor.NONE -> this
         }
 
     // Key positions on the field

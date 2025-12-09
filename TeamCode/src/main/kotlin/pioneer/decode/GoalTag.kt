@@ -85,7 +85,7 @@ object GoalTagProcessor {
                     ?.let { GoalTag.RED }
             }
 
-            AllianceColor.NEUTRAL -> {
+            AllianceColor.NONE -> {
                 null
             }
         }
