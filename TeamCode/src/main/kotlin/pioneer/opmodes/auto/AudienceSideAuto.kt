@@ -71,14 +71,14 @@ class AudienceSideAuto : BaseOpMode() {
 
         when (state) {
             State.INIT -> {
-                bot.spindexer?.checkingForNewArtifacts = false
+                bot.spindexer?.apply {
+                    checkingForNewArtifacts = false
+                    setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+                    moveToNextOuttake(motifOrder.currentArtifact)
+                }
                 P = Points(bot.allianceColor)
                 Constants.TransferData.allianceColor = bot.allianceColor
-                bot.spindexer?.apply {
-                    setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-                    bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
-                }
-                bot.pinpoint?.reset(Points(bot.allianceColor).START_FAR)
+                bot.pinpoint?.reset(P.START_FAR)
                 bot.follower.path = null
                 state = State.DRIVE_1
             }
