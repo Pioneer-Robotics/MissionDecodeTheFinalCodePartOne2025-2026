@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
-import pioneer.hardware.Camera
 import pioneer.opmodes.BaseOpMode
 import pioneer.vision.AprilTag
 
@@ -70,7 +69,7 @@ class ObeliskTest : BaseOpMode() {
 
         if (motif != null && motif.isValid()) {
             telemetry.addData("Motif Tag", motif.aprilTagId)
-            telemetry.addData("Current Artifact", motif.currentArtifact()?.toString() ?: "None")
+            telemetry.addData("Current Artifact", motif.currentArtifact?.toString() ?: "None")
             telemetry.addData("Position", "${motif.getCurrentIndex() + 1} of 3")
             telemetry.addData("Pattern", getPatternString(motif))
         } else {

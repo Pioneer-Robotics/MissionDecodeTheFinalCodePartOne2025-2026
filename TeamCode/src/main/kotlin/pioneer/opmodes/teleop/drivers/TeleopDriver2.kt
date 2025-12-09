@@ -11,7 +11,6 @@ import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
-import java.lang.Math.pow
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.pow
@@ -49,6 +48,7 @@ class TeleopDriver2(
         handleTurret()
         handleShootInput()
         processShooting()
+        updateIndicatorLED()
         chrono.update() // Manual update to allow dt to match across the loop.
     }
 
@@ -189,6 +189,16 @@ class TeleopDriver2(
                     GoalTag.RED.shootingPose
                 },
             )
+        }
+    }
+
+    private fun updateIndicatorLED() {
+        bot.flywheel?.velocity?.let {
+            if (it > flywheelVelocityEnum.velocity) {
+                gamepad.setLedColor(0.0, 1.0, 0.0, -1)
+            } else {
+                gamepad.setLedColor(1.0, 0.0, 0.0, -1)
+            }
         }
     }
 }

@@ -35,6 +35,10 @@ class TeleopDriver1(
         handleSpindexerReset()
         handleResetPose()
         bot.spindexer?.update()
+
+        if (gamepad.right_stick_button) {
+            bot.spindexer?.resetMotorPosition()
+        }
     }
 
     private fun drive() {
@@ -89,10 +93,11 @@ class TeleopDriver1(
     }
 
     private fun moveSpindexerManual() {
-        if (gamepad.right_trigger > 0.25) {
+        // FIXME: Manual moving won't reset power back to 0
+        if (gamepad.right_trigger > 0.1) {
             bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
         }
-        if (gamepad.left_trigger > 0.25) {
+        if (gamepad.left_trigger > 0.1) {
             bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
         }
     }

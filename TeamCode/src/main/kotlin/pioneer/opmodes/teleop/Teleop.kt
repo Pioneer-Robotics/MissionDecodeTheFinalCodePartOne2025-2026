@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
 import pioneer.BotType
+import pioneer.Constants
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
@@ -15,6 +16,7 @@ class Teleop : BaseOpMode() {
     private lateinit var driver1: TeleopDriver1
     private lateinit var driver2: TeleopDriver2
     private val allianceToggle = Toggle(false)
+    private var changedAllianceColor = false
 
     override fun onInit() {
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
@@ -26,10 +28,17 @@ class Teleop : BaseOpMode() {
     override fun init_loop() {
         allianceToggle.toggle(gamepad1.touchpad)
         if (allianceToggle.justChanged) {
+            changedAllianceColor = true
             bot.allianceColor = bot.allianceColor.next()
         }
         telemetry.addData("Alliance Color", bot.allianceColor)
         telemetry.update()
+    }
+
+    override fun start() {
+        if (!changedAllianceColor) bot.allianceColor = Constants.TransferData.allianceColor
+//        bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerPositionTicks)
+//        bot.turret?.resetMotorPosition(Constants.TransferData.turretPositionTicks)
     }
 
     override fun onLoop() {
@@ -42,6 +51,9 @@ class Teleop : BaseOpMode() {
     }
 
     private fun addTelemetryData() {
+//        telemetry.addData("Transfer Data", Constants.TransferData.turretPositionTicks)
+//        telemetry.addData("Turret Offset Ticks", bot.turret?.offsetTicks)
+//        telemetry.addData("Turret Angle", bot.turret?.currentAngle)
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
         telemetry.addData("Pose", bot.pinpoint!!.pose)
         telemetry.addData("Target Goal", driver2.targetGoal)

@@ -5,6 +5,7 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
 import kotlin.math.PI
 
@@ -169,13 +170,14 @@ object Constants {
 
         @JvmField var KI = 0.0
 
-        @JvmField var KD = 0.025
+        @JvmField var KD = 0.04
 
-        @JvmField var KS = 0.075
+        @JvmField var KS_START = 0.05
+        @JvmField var KS_STEP = 0.01
 
         @JvmField var MAX_POWER_RATE = 5.0
 
-        const val POSITION_TOLERANCE_TICKS = 200
+        const val POSITION_TOLERANCE_TICKS = 100
         const val TICKS_PER_REV = 8192
 
         // TODO: Tune these values when we test on the real hardware
@@ -190,10 +192,17 @@ object Constants {
         const val TICKS_PER_REV = 384.5 * 3
         const val HEIGHT = 0.0 // TODO MEASURE
         const val THETA = 0.93
+        const val ANGLE_TOLERANCE_RADIANS = 0.075
     }
 
     object ServoPositions {
         const val LAUNCHER_REST = 0.067
         const val LAUNCHER_TRIGGERED = 0.315
+    }
+
+    object TransferData {
+        var allianceColor = AllianceColor.NEUTRAL
+        var turretPositionTicks = 0
+        var spindexerPositionTicks = 0
     }
 }

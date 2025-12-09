@@ -1,16 +1,17 @@
 package pioneer.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.BotType
+import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.decode.Motif
 import pioneer.decode.Obelisk
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
-import pioneer.hardware.Spindexer.MotorPosition
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
@@ -20,6 +21,7 @@ import pioneer.pathing.paths.LinearPath
 @Autonomous(name = "Audience Side Auto", group = "Autonomous")
 class AudienceSideAuto : BaseOpMode() {
     enum class State {
+        INIT,
         DRIVE_1,
         SHOOT,
         DRIVE_2,
@@ -32,24 +34,17 @@ class AudienceSideAuto : BaseOpMode() {
         LAUNCHING,
     }
 
-    private var state = State.DRIVE_1
+    private var state = State.INIT
     private var launchState = LaunchState.READY
     private lateinit var P: Points
     private val allianceToggle = Toggle(false)
     private var motifOrder: Motif = Motif(21)
     private var motifIndex = 0
+    private val resetTimer = ElapsedTime()
+    private var shouldAutoTrack = true
 
     override fun onInit() {
-        bot =
-            Bot.fromType(BotType.COMP_BOT, hardwareMap).apply {
-                spindexer?.apply {
-                    setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-                    motorState = MotorPosition.OUTTAKE_1
-                }
-                pinpoint?.reset(Points(allianceColor).START_FAR)
-                follower.path = null
-            }
-        P = Points(bot.allianceColor)
+        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
     }
 
     override fun init_loop() {
@@ -72,9 +67,21 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     override fun onLoop() {
-        updateTurretTracking()
+        if (shouldAutoTrack) updateTurretTracking()
 
         when (state) {
+            State.INIT -> {
+                bot.spindexer?.checkingForNewArtifacts = false
+                P = Points(bot.allianceColor)
+                Constants.TransferData.allianceColor = bot.allianceColor
+                bot.spindexer?.apply {
+                    setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+                    bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
+                }
+                bot.pinpoint?.reset(Points(bot.allianceColor).START_FAR)
+                bot.follower.path = null
+                state = State.DRIVE_1
+            }
             State.DRIVE_1 -> state_drive_1()
             State.SHOOT -> state_shoot()
             State.DRIVE_2 -> state_drive_2()
@@ -115,8 +122,13 @@ class AudienceSideAuto : BaseOpMode() {
                     LaunchState.LAUNCHING -> {
                         if (bot.launcher?.isReset == true) {
                             if (bot.spindexer?.isEmpty == true) {
-                                state = State.DRIVE_2
+                                resetTimer.reset()
                                 bot.follower.path = null
+                                shouldAutoTrack = false
+                                state = State.STOP
+//                                bot.spindexer?.moveToNextOpenIntake()
+//                                bot.turret?.gotoAngle(0.0)
+//                                state = State.DRIVE_2
                             }
                             launchState = LaunchState.READY
                         }
@@ -140,7 +152,21 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     private fun state_stop() {
-        stop()
+        if (resetTimer.seconds() > 2.5) {
+            bot.mecanumBase?.setDriveVA(Pose(vy=20.0))
+            bot.flywheel?.velocity = 0.0
+            bot.spindexer?.moveToNextOpenIntake()
+            bot.turret?.gotoAngle(0.0)
+        }
+        if (resetTimer.seconds() > 5.0) {
+            requestOpModeStop()
+        }
+//        if (bot.spindexer?.reachedTarget == true &&
+//            bot.turret?.reachedTarget == true) {
+//            Constants.TransferData.turretPositionTicks = bot.turret?.currentTicks ?: 0
+//            Constants.TransferData.spindexerPositionTicks = bot.spindexer?.currentMotorPosition ?: 0
+//            stop()
+//        }
     }
 
     private fun updateTurretTracking() {
@@ -158,13 +184,13 @@ class AudienceSideAuto : BaseOpMode() {
         telemetry.addData("Motif Index", motifIndex)
     }
 
-    override fun onStop() {
-        bot.apply {
-            flywheel?.velocity = 0.0
-            turret?.gotoAngle(0.0, 0.0)
-            spindexer?.motorState = MotorPosition.INTAKE_1
-            updateAll(dt)
-        }
-        super.onStop()
-    }
+//    override fun onStop() {
+//        bot.apply {
+//            flywheel?.velocity = 0.0
+//            turret?.gotoAngle(0.0, 0.0)
+//            spindexer?.motorState = MotorPosition.INTAKE_1
+//            updateAll(dt)
+//        }
+//        super.onStop()
+//    }
 }
