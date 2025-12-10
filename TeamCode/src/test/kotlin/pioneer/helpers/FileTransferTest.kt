@@ -156,23 +156,23 @@ class FileTransferTest {
     fun testDataMapMutability() {
         // Test that data map is mutable and can be modified
         val testData = OpModeDataTransfer.OMDT()
-        
+
         // Add items to map
         testData.data["key1"] = "value1"
         testData.data["key2"] = 123
         testData.data["key3"] = true
-        
+
         // Verify items were added
         assertEquals("Key1 should match", "value1", testData.data["key1"])
-        assertEquals("Key2 should match", 123.0, testData.data["key2"])
-        assertEquals("Key3 should match", true, testData.data["key3"])
-        
+        assertEquals("Key2 should match", 123, (testData.data["key2"] as Number).toInt())
+        assertEquals("Key3 should match", true, testData.data["key3"] as Boolean)
+
         // Serialize and check
         val json = gson.toJson(testData)
         val restored = gson.fromJson(json, OpModeDataTransfer.OMDT::class.java)
-        
+
         assertEquals("Key1 should survive", "value1", restored.data["key1"])
-        assertEquals("Key2 should survive", 123.0, restored.data["key2"])
-        assertEquals("Key3 should survive", true, restored.data["key3"])
+        assertEquals("Key2 should survive", 123, (restored.data["key2"] as Number).toInt())
+        assertEquals("Key3 should survive", true, restored.data["key3"] as Boolean)
     }
 }
