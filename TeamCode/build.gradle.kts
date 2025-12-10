@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.ftc.vision)
     implementation(libs.androidx.appcompat)
     implementation(libs.acmerobotics.dashboard)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
 }
 
