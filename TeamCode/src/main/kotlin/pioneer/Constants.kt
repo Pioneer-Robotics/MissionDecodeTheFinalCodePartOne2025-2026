@@ -201,7 +201,7 @@ object Constants {
     }
 
     object TransferData {
-        var allianceColor = AllianceColor.NEUTRAL
+        var allianceColor = AllianceColor.NONE
         var turretPositionTicks = 0
         var spindexerPositionTicks = 0
     }
