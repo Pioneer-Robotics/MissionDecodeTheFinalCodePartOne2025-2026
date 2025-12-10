@@ -18,7 +18,7 @@ import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
 
-@Autonomous(name = "Audience Side Auto", group = "Autonomous")
+@Autonomous(name = "Audience Side Auto", group = "Autonomous", preselectTeleOp = "Teleop")
 class AudienceSideAuto : BaseOpMode() {
     enum class State {
         INIT,

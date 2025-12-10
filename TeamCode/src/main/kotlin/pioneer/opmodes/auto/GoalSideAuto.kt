@@ -8,7 +8,7 @@ import pioneer.decode.Points
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
 
-@Autonomous(name = "Goal Side Auto", group = "Autonomous")
+@Autonomous(name = "Goal Side Auto", group = "Autonomous", preselectTeleOp = "Teleop")
 class GoalSideAuto : BaseOpMode() {
     enum class AutoOptions {
         PRELOAD_ONLY,
