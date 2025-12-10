@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.helpers.Chrono
@@ -43,7 +44,13 @@ class Spindexer(
     private val motorName: String = Constants.HardwareNames.SPINDEXER_MOTOR,
     private val intakeSensorName: String = Constants.HardwareNames.INTAKE_SENSOR,
     private val _artifacts: Array<Artifact?> = Array(3) { null },
+    private val overCurrentThreshold: Double = 5000.0, // TODO: Find appropriate threshold
+    private val currentUnit: CurrentUnit = CurrentUnit.MILLIAMPS,
 ) : HardwareComponent {
+
+    private lateinit var motor: DcMotorEx
+    private lateinit var intakeSensor: RevColorSensor
+
     // Motor positions in radians
     enum class MotorPosition(
         val radians: Double,
@@ -109,6 +116,13 @@ class Spindexer(
     val currentScannedArtifact: Artifact?
         get() = scanArtifact()
 
+    val current: Double
+        get() = motor.getCurrent(currentUnit)
+
+    // TODO: Implement in motion commands to detect jammed artifact
+    val isOverCurrent: Boolean
+        get() = motor.isOverCurrent()
+
     var checkingForNewArtifacts = true
 
     // Private variables
@@ -132,8 +146,6 @@ class Spindexer(
         listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
     private val outtakePositions =
         listOf(MotorPosition.OUTTAKE_1, MotorPosition.OUTTAKE_2, MotorPosition.OUTTAKE_3)
-    private lateinit var motor: DcMotorEx
-    private lateinit var intakeSensor: RevColorSensor
 
     /**
      * Returns the index of the current motor position in the intake/outtake lists.
@@ -156,6 +168,7 @@ class Spindexer(
             hardwareMap.get(DcMotorEx::class.java, motorName).apply {
                 mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
                 mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+                setCurrentAlert(overCurrentThreshold, currentUnit)
             }
 
         intakeSensor =
