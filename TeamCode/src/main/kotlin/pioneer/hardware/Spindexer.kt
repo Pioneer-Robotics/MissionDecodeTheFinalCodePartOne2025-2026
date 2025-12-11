@@ -139,12 +139,6 @@ class Spindexer(
     val isOuttakePosition: Boolean
         get() = motorState in outtakePositions
 
-    val currentSlotIndex: Int?
-        get() = positionIndex
-
-    val currentSlotArtifact: Artifact?
-        get() = positionIndex?.let { _artifacts[it] }
-
     val hasOpenIntake: Boolean
         get() = _artifacts.any { it == null }
 
@@ -247,8 +241,8 @@ class Spindexer(
     fun popCurrentArtifact(): Artifact? {
         return if (isOuttakePosition) {
             // Handle outtake mode
-            val index = currentSlotIndex ?: return null
-            val artifact = currentSlotArtifact
+            val index = positionIndex ?: return null
+            val artifact = _artifacts[index]
             _artifacts[index] = null
             // Automatically move to intake if empty
             if (isEmpty) moveToNextOpenIntake()
@@ -437,20 +431,18 @@ class Spindexer(
         if (switchMode) switchMode() // Switch between intake and outtake before selecting
         if (isIntakePosition && !hasOpenIntake) return false // No open intake available
 
-        val targetIndex = targetIndexForCurrentMode(artifact) ?: return false
+        val targetIndex =
+            if (isIntakePosition) {
+                nextIntakeIndex
+            } else {
+                outtakeIndexFor(artifact)
+            } ?: return false
 
         val currentIndex = positions.indexOf(motorState)
         if (currentIndex == targetIndex && currentIndex != -1) return true
 
-        setMotorStateAt(targetIndex)
+        motorState = positions[targetIndex]
         return true
-    }
-
-    private fun targetIndexForCurrentMode(artifact: Artifact?): Int? =
-        if (isIntakePosition) nextIntakeIndex else outtakeIndexFor(artifact)
-
-    private fun setMotorStateAt(index: Int) {
-        motorState = positions[index]
     }
 
     // To be used in tandem with reset(). Only to be called when something bad happens :(
