@@ -262,6 +262,10 @@ class Spindexer(
         manualMove = true
     }
 
+    fun resumeAutoControl() {
+        manualMove = false
+    }
+
     fun resetArtifacts() {
         _artifacts.fill(null)
     }

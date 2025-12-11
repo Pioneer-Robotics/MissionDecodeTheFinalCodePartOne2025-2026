@@ -10,6 +10,7 @@ import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.abs
 
 class TeleopDriver1(
     var gamepad: Gamepad,
@@ -89,12 +90,11 @@ class TeleopDriver1(
     }
 
     private fun moveSpindexerManual() {
-        if (gamepad.right_trigger > 0.1) {
-            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
-        } else if (gamepad.left_trigger > 0.1) {
-            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
+        val power = gamepad.right_trigger.toDouble() - gamepad.left_trigger.toDouble()
+        if (abs(power) > 0.1) {
+            bot.spindexer?.moveManual(power)
         } else {
-            bot.spindexer?.moveManual(0.0)
+            bot.spindexer?.resumeAutoControl()
         }
     }
 
