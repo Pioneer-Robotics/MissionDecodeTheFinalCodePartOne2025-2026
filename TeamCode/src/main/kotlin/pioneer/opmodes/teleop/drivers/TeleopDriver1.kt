@@ -34,11 +34,7 @@ class TeleopDriver1(
         handleCancelLastIntake()
         handleSpindexerReset()
         handleResetPose()
-        bot.spindexer?.update()
-
-        if (gamepad.right_stick_button) {
-            bot.spindexer?.resetMotorPosition()
-        }
+        handleResetSpindexerMotor()
     }
 
     private fun drive() {
@@ -93,24 +89,30 @@ class TeleopDriver1(
     }
 
     private fun moveSpindexerManual() {
-        // FIXME: Manual moving won't reset power back to 0
         if (gamepad.right_trigger > 0.1) {
             bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
-        }
-        if (gamepad.left_trigger > 0.1) {
+        } else if (gamepad.left_trigger > 0.1) {
             bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
+        } else {
+            bot.spindexer?.moveManual(0.0)
         }
     }
 
     private fun handleCancelLastIntake() {
-        if (gamepad.cross) {
-            bot.spindexer?.cancelLastIntake()
+        if (gamepad.cross && bot.spindexer?.isIntakePosition == true) {
+            bot.spindexer?.popCurrentArtifact()
         }
     }
 
     private fun handleSpindexerReset() {
         if (gamepad.share) {
-            bot.spindexer?.reset()
+            bot.spindexer?.rescanAllArtifacts()
+        }
+    }
+
+    private fun handleResetSpindexerMotor() {
+        if (gamepad.right_stick_button) {
+            bot.spindexer?.resetMotorPosition()
         }
     }
 

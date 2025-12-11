@@ -3,7 +3,6 @@ package pioneer.hardware
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
 import pioneer.decode.Artifact
@@ -63,30 +62,41 @@ class Spindexer(
         OUTTAKE_3(1 * PI / 3), // Shift down (+2) (wrapped)
     }
 
+    private enum class VisibilityState {
+        IDLE,
+        VISIBLE,
+        LOSING,
+    }
+
     // Indirect reference to internal artifacts array to prevent modification
-    val artifacts: Array<Artifact?>
+    var artifacts: Array<Artifact?>
         get() = _artifacts.copyOf()
+        set(value: Array<Artifact?>) {
+            require(value.size == 3) { "Exactly 3 artifacts must be provided." }
+            value.forEachIndexed { index, artifact ->
+                _artifacts[index] = artifact
+            }
+    }
 
     // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1
 
-    val isOuttakePosition: Boolean
-        get() =
-            motorState in
-                listOf(
-                    MotorPosition.OUTTAKE_1,
-                    MotorPosition.OUTTAKE_2,
-                    MotorPosition.OUTTAKE_3,
-                )
+    private val intakePositions =
+        listOf(
+            MotorPosition.INTAKE_1,
+            MotorPosition.INTAKE_2,
+            MotorPosition.INTAKE_3,
+        )
 
-    val isIntakePosition: Boolean
-        get() =
-            motorState in
-                listOf(
-                    MotorPosition.INTAKE_1,
-                    MotorPosition.INTAKE_2,
-                    MotorPosition.INTAKE_3,
-                )
+    private val outtakePositions =
+        listOf(
+            MotorPosition.OUTTAKE_1,
+            MotorPosition.OUTTAKE_2,
+            MotorPosition.OUTTAKE_3,
+        )
+
+    private val positions: List<MotorPosition>
+        get() = if (isIntakePosition) intakePositions else outtakePositions
 
     // Getter to check if motor has reached target position
     val reachedTarget: Boolean
@@ -123,12 +133,43 @@ class Spindexer(
     val isOverCurrent: Boolean
         get() = motor.isOverCurrent()
 
+    val isIntakePosition: Boolean
+        get() = motorState in intakePositions
+
+    val isOuttakePosition: Boolean
+        get() = motorState in outtakePositions
+
+    val currentSlotIndex: Int?
+        get() = positionIndex
+
+    val currentSlotArtifact: Artifact?
+        get() = positionIndex?.let { _artifacts[it] }
+
+    val hasOpenIntake: Boolean
+        get() = _artifacts.any { it == null }
+
+    val remainingIntakeSlots: Int
+        get() = _artifacts.count { it == null }
+
+    val nextOuttakeIndex: Int?
+        get() = _artifacts.indexOfFirst { it != null }.takeIf { it != -1 }
+
+    val nextIntakeIndex: Int?
+        get() = _artifacts.indexOfFirst { it == null }.takeIf { it != -1 }
+
+    fun containsArtifact(artifact: Artifact): Boolean = _artifacts.any { it == artifact }
+
+    private fun outtakeIndexFor(artifact: Artifact?): Int? =
+        artifact?.let { desired ->
+            _artifacts.indexOfFirst { it == desired }.takeIf { it != -1 }
+        } ?: nextOuttakeIndex
+
     var checkingForNewArtifacts = true
 
     // Private variables
     private var offsetTicks = 0
     private var lastPower = 0.0
-    private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
+    private val pidTimer = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
     private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
     private val motorPID =
         PIDController(
@@ -136,16 +177,11 @@ class Spindexer(
             Constants.Spindexer.KI,
             Constants.Spindexer.KD,
         )
-    private val artifactVisibleTimer = ElapsedTime()
-    private val artifactLostTimer = ElapsedTime()
-    private var artifactSeen = false
-    private var artifactWasSeenRecently = false
+    private val artifactVisibleTimer = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
+    private val artifactLostTimer = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
+    private var visibilityState = VisibilityState.IDLE
     private var lastStoredIndex = 0
     private var manualMove = false
-    private val intakePositions =
-        listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
-    private val outtakePositions =
-        listOf(MotorPosition.OUTTAKE_1, MotorPosition.OUTTAKE_2, MotorPosition.OUTTAKE_3)
 
     /**
      * Returns the index of the current motor position in the intake/outtake lists.
@@ -155,11 +191,7 @@ class Spindexer(
             // Only return index if at target position
             if (!reachedTarget) return null
             // Find index based on current motor state
-            return when (motorState) {
-                in intakePositions -> intakePositions.indexOf(motorState)
-                in outtakePositions -> outtakePositions.indexOf(motorState)
-                else -> null // Safety check
-            }
+            return positions.indexOf(motorState).takeIf { it >= 0 }
         }
 
     override fun init() {
@@ -183,7 +215,7 @@ class Spindexer(
      * Checks for new artifacts if in an intake position.
      */
     override fun update() {
-        chrono.update()
+        pidTimer.update()
         runMotorToState()
         if (checkingForNewArtifacts) checkForArtifact()
     }
@@ -194,11 +226,7 @@ class Spindexer(
      */
     fun moveToNextOpenIntake(): Boolean {
         manualMove = false
-        _artifacts.indexOfFirst { it == null }.takeIf { it != -1 }?.let {
-            motorState = intakePositions[it]
-            return true
-        }
-        return false
+        return moveToNext(switchMode = !isIntakePosition)
     }
 
     /**
@@ -207,46 +235,31 @@ class Spindexer(
      */
     fun moveToNextOuttake(artifact: Artifact? = null): Boolean {
         manualMove = false
-        // No artifacts to outtake
-        if (isEmpty) return false
-
-        // Already at desired outtake position
-        if (motorState in outtakePositions) {
-            val currentIndex = outtakePositions.indexOf(motorState)
-            if (artifact != null && _artifacts[currentIndex] == artifact) return true
-        }
-
-        // If no artifact specified, move to next outtake in sequence
-        val nextIndex = findOuttakeIndex(artifact)
-
-        motorState = outtakePositions[nextIndex]
-        return true
+        return moveToNext(switchMode = !isOuttakePosition, artifact = artifact)
     }
 
     /**
-     * Pops (removes and returns) the artifact at the current outtake position.
-     * @return the popped Artifact, or null if none present or not in outtake position
+     * Pops (removes and returns) the artifact at the current position based on the mode.
+     * If in outtake mode, removes the artifact at the current outtake position.
+     * If in intake mode, cancels the last intake.
+     * @return the popped Artifact, or null if none present or invalid state
      */
     fun popCurrentArtifact(): Artifact? {
-        // Only allow pop from outtake positions
-        if (motorState !in outtakePositions) return null
-        // Get and remove artifact at current position
-        val index = positionIndex ?: return null
-        val artifact = _artifacts[index]
-        _artifacts[index] = null
-        // Automatically move to intake if empty
-        if (isEmpty) moveToNextOpenIntake()
-        return artifact
-    }
-
-    fun cancelLastIntake() {
-        artifacts[lastStoredIndex] = null
-    }
-
-    fun reset() {
-        // Clear all stored artifacts
-        for (i in _artifacts.indices) {
-            _artifacts[i] = null
+        return if (isOuttakePosition) {
+            // Handle outtake mode
+            val index = currentSlotIndex ?: return null
+            val artifact = currentSlotArtifact
+            _artifacts[index] = null
+            // Automatically move to intake if empty
+            if (isEmpty) moveToNextOpenIntake()
+            artifact
+        } else if (isIntakePosition) {
+            // Handle intake mode (cancel last intake)
+            val artifact = _artifacts[lastStoredIndex]
+            _artifacts[lastStoredIndex] = null
+            artifact
+        } else {
+            null
         }
     }
 
@@ -255,17 +268,19 @@ class Spindexer(
         manualMove = true
     }
 
-    fun setArtifacts(vararg artifacts: Artifact?) {
-        require(artifacts.size == 3) { "Exactly 3 artifacts must be provided." }
-        artifacts.forEachIndexed { index, artifact ->
-            _artifacts[index] = artifact
-        }
+    fun resetArtifacts() {
+        _artifacts.fill(null)
     }
 
     fun resetMotorPosition(resetTicks: Int = 0) {
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         offsetTicks = resetTicks
         motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+    }
+
+    fun resetAll() {
+        resetArtifacts()
+        resetMotorPosition()
     }
 
     private fun wrapTicks(
@@ -296,10 +311,10 @@ class Spindexer(
         val error = wrapTicks(rawError)
 
         // PID -> -1..1 output
-        var power = motorPID.update(error.toDouble(), chrono.dt)
+        var power = motorPID.update(error.toDouble(), pidTimer.dt)
 
         // Ramp power to prevent sudden acceleration
-        power = rampPower(power, chrono.dt)
+        power = rampPower(power, pidTimer.dt)
 
         // Static constant
         val adjustedKS = Constants.Spindexer.KS_START + Constants.Spindexer.KS_STEP * numStoredArtifacts
@@ -312,34 +327,25 @@ class Spindexer(
 
     private fun checkForArtifact() {
         // Check for artifact if in intake position and reached target
-        if (motorState in intakePositions) {
-            if (scanAndStoreArtifact()) {
-                // Artifact detected and stored, move to next open intake or switch mode if full
-                if (!moveToNextOpenIntake()) switchMode()
-            }
-        }
-    }
 
-    private fun findOuttakeIndex(target: Artifact?): Int =
-        target?.let {
-            _artifacts
-                .indexOfFirst { it == target }
-                .takeIf { it != -1 }
-        } ?: _artifacts.indexOfFirst { it != null }
+        if (!isIntakePosition || !reachedTarget) return
+        // Artifact detected and stored, move to next open intake or switch mode if full
+
+        if (scanAndStoreArtifact() && !moveToNextOpenIntake()) switchMode()
+    }
 
     /**
      * Switches the motor state between intake and outtake for the current position.
      */
     private fun switchMode() {
-        val index = positionIndex ?: return
-
-        // Switch motor state to nearest opposite position
-        motorState =
-            if (motorState in intakePositions) {
-                outtakePositions[(index - 1).mod(outtakePositions.size)]
-            } else {
-                intakePositions[(index + 1).mod(intakePositions.size)]
-            }
+        positionIndex?.let { index ->
+            motorState =
+                if (isIntakePosition) {
+                    outtakePositions[(index - 1).mod(outtakePositions.size)]
+                } else {
+                    intakePositions[(index + 1).mod(intakePositions.size)]
+                }
+        }
     }
 
     /**
@@ -366,8 +372,8 @@ class Spindexer(
         // Determine artifact based on hue thresholds
         return when {
             sensor.distance > 15.0 -> null
-            sensor.hue < 170 && sensor.hue > 140 -> Artifact.GREEN
-            sensor.hue < 250 && sensor.hue > 170 -> Artifact.PURPLE
+            sensor.hue.toDouble() in 140.0..170.0 -> Artifact.GREEN
+            sensor.hue.toDouble() in 170.0..250.0 -> Artifact.PURPLE
             else -> null
         }
     }
@@ -376,47 +382,75 @@ class Spindexer(
      * Scans and stores the artifact at the current motor position.
      */
     private fun scanAndStoreArtifact(): Boolean {
-        val artifact = scanArtifact()
-
-        if (artifact != null) {
-            // If this is the first time we see it, start the visible timer
-            if (!artifactSeen) {
-                artifactVisibleTimer.reset()
-                artifactSeen = true
-            }
-
-            // Reset the lost timer because we see it
-            artifactLostTimer.reset()
-            artifactWasSeenRecently = true
-
-            // If visible long enough, confirm intake
-            if (artifactVisibleTimer.milliseconds() >= Constants.Spindexer.CONFIRM_INTAKE_MS) {
+        return scanArtifact()?.let { artifact ->
+            onArtifactSeen()
+            if (artifactVisibleTimer.peek() >= Constants.Spindexer.CONFIRM_INTAKE_MS) {
                 storeArtifact(artifact)
-
-                // Reset state
-                artifactSeen = false
-                artifactWasSeenRecently = false
-
+                resetArtifactVisibility()
                 return true
             }
-        } else {
-            // Artifact disappeared
+            false
+        } ?: handleArtifactLoss()
+    }
 
-            if (artifactWasSeenRecently) {
-                // Start loss timer if not already running
-                if (artifactLostTimer.milliseconds() == 0.0) {
-                    artifactLostTimer.reset()
-                }
+    private fun onArtifactSeen() {
+        if (visibilityState != VisibilityState.VISIBLE) {
+            artifactVisibleTimer.reset()
+        }
+        visibilityState = VisibilityState.VISIBLE
+        artifactLostTimer.reset()
+    }
 
-                // Only reset if it's gone too long
-                if (artifactLostTimer.milliseconds() > Constants.Spindexer.CONFIRM_LOSS_MS) {
-                    artifactSeen = false
-                    artifactWasSeenRecently = false
+    private fun resetArtifactVisibility() {
+        visibilityState = VisibilityState.IDLE
+        artifactVisibleTimer.reset()
+        artifactLostTimer.reset()
+    }
+
+    private fun handleArtifactLoss(): Boolean {
+        when (visibilityState) {
+            VisibilityState.IDLE -> return false
+            VisibilityState.VISIBLE -> {
+                visibilityState = VisibilityState.LOSING
+                artifactLostTimer.reset()
+            }
+            VisibilityState.LOSING -> {
+                if (artifactLostTimer.peek() >= Constants.Spindexer.CONFIRM_LOSS_MS) {
+                    resetArtifactVisibility()
                 }
             }
         }
-
         return false
+    }
+
+    /**
+     * Steps the spindexer to the next slot, optionally swapping intake/outtake first.
+     *
+     * Intake: moves to the next empty slot (returns false if full and not switching).
+     * Outtake: moves to a slot with the requested artifact if provided, otherwise the first non-null.
+     * When `switchMode` is true, the intake/outtake side is toggled before picking a target.
+     */
+    private fun moveToNext(
+        switchMode: Boolean = false,
+        artifact: Artifact? = null,
+    ): Boolean {
+        if (switchMode) switchMode() // Switch between intake and outtake before selecting
+        if (isIntakePosition && !hasOpenIntake) return false // No open intake available
+
+        val targetIndex = targetIndexForCurrentMode(artifact) ?: return false
+
+        val currentIndex = positions.indexOf(motorState)
+        if (currentIndex == targetIndex && currentIndex != -1) return true
+
+        setMotorStateAt(targetIndex)
+        return true
+    }
+
+    private fun targetIndexForCurrentMode(artifact: Artifact?): Int? =
+        if (isIntakePosition) nextIntakeIndex else outtakeIndexFor(artifact)
+
+    private fun setMotorStateAt(index: Int) {
+        motorState = positions[index]
     }
 
     // To be used in tandem with reset(). Only to be called when something bad happens :(
