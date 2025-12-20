@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.external.Const
 import pioneer.Constants
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
@@ -92,9 +93,10 @@ class Turret(
         pose: Pose,
         target: Pose,
     ) {
+        val shootPose = pose + Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
         // General Angle(From robot 0 to target):
-        val targetTheta = (pose angleTo target)
-        val turretTheta = (PI / 2 + targetTheta) - pose.theta
+        val targetTheta = (shootPose angleTo target)
+        val turretTheta = (PI / 2 + targetTheta) - shootPose.theta
         gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.85)
     }
 }
