@@ -56,7 +56,7 @@ class TeleopDriver1(
                 omega = gamepad.right_stick_x.toDouble(),
             ),
             drivePower,
-            Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
+            Constants.Drive.MAX_MOTOR_VELOCITY_TPS
         )
     }
 

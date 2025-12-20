@@ -10,7 +10,7 @@ import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 import kotlin.math.hypot
 
-@Disabled
+//@Disabled
 @Autonomous(name = "Static Feedforward Tuner", group = "Calibration")
 class StaticFeedforwardTuner : BaseOpMode() {
     enum class State {
@@ -30,7 +30,6 @@ class StaticFeedforwardTuner : BaseOpMode() {
 
     override fun onInit() {
         bot = Bot.fromType(BotType.MECANUM_BOT, hardwareMap)
-        bot.pinpoint!!.reset() // Reset the localizer to the origin
 
         telemetryPacket.put("Current Power", currentPower)
         telemetryPacket.put("Current Velocity", hypot(bot.pinpoint!!.pose.vx, bot.pinpoint!!.pose.vy))

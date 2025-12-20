@@ -1,11 +1,16 @@
 package pioneer.pathing.paths
 
+import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
 
 /**
  * Path interface representing a path in 2D space
  */
 interface Path {
+    enum class HeadingInterpolationMode {
+        LINEAR,
+    }
+
     /**
      * The start and end poses of the path
      */
@@ -17,10 +22,27 @@ interface Path {
     var endPose: Pose
 
     /**
+     * Interpolation mode between start and end heading
+     */
+    var headingInterpolationMode: HeadingInterpolationMode
+
+    /**
      * Gets the arc length of the path
      * @return The length of the path
      */
     fun getLength(): Double
+
+    /**
+     * Get interpolated heading target at a given parameter t
+     * @return Double representing target angle
+     */
+    fun getHeadingTarget(t: Double): Double {
+        when (headingInterpolationMode) {
+            HeadingInterpolationMode.LINEAR -> {
+                return MathUtils.lerp(startPose.theta, endPose.theta, t)
+            }
+        }
+    }
 
     /**
      * Gets the pose on the path at the given parameter t

@@ -47,7 +47,7 @@ abstract class BaseOpMode : OpMode() {
 
         // Update path follower
         if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
-            bot.follower.update(dt)
+            bot.follower.update()
             telemetry.addLine("Updated follower")
         }
 

@@ -79,7 +79,6 @@ class AudienceSideAuto : BaseOpMode() {
                     bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
                 }
                 bot.pinpoint?.reset(Points(bot.allianceColor).START_FAR)
-                bot.follower.path = null
                 state = State.DRIVE_1
             }
             State.DRIVE_1 -> state_drive_1()
@@ -92,9 +91,9 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     private fun state_drive_1() {
-        if (bot.follower.path == null) {
+        if (!bot.follower.isFollowing) {
             bot.flywheel?.velocity = 1000.0
-            bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR)
+            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR))
         }
 
         if (bot.follower.done) {
@@ -123,7 +122,6 @@ class AudienceSideAuto : BaseOpMode() {
                         if (bot.launcher?.isReset == true) {
                             if (bot.spindexer?.isEmpty == true) {
                                 resetTimer.reset()
-                                bot.follower.path = null
                                 shouldAutoTrack = false
                                 state = State.STOP
 //                                bot.spindexer?.moveToNextOpenIntake()
@@ -139,14 +137,13 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     private fun state_drive_2() {
-        if (bot.follower.path == null) {
-            bot.follower.path = LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE)
+        if (!bot.follower.isFollowing) {
+            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE))
             bot.spindexer?.moveToNextOpenIntake()
         }
 
         if (bot.follower.done) {
             bot.flywheel?.velocity = 0.0
-            bot.follower.path = null
             state = State.STOP
         }
     }

@@ -8,7 +8,7 @@ import pioneer.BotType
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 
-@Disabled
+//@Disabled
 @Autonomous(name = "Horizontal KV Tuner", group = "Calibration")
 class HorizontalKVTuner : BaseOpMode() {
     override fun onInit() {
@@ -20,7 +20,7 @@ class HorizontalKVTuner : BaseOpMode() {
 
     override fun onLoop() {
         bot.mecanumBase!!.setDriveVA(
-            Pose(vx = 50.0, ay = 0.0), // 50 cm/s forward
+            Pose(vx = 50.0, ay = 0.0), // 50 cm/s sideways
         )
         telemetry.addData("Velocity (cm/s)", bot.pinpoint!!.pose.vx)
         telemetry.addData("Position (cm)", bot.pinpoint!!.pose.x)
