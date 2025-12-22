@@ -116,11 +116,14 @@ class TeleopDriver1(
 
     private fun handleResetPose() {
         if (gamepad.options) {
-            if (bot.allianceColor == AllianceColor.RED) {
-                bot.pinpoint?.reset(Pose(-86.7, -99.0, theta = 0.1))
-            } else {
-                bot.pinpoint?.reset(Pose(86.7, -99.0, theta = 0.1))
-            }
+            //FIXME: Reset pose is just set to red for testing over WB, no blue side
+            bot.pinpoint?.reset(Pose(-86.7, -99.0, theta = 0.1))
+
+//            if (bot.allianceColor == AllianceColor.RED) {
+//                bot.pinpoint?.reset(Pose(-86.7, -99.0, theta = 0.1))
+//            } else {
+//                bot.pinpoint?.reset(Pose(86.7, -99.0, theta = 0.1))
+//            }
         }
     }
 }
