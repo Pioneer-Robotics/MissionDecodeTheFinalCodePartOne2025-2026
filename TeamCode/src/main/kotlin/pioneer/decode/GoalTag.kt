@@ -47,12 +47,11 @@ enum class GoalTag(
 
     val shootingHeight = height + 50.0
 
-    // Tag pose plus half the goal depth (46.45 cm)
     val shootingPose: Pose
         get() =
             when (this) {
                 BLUE -> this.pose + Pose(x = -32.0, y = 30.0) // -X +Y
-                RED -> this.pose + Pose(x = (46.45 / 2) / sqrt(2.0), y = (46.45 / 2) / sqrt(2.0)) // +X +Y //TODO: Update when back at HS
+                RED -> this.pose + Pose(x = 32.0, y = 30.0) // +X +Y
             }
 }
 

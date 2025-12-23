@@ -56,7 +56,6 @@ class GoalSideAuto : BaseOpMode() {
     private var targetVelocity = 0.0
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
-    private var motifIndex = 0
     private var lookForTag = true
 
     override fun onInit() {
@@ -95,9 +94,9 @@ class GoalSideAuto : BaseOpMode() {
             State.STOP -> state_stop()
         }
 
-        val target = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED.shootingPose else GoalTag.BLUE.shootingPose
-        targetVelocity = bot.flywheel!!.estimateVelocity(target, bot.pinpoint!!.pose)
-        bot.turret?.autoTrack(bot.pinpoint!!.pose, target)
+        val targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
+        targetVelocity = bot.flywheel!!.estimateVelocity(targetGoal.shootingPose, bot.pinpoint!!.pose, targetGoal.shootingHeight)
+        bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
 
         telemetry.addData("Next Artifact", motifOrder.currentArtifact)
         telemetry.addData("Detected Motif", motifOrder.toString())
