@@ -72,6 +72,36 @@ class Spindexer(
                     MotorPosition.OUTTAKE_3,
                 )
 
+    val closestMotorState: MotorPosition
+        get() {
+            var closestPosition = MotorPosition.INTAKE_1
+            var smallestError = Double.MAX_VALUE
+
+            for (position in MotorPosition.entries) {
+                val targetTicks = (position.radians * ticksPerRadian).toInt()
+                val error = wrapTicks(targetTicks - currentMotorPosition).toDouble()
+                if (abs(error) < abs(smallestError)) {
+                    smallestError = error
+                    closestPosition = position
+                }
+            }
+
+            return closestPosition
+        }
+
+    val reachedOuttakePosition: Boolean
+        get() {
+            // Check if motor position matches any outtake position
+            for (position in outtakePositions) {
+                val targetTicks = (position.radians * ticksPerRadian).toInt()
+                val error = wrapTicks(targetTicks - currentMotorPosition)
+                if (abs(error) < 300.0) {
+                    return true
+                }
+            }
+            return false
+        }
+
     val isIntakePosition: Boolean
         get() =
             motorState in
@@ -219,6 +249,14 @@ class Spindexer(
         if (motorState !in outtakePositions) return null
         // Get and remove artifact at current position
         val index = positionIndex ?: return null
+        val artifact = _artifacts[index]
+        _artifacts[index] = null
+        // Automatically move to intake if empty
+        if (isEmpty) moveToNextOpenIntake()
+        return artifact
+    }
+    
+    fun popArtifact(index: Int): Artifact? {
         val artifact = _artifacts[index]
         _artifacts[index] = null
         // Automatically move to intake if empty

@@ -62,8 +62,7 @@ object Constants {
 
         // limits
         const val MAX_MOTOR_VELOCITY_TPS = 2500.0
-        const val MAX_FWD_VEL_CMPS = 150.0
-        const val MAX_STRAFE_VEL_CMPS = 125.0
+        const val MAX_DRIVE_VEL_CMPS = 150.0
         const val DEFAULT_POWER = 0.7
 
         // Feedforward gains using Pose(x,y,theta)
@@ -75,8 +74,8 @@ object Constants {
 //        @JvmField var kAT = 0.0
 
         val kV = Pose(x = 0.0063, y = 0.0055, theta = -0.147)
-        val kA = Pose(x = 0.0025, y = 0.001, theta = 0.0)
-        val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
+        val kA = Pose(x = 0.00125, y = 0.001, theta = 0.0)
+        val kS = Pose(x = 0.11, y = 0.06, theta = 0.0)
 
         val MOTOR_CONFIG =
             mapOf(
@@ -104,16 +103,16 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 0.5
+        const val POSITION_THRESHOLD = 1.0
 
         /** The threshold in radians to consider the target heading reached. */
         const val ROTATION_THRESHOLD = 0.05
 
         /** The maximum drive velocity in cm per second. */
-        const val MAX_DRIVE_VELOCITY = 100.0
+        const val MAX_DRIVE_VELOCITY = 110.0
 
         /** The maximum drive acceleration in cm per second squared. */
-        const val MAX_DRIVE_ACCELERATION = 50.0
+        const val MAX_DRIVE_ACCELERATION = 30.0
 
         /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
         const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
@@ -125,24 +124,18 @@ object Constants {
         const val MAX_ANGULAR_ACCELERATION = 10.0
 
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 10.0
-
+        @JvmField var X_KP = 7.5
         @JvmField var X_KI = 0.0
-
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 10.0
-
+        @JvmField var Y_KP = 7.5
         @JvmField var Y_KI = 0.0
-
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 0.5
-
+        @JvmField var THETA_KP = 5.0
         @JvmField var THETA_KI = 0.0
-
         @JvmField var THETA_KD = 0.0
     }
 

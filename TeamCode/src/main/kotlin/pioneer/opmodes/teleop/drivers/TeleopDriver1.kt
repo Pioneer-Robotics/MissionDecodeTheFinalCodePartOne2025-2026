@@ -56,7 +56,7 @@ class TeleopDriver1(
                 omega = gamepad.right_stick_x.toDouble(),
             ),
             drivePower,
-            Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
+            Constants.Drive.MAX_MOTOR_VELOCITY_TPS
         )
     }
 
@@ -95,10 +95,10 @@ class TeleopDriver1(
     private fun moveSpindexerManual() {
         // FIXME: Manual moving won't reset power back to 0
         if (gamepad.right_trigger > 0.1) {
-            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
+            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble() * 8000.0)
         }
         if (gamepad.left_trigger > 0.1) {
-            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
+            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble() * 8000.0)
         }
     }
 

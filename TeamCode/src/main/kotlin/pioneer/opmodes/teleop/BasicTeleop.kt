@@ -26,7 +26,7 @@ class BasicTeleop : BaseOpMode() {
                 omega = gamepad1.right_stick_x.toDouble(),
             ),
             drivePower,
-            Constants.Drive.MAX_MOTOR_VELOCITY_TPS,
+            Constants.Drive.MAX_MOTOR_VELOCITY_TPS
         )
     }
 

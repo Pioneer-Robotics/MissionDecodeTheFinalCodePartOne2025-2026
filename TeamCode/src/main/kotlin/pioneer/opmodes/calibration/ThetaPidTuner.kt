@@ -41,23 +41,20 @@ class ThetaPidTuner : BaseOpMode() {
     }
 
     private fun state_init() {
-        bot.follower.path = LinearPath(Pose(), Pose(theta = -3.14))
-        bot.follower.start()
+        bot.follower.followPath(LinearPath(Pose(), Pose(theta = -3.14)))
         state = State.CLOCK
     }
 
     private fun state_clock() {
         if (bot.follower.done) {
-            bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(theta = 0.0))
-            bot.follower.start()
+            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, Pose(theta = 0.0)))
             state = State.COUNTER
         }
     }
 
     private fun state_counter() {
         if (bot.follower.done) {
-            bot.follower.path = LinearPath(bot.pinpoint!!.pose, Pose(theta = -3.14))
-            bot.follower.start()
+            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, Pose(theta = -3.14)))
             state = State.COUNTER
         }
     }

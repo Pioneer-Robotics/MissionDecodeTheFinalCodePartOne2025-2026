@@ -56,7 +56,7 @@ class Bot private constructor(
     val follower: Follower by lazy {
         Follower(
             localizer = pinpoint!!,
-            mecanumBase = mecanumBase!!,
+            drive = mecanumBase!!,
         )
     }
 

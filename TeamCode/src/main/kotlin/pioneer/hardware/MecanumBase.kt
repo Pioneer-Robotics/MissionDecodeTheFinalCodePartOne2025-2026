@@ -6,14 +6,22 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.Constants
 import pioneer.helpers.Pose
+import pioneer.pathing.follower.RobotFeedforward
 import kotlin.math.abs
-import kotlin.math.sign
 
 class MecanumBase(
     private val hardwareMap: HardwareMap,
     private val motorConfig: Map<String, DcMotorSimple.Direction> = Constants.Drive.MOTOR_CONFIG,
 ) : HardwareComponent {
     private lateinit var motors: Map<String, DcMotorEx>
+
+    private val feedforward = RobotFeedforward(
+        Constants.Drive.kV.x, Constants.Drive.kA.x,
+        Constants.Drive.kV.y, Constants.Drive.kA.y,
+        Constants.Drive.kV.theta, Constants.Drive.kA.theta,
+        Constants.Drive.kS.x, Constants.Drive.kS.y,
+        Constants.Drive.kS.theta,
+    )
 
     override fun init() {
         motors =
@@ -61,14 +69,9 @@ class MecanumBase(
      * Feedforward control for motion profiling
      */
     fun setDriveVA(pose: Pose) {
-        val ffX = calculateFeedforward(pose.vx, pose.ax, Constants.Drive.kV.x, Constants.Drive.kA.x, Constants.Drive.kS.x)
-        val ffY = calculateFeedforward(pose.vy, pose.ay, Constants.Drive.kV.y, Constants.Drive.kA.y, Constants.Drive.kS.y)
-        val ffTheta =
-            calculateFeedforward(pose.omega, pose.alpha, Constants.Drive.kV.theta, Constants.Drive.kA.theta, Constants.Drive.kS.theta)
-
-//        val ffX = calculateFeedforward(pose.vx, pose.ax, Constants.Drive.kV.x, Constants.Drive.kAX, Constants.Drive.kS.x)
-//        val ffY = calculateFeedforward(pose.vy, pose.ay, Constants.Drive.kV.y, Constants.Drive.kAY, Constants.Drive.kS.y)
-//        val ffTheta = calculateFeedforward(pose.omega, pose.alpha, Constants.Drive.kV.theta, Constants.Drive.kAT, Constants.Drive.kS.theta)
+        val ffX = feedforward.calculateX(pose.vx, pose.ax)
+        val ffY = feedforward.calculateY(pose.vy, pose.ay)
+        val ffTheta = feedforward.calculateTheta(pose.omega, pose.alpha)
 
         val motorPowers = calculateMotorPowers(Pose(vx = ffX, vy = ffY, omega = ffTheta))
         motors.values.forEachIndexed { index, motor ->
@@ -83,14 +86,6 @@ class MecanumBase(
         val rightBackPower = pose.vy + pose.vx - pose.omega
         return listOf(leftFrontPower, leftBackPower, rightFrontPower, rightBackPower)
     }
-
-    private fun calculateFeedforward(
-        v: Double,
-        a: Double,
-        kV: Double,
-        kA: Double,
-        kS: Double,
-    ): Double = v * kV + a * kA + if (abs(v) > 1e-3) kS * sign(v) else 0.0
 
     fun stop() {
         motors.values.forEach { it.power = 0.0 }
