@@ -19,7 +19,7 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 
-class TeleopDriver2(
+class TeleopDriver2Testing(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
@@ -43,6 +43,7 @@ class TeleopDriver2(
     var flywheelVelocityEnum = FlywheelSpeedRange.SHORT_RANGE
     var shootState = ShootState.READY
     var targetGoal = GoalTag.RED
+    var targetGoalPose = Pose()
     private var shootingAll = false
     private var remainingShots = 0
     var turretAngle = 0.0
@@ -76,7 +77,7 @@ class TeleopDriver2(
 //        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
 
         if (isEstimateSpeed.state) {
-            flywheelSpeed = bot.flywheel!!.estimateVelocity(targetGoal.shootingPose, bot.pinpoint?.pose ?: Pose(), targetGoal.shootingHeight)
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(targetGoal.pose, bot.pinpoint?.pose ?: Pose(), targetGoal.height)
         } else {
             flywheelSpeed = flywheelVelocityEnum.velocity
         }
@@ -198,19 +199,16 @@ class TeleopDriver2(
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
             bot.turret?.autoTrack(
                 bot.pinpoint?.pose ?: Pose(),
-                targetGoal.shootingPose,
+                targetGoal.pose,
             )
         }
     }
 
     private fun updateIndicatorLED() {
         bot.flywheel?.velocity?.let {
-            if (it >= flywheelSpeed-10 && it <=flywheelSpeed+20) {
+            if (it >= flywheelSpeed-20 && it <=flywheelSpeed+50) {
                 gamepad.setLedColor(0.0, 1.0, 0.0, -1)
-            } else if (it <flywheelSpeed-10){
-                gamepad.setLedColor(255.0,165.0,0.0, -1)
-            }
-            else {
+            } else {
                 gamepad.setLedColor(1.0, 0.0, 0.0, -1)
             }
         }

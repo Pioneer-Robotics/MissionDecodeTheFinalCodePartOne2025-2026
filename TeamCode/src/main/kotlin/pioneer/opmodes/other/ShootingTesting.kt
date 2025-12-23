@@ -1,20 +1,23 @@
-package pioneer.opmodes.teleop
+package pioneer.opmodes.other
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.Constants
+import pioneer.hardware.Flywheel
+import pioneer.hardware.Launcher
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.opmodes.teleop.drivers.TeleopDriver1
 import pioneer.opmodes.teleop.drivers.TeleopDriver2
+import pioneer.opmodes.teleop.drivers.TeleopDriver2Testing
 
-@TeleOp(name = "Teleop")
-class Teleop : BaseOpMode() {
+@TeleOp(name = "Shooter Testing", group = "Testing")
+class ShootingTesting : BaseOpMode() {
     private lateinit var driver1: TeleopDriver1
-    private lateinit var driver2: TeleopDriver2
+    private lateinit var driver2: TeleopDriver2Testing
     private val allianceToggle = Toggle(false)
     private var changedAllianceColor = false
 
@@ -22,7 +25,7 @@ class Teleop : BaseOpMode() {
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
 
         driver1 = TeleopDriver1(gamepad1, bot)
-        driver2 = TeleopDriver2(gamepad2, bot)
+        driver2 = TeleopDriver2Testing(gamepad2, bot)
     }
 
     override fun init_loop() {
@@ -56,7 +59,6 @@ class Teleop : BaseOpMode() {
 //        telemetry.addData("Turret Angle", bot.turret?.currentAngle)
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
         telemetry.addData("Pose", bot.pinpoint!!.pose)
-        telemetry.addData("Target Goal", driver2.targetGoal)
         telemetry.addData("Turret Mode", bot.turret?.mode)
         telemetry.addData("Shoot State", driver2.shootState)
         telemetry.addData("Estimating Flywheel Speed", driver2.isEstimateSpeed.state)
@@ -71,4 +73,5 @@ class Teleop : BaseOpMode() {
         telemetry.addData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS))
         telemetryPacket.addLine("Flywheel TPS" + (bot.flywheel?.velocity ?: 0.0))
     }
+
 }

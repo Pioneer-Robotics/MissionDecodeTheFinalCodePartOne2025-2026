@@ -10,6 +10,8 @@ import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 class Turret(
     private val hardwareMap: HardwareMap,
@@ -93,7 +95,8 @@ class Turret(
         pose: Pose,
         target: Pose,
     ) {
-        val shootPose = pose + Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
+        val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
+                Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
         // General Angle(From robot 0 to target):
         val targetTheta = (shootPose angleTo target)
         val turretTheta = (PI / 2 + targetTheta) - shootPose.theta
