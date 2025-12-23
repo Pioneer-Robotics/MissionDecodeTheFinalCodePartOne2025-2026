@@ -45,7 +45,7 @@ enum class GoalTag(
     val height: Double
         get() = position[2].toDouble()
 
-    val shootingHeight = height + 20.0
+    val shootingHeight = height + 45.0
 
     // Tag pose plus half the goal depth (46.45 cm)
     val shootingPose: Pose
@@ -62,7 +62,7 @@ enum class GoalTag(
  * @property tagId The ID of the goal AprilTag to process.
  */
 object GoalTagProcessor {
-    private val validTags = GoalTag.values().map { it.id }.toSet()
+    private val validTags = GoalTag.entries.map { it.id }.toSet()
 
     fun isValidGoalTag(aprilTagId: Int): Boolean = aprilTagId in validTags
 
@@ -97,7 +97,7 @@ object GoalTagProcessor {
     fun getRobotFieldPose(detections: List<AprilTagDetection>): Pose? {
         val tag =
             detections.firstNotNullOfOrNull { detection ->
-                GoalTag.values().firstOrNull { it.id == detection.id }
+                GoalTag.entries.firstOrNull { it.id == detection.id }
             }
 
         return tag?.pose?.let { tagPose ->
@@ -106,8 +106,8 @@ object GoalTagProcessor {
                     GoalTag.BLUE.id, GoalTag.RED.id -> {
                         detection.ftcPose?.let { ftcPose ->
                             Pose(
-                                x = tagPose.x + MathUtils.inToCM(ftcPose.x.toDouble()),
-                                y = tagPose.y + MathUtils.inToCM(ftcPose.y.toDouble()),
+                                x = tagPose.x + MathUtils.inToCM(ftcPose.x),
+                                y = tagPose.y + MathUtils.inToCM(ftcPose.y),
                                 theta = tagPose.theta + ftcPose.bearing,
                             )
                         }

@@ -255,6 +255,14 @@ class Spindexer(
         if (isEmpty) moveToNextOpenIntake()
         return artifact
     }
+    
+    fun popArtifact(index: Int): Artifact? {
+        val artifact = _artifacts[index]
+        _artifacts[index] = null
+        // Automatically move to intake if empty
+        if (isEmpty) moveToNextOpenIntake()
+        return artifact
+    }
 
     fun cancelLastIntake() {
         artifacts[lastStoredIndex] = null

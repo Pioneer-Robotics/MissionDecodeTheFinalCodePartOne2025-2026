@@ -16,7 +16,6 @@ class Motif(
     // Returns the next artifact in the motif's sequence, cycling back to the start if needed
     fun getNextArtifact(): Artifact? {
         if (artifacts.isEmpty()) return null
-
         val artifact = artifacts[currentIndex]
         currentIndex = (currentIndex + 1) % artifacts.size
         return artifact
