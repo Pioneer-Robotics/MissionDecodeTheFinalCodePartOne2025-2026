@@ -19,30 +19,33 @@ class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
-    enum class FlywheelSpeed(
+    enum class FlywheelSpeedRange(
         val velocity: Double,
     ) {
         SHORT_RANGE(800.0),
         LONG_RANGE(1000.0),
     }
 
+    val isEstimateSpeed = Toggle(true)
     private val chrono = Chrono(autoUpdate = false)
     private val isAutoTracking = Toggle(false)
     private val flywheelToggle = Toggle(false)
-    private val changeFlywheelSpeedToggle = Toggle(false)
+    private val changeFlywheelRangeToggle = Toggle(false)
 
     var P = Points(bot.allianceColor)
 
     enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
 
-    var flywheelVelocityEnum = FlywheelSpeed.SHORT_RANGE
+    var flywheelVelocityEnum = FlywheelSpeedRange.SHORT_RANGE
     var shootState = ShootState.READY
-    var targetGoal = Pose()
+    var targetGoal = GoalTag.RED
     private var shootingAll = false
     private var remainingShots = 0
     var turretAngle = 0.0
+    var flywheelSpeed = 0.0
 
     fun update() {
+        checkTargetGoal()
         updateFlywheelSpeed()
         handleFlywheel()
         handleTurret()
@@ -52,7 +55,14 @@ class TeleopDriver2(
         chrono.update() // Manual update to allow dt to match across the loop.
     }
 
+    private fun checkTargetGoal() {
+        if (bot.allianceColor == AllianceColor.BLUE) {
+            targetGoal = GoalTag.BLUE
+        } else { return }
+    }
+
     private fun updateFlywheelSpeed() {
+        isEstimateSpeed.toggle(gamepad.dpad_right)
 //        if (flywheelSpeed < 1.0 && gamepad.dpad_up) {
 //            flywheelSpeed += chrono.dt * 0.5
 //        }
@@ -60,8 +70,16 @@ class TeleopDriver2(
 //            flywheelSpeed -= chrono.dt * 0.5
 //        }
 //        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
-        changeFlywheelSpeedToggle.toggle(gamepad.dpad_up)
-        if (changeFlywheelSpeedToggle.justChanged) {
+
+        if (isEstimateSpeed.state) {
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(targetGoal.shootingPose, bot.pinpoint?.pose ?: Pose())
+        } else {
+            flywheelSpeed = flywheelVelocityEnum.velocity
+        }
+
+        changeFlywheelRangeToggle.toggle(gamepad.dpad_up)
+
+        if (changeFlywheelRangeToggle.justChanged) {
             flywheelVelocityEnum = flywheelVelocityEnum.next()
         }
     }
@@ -69,7 +87,7 @@ class TeleopDriver2(
     private fun handleFlywheel() {
         flywheelToggle.toggle(gamepad.dpad_left)
         if (flywheelToggle.state) {
-            bot.flywheel?.velocity = flywheelVelocityEnum.velocity
+            bot.flywheel?.velocity = flywheelSpeed
         } else {
             bot.flywheel?.velocity = 0.0
         }
@@ -174,20 +192,9 @@ class TeleopDriver2(
 
     private fun handleAutoTrack() {
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
-            if (bot.allianceColor == AllianceColor.RED) {
-                targetGoal = GoalTag.RED.pose
-            } else {
-                targetGoal = GoalTag.BLUE.pose
-            }
             bot.turret?.autoTrack(
                 bot.pinpoint?.pose ?: Pose(),
-                if (bot.allianceColor ==
-                    AllianceColor.BLUE
-                ) {
-                    GoalTag.BLUE.shootingPose
-                } else {
-                    GoalTag.RED.shootingPose
-                },
+                targetGoal.shootingPose,
             )
         }
     }

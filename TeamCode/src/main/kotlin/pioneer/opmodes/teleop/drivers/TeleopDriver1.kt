@@ -117,9 +117,9 @@ class TeleopDriver1(
     private fun handleResetPose() {
         if (gamepad.options) {
             if (bot.allianceColor == AllianceColor.RED) {
-                bot.pinpoint?.reset(Pose(-80.0, -95.0, theta = 0.1))
+                bot.pinpoint?.reset(Pose(-86.7, -99.0, theta = 0.1))
             } else {
-                bot.pinpoint?.reset(Pose(80.0, -95.0, theta = 0.1))
+                bot.pinpoint?.reset(Pose(86.7, -99.0, theta = 0.1))
             }
         }
     }

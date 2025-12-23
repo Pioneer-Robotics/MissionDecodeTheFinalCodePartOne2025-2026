@@ -45,6 +45,8 @@ enum class GoalTag(
     val height: Double
         get() = position[2].toDouble()
 
+    val shootingHeight = height + 20.0
+
     // Tag pose plus half the goal depth (46.45 cm)
     val shootingPose: Pose
         get() =

@@ -59,6 +59,7 @@ class Teleop : BaseOpMode() {
         telemetry.addData("Target Goal", driver2.targetGoal)
         telemetry.addData("Turret Mode", bot.turret?.mode)
         telemetry.addData("Shoot State", driver2.shootState)
+        telemetry.addData("Estimating Flywheel Speed", driver2.isEstimateSpeed)
         telemetry.addData("Flywheel Speed", driver2.flywheelVelocityEnum)
         telemetry.addData("Flywheel TPS", bot.flywheel?.velocity)
         telemetry.addData("Turret Angle", driver2.turretAngle)

@@ -7,9 +7,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
+import pioneer.decode.GoalTag
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
 
@@ -56,9 +59,9 @@ class Flywheel(
         target: Pose,
         pose: Pose,
     ): Double {
-        val tempTargetHeight = 0 // TODO Replace with GoalTag info when merged with CV branch
-        val heightDiff = tempTargetHeight - Constants.Turret.HEIGHT
-        val groundDistance = pose distanceTo pose
+        val shootPose = pose + Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
+        val heightDiff = GoalTag.BLUE.shootingHeight - Constants.Turret.HEIGHT
+        val groundDistance = shootPose distanceTo target
         val v0 =
             (groundDistance) / (
                 cos(
@@ -67,6 +70,10 @@ class Flywheel(
             )
 
         val flywheelVelocity = 1.58901 * v0 + 17.2812
-        return flywheelVelocity
+        val thetaToTarget = -(shootPose angleTo target)
+        val newTargetVelocityX = sin(thetaToTarget) * flywheelVelocity - pose.vx
+        val newTargetVelocityY = cos(thetaToTarget) * flywheelVelocity - pose.vy
+        val newTargetVelocity = sqrt(newTargetVelocityX.pow(2) + newTargetVelocityY.pow(2))
+        return newTargetVelocity
     }
 }
