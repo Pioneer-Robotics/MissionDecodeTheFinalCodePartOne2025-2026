@@ -95,7 +95,7 @@ class Spindexer(
             for (position in outtakePositions) {
                 val targetTicks = (position.radians * ticksPerRadian).toInt()
                 val error = wrapTicks(targetTicks - currentMotorPosition)
-                if (abs(error) < 100.0) {
+                if (abs(error) < 300.0) {
                     return true
                 }
             }

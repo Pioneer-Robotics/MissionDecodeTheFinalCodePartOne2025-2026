@@ -31,7 +31,7 @@ class Points(
     fun Pose.T(c: AllianceColor): Pose =
         when (c) {
             AllianceColor.RED -> this
-            AllianceColor.BLUE -> Pose(-this.x, this.y, -this.theta)
+            AllianceColor.BLUE -> Pose(-this.x, this.y, theta=-this.theta)
             AllianceColor.NEUTRAL -> this
         }
 

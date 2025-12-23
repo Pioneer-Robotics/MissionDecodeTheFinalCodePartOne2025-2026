@@ -7,6 +7,8 @@ import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
+import pioneer.helpers.Toggle
+import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
 
@@ -35,12 +37,14 @@ class GoalSideAuto : BaseOpMode() {
         DONE,
     }
 
+    // Not used in current implementation
     enum class LaunchState {
         READY,
         MOVING_TO_POSITION,
         LAUNCHING,
     }
 
+    private val allianceToggle = Toggle(false)
     private lateinit var P: Points
     private var autoType = AutoOptions.FIRST_ROW
     private var state = State.GOTO_SHOOT
@@ -50,10 +54,29 @@ class GoalSideAuto : BaseOpMode() {
     override fun onInit() {
         bot =
             Bot.fromType(BotType.COMP_BOT, hardwareMap)
-        P = Points(bot.allianceColor)
+    }
+
+    override fun init_loop() {
+        allianceToggle.toggle(gamepad1.touchpad)
+        if (allianceToggle.justChanged) {
+            bot.allianceColor = bot.allianceColor.next()
+        }
+
+//        bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
+//            Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
+//                motifOrder = detectedMotif
+//            }
+
+
+        telemetry.apply {
+            addData("Alliance Color", bot.allianceColor)
+//            addData("Detected Motif", motifOrder.toString())
+            update()
+        }
     }
 
     override fun start() {
+        P = Points(bot.allianceColor)
         bot.apply{
             pinpoint?.reset(P.START_GOAL)
             spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
@@ -122,10 +145,11 @@ class GoalSideAuto : BaseOpMode() {
     private fun handle_shoot_all() {
         // FIXME: UNTESTED IN AUTO
         if (bot.flywheel!!.velocity > 790.0) {
-            val slowSpeed = 0.075 + 0.005 * bot.spindexer!!.numStoredArtifacts
-            val speed = 0.125 + 0.005 * bot.spindexer!!.numStoredArtifacts
+            val slowSpeed = 500.0
+            val speed = 1000.0
             bot.spindexer?.moveManual(if (bot.spindexer!!.reachedOuttakePosition) slowSpeed else speed)
             val closestMotorPosition = bot.spindexer!!.closestMotorState.ordinal / 2
+            bot.spindexer!!.motorState = bot.spindexer!!.closestMotorState
             val hasArtifact = bot.spindexer!!.artifacts[closestMotorPosition] != null
             if (bot.spindexer!!.reachedOuttakePosition && hasArtifact) {
                 bot.launcher!!.triggerLaunch()
@@ -136,6 +160,7 @@ class GoalSideAuto : BaseOpMode() {
 
     private fun state_goto_collect() {
         if (!bot.follower.isFollowing) { // Starting path
+            bot.spindexer!!.moveToNextOpenIntake()
             when (collectState) {
                 CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL))
                 CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID))

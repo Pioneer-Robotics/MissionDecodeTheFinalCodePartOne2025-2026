@@ -103,7 +103,7 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 0.5
+        const val POSITION_THRESHOLD = 1.0
 
         /** The threshold in radians to consider the target heading reached. */
         const val ROTATION_THRESHOLD = 0.05

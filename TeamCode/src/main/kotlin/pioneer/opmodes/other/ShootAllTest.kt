@@ -4,9 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.decode.Artifact
-import pioneer.helpers.Toggle
 import pioneer.opmodes.BaseOpMode
-import pioneer.opmodes.auto.GoalSideAuto.LaunchState
 
 @Autonomous(name="Shoot All Test", group="Testing")
 class ShootAllTest : BaseOpMode() {
@@ -22,11 +20,12 @@ class ShootAllTest : BaseOpMode() {
 
     override fun onLoop() {
         if (bot.flywheel!!.velocity > 790.0) {
-            val slowSpeed = 0.075 + 0.005 * bot.spindexer!!.numStoredArtifacts
-            val speed = 0.125 + 0.005 * bot.spindexer!!.numStoredArtifacts
+            val slowSpeed = 0.085 + 0.05 * bot.spindexer!!.numStoredArtifacts
+            val speed = 0.115 + 0.05 * bot.spindexer!!.numStoredArtifacts
             bot.spindexer?.moveManual(if (bot.spindexer!!.reachedOuttakePosition) slowSpeed else speed)
             val closestMotorPosition = bot.spindexer!!.closestMotorState.ordinal / 2
             val hasArtifact = bot.spindexer!!.artifacts[closestMotorPosition] != null
+            bot.spindexer!!.motorState = bot.spindexer!!.closestMotorState
             if (bot.spindexer!!.reachedOuttakePosition && hasArtifact) {
                 bot.launcher!!.triggerLaunch()
                 bot.spindexer!!.popCurrentArtifact()
