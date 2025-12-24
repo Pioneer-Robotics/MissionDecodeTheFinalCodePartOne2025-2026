@@ -10,6 +10,7 @@ import pioneer.decode.Motif
 import pioneer.decode.Obelisk
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
+import pioneer.helpers.FileLogger
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
@@ -111,6 +112,7 @@ class GoalSideAuto : BaseOpMode() {
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
             val endPose = if (lookForTag) P.SHOOT_GOAL_CLOSE.copy(theta=0.0) else P.SHOOT_GOAL_CLOSE
+            FileLogger.debug("GoalSideAuto", "Set Target Pose: $endPose")
             bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, endPose))
         }
         if (lookForTag) {

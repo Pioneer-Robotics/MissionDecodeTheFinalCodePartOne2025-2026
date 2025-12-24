@@ -137,6 +137,20 @@ object Constants {
         @JvmField var THETA_KP = 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
+
+        // Position PID coefficients for final pose correction
+        @JvmField var POS_X_KP = 0.0
+        @JvmField var POS_X_KI = 0.0
+        @JvmField var POS_X_KD = 0.0
+
+        @JvmField var POS_Y_KP = 0.0
+        @JvmField var POS_Y_KI = 0.0
+        @JvmField var POS_Y_KD = 0.0
+
+        @JvmField var POS_THETA_KP = 0.0
+        @JvmField var POS_THETA_KI = 0.0
+        @JvmField var POS_THETA_KD = 0.0
+
     }
 
     object Camera {
@@ -159,11 +173,9 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.00045
-
+        @JvmField var KP = 0.000425
         @JvmField var KI = 0.0
-
-        @JvmField var KD = 0.04
+        @JvmField var KD = 0.02
 
         @JvmField var KS_START = 0.05
         @JvmField var KS_STEP = 0.01
@@ -171,6 +183,7 @@ object Constants {
         @JvmField var MAX_POWER_RATE = 5.0
 
         const val POSITION_TOLERANCE_TICKS = 100
+        const val VELOCITY_TOLERANCE_TPS = 125
         const val TICKS_PER_REV = 8192
 
         // TODO: Tune these values when we test on the real hardware
@@ -191,7 +204,7 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.067
+        const val LAUNCHER_REST = 0.065
         const val LAUNCHER_TRIGGERED = 0.315
     }
 

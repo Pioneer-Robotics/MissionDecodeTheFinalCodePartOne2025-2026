@@ -10,8 +10,6 @@ import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
 import pioneer.localization.Localizer
 import pioneer.pathing.motionprofile.*
-import pioneer.pathing.motionprofile.constraints.AccelerationConstraint
-import pioneer.pathing.motionprofile.constraints.VelocityConstraint
 import pioneer.pathing.paths.Path
 import kotlin.math.*
 import kotlin.time.DurationUnit
@@ -23,9 +21,14 @@ class Follower(
     private val timer = ElapsedTime()
     private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
 
-    private val pidX = PIDController(Constants.Follower.X_KP, Constants.Follower.X_KI, Constants.Follower.X_KD)
-    private val pidY = PIDController(Constants.Follower.Y_KP, Constants.Follower.Y_KI, Constants.Follower.Y_KD)
-    private val pidHeading = PIDController(Constants.Follower.THETA_KP, Constants.Follower.THETA_KI, Constants.Follower.THETA_KD)
+    private val pidVX = PIDController(Constants.Follower.X_KP, Constants.Follower.X_KI, Constants.Follower.X_KD)
+    private val pidVY = PIDController(Constants.Follower.Y_KP, Constants.Follower.Y_KI, Constants.Follower.Y_KD)
+    private val pidVHeading = PIDController(Constants.Follower.THETA_KP, Constants.Follower.THETA_KI, Constants.Follower.THETA_KD)
+
+    // Second set of PIDs for direct position control to be used when path is done (if needed)
+    private val pidXPos = PIDController(Constants.Follower.POS_X_KP, Constants.Follower.POS_X_KI, Constants.Follower.POS_X_KD)
+    private val pidYPos = PIDController(Constants.Follower.POS_Y_KP, Constants.Follower.POS_Y_KI, Constants.Follower.POS_Y_KD)
+    private val pidHeadingPos = PIDController(Constants.Follower.POS_THETA_KP, Constants.Follower.POS_THETA_KI, Constants.Follower.POS_THETA_KD)
 
     private var path: Path? = null
     private var profile: MotionProfile? = null
@@ -68,9 +71,9 @@ class Follower(
         this.path = path
         this.profile = calculateMotionProfile(path)
         // Reset PID controllers and timer
-        pidX.reset()
-        pidY.reset()
-        pidHeading.reset()
+        pidVX.reset()
+        pidVY.reset()
+        pidVHeading.reset()
         timer.reset()
 
         FileLogger.debug("Follower", "Profile duration=${profile?.duration()}")
@@ -79,9 +82,9 @@ class Follower(
     fun reset() {
         path = null
         profile = null
-        pidX.reset()
-        pidY.reset()
-        pidHeading.reset()
+        pidVX.reset()
+        pidVY.reset()
+        pidVHeading.reset()
         drive.stop()
     }
 
@@ -92,6 +95,30 @@ class Follower(
         val path = path ?: return true
         val profile = profile ?: return true
         val t = timer.seconds()
+
+//        if (timer.seconds() > t) { // Untested
+//            // If path is done but not within tolerances
+//            if (!done) {
+//                // Switch to position PID control to correct final pose
+//                val errorX = path.endPose.x - localizer.pose.x
+//                val errorY = path.endPose.y - localizer.pose.y
+//                val errorHeading = MathUtils.normalizeRadians(path.endPose.theta - localizer.pose.theta)
+//                val vxCorrect = pidXPos.update(errorX, chrono.dt)
+//                val vyCorrect = pidYPos.update(errorY, chrono.dt)
+//                val omegaCorrect = pidHeadingPos.update(errorHeading, chrono.dt)
+//                val driveCommand = Pose(
+//                    vx = vxCorrect,
+//                    vy = vyCorrect,
+//                    omega = omegaCorrect,
+//                    ax = 0.0,
+//                    ay = 0.0,
+//                    alpha = 0.0,
+//                )
+//                FileLogger.debug("Follower", "Final Pose Correction Drive Command: $driveCommand")
+//                drive.setDriveVA(driveCommand)
+//                return false
+//            }
+//        }
 
         if (done) {
             reset()
@@ -134,9 +161,9 @@ class Follower(
         val (errorX, errorY) = MathUtils.rotateVector(errorFieldX, errorFieldY, -localizer.pose.theta)
 
         // PID corrections
-        val vxCorrect = pidX.update(errorX, chrono.dt)
-        val vyCorrect = pidY.update(errorY, chrono.dt)
-        val omegaCorrect = pidHeading.update(errorHeading, chrono.dt)
+        val vxCorrect = pidVX.update(errorX, chrono.dt)
+        val vyCorrect = pidVY.update(errorY, chrono.dt)
+        val omegaCorrect = pidVHeading.update(errorHeading, chrono.dt)
 
         // final drive command
         val driveCommand = Pose(

@@ -116,7 +116,7 @@ class Spindexer(
         get() {
             // Compute circular error
             val error = wrapTicks(targetMotorPosition - currentMotorPosition)
-            return abs(error) < Constants.Spindexer.POSITION_TOLERANCE_TICKS
+            return abs(error) < Constants.Spindexer.POSITION_TOLERANCE_TICKS && (motor.velocity < Constants.Spindexer.VELOCITY_TOLERANCE_TPS)
         }
 
     // Getters for artifact storage status
@@ -145,7 +145,7 @@ class Spindexer(
     private var offsetTicks = 0
     private var lastPower = 0.0
     private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
-    private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
+    private val ticksPerRadian: Int = -(Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt() // FIXME: Negative
     private val motorPID =
         PIDController(
             Constants.Spindexer.KP,
@@ -390,7 +390,7 @@ class Spindexer(
     private fun detectArtifact(sensor: RevColorSensor): Artifact? {
         // Determine artifact based on hue thresholds
         return when {
-            sensor.distance > 15.0 -> null
+            sensor.distance > 8.0 -> null
             sensor.hue < 170 && sensor.hue > 140 -> Artifact.GREEN
             sensor.hue < 250 && sensor.hue > 170 -> Artifact.PURPLE
             else -> null
