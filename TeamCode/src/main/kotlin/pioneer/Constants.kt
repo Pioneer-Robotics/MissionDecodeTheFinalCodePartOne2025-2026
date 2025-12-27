@@ -103,10 +103,10 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 1.0
+        const val POSITION_THRESHOLD = 2.0
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.05
+        const val ROTATION_THRESHOLD = 0.075
 
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 110.0
@@ -173,22 +173,21 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.000425
-        @JvmField var KI = 0.0
-        @JvmField var KD = 0.02
+        @JvmField var KP = 0.00025
+        @JvmField var KI = 0.0035
+        @JvmField var KD = 0.0075
 
         @JvmField var KS_START = 0.05
-        @JvmField var KS_STEP = 0.01
+        @JvmField var KS_STEP = 0.015
 
-        @JvmField var MAX_POWER_RATE = 5.0
+        @JvmField var MAX_POWER_RATE = 15.0
 
         const val POSITION_TOLERANCE_TICKS = 100
-        const val VELOCITY_TOLERANCE_TPS = 125
+        const val VELOCITY_TOLERANCE_TPS = 100
         const val TICKS_PER_REV = 8192
 
-        // TODO: Tune these values when we test on the real hardware
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 50
+        const val CONFIRM_INTAKE_MS = 25
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10

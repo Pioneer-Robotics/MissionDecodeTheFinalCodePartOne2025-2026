@@ -120,11 +120,11 @@ class Follower(
 //            }
 //        }
 
-        if (done) {
-            reset()
-            drive.stop()
-            return true
-        }
+//        if (done) {
+//            reset()
+//            drive.stop()
+//            return true
+//        }
 
         val state = profile[t] // MotionState(x = s)
         val s = state.x
@@ -160,6 +160,8 @@ class Follower(
         // convert position errors to robot frame
         val (errorX, errorY) = MathUtils.rotateVector(errorFieldX, errorFieldY, -localizer.pose.theta)
 
+//        FileLogger.debug("Follower", "Position Error: $errorX, $errorY")
+
         // PID corrections
         val vxCorrect = pidVX.update(errorX, chrono.dt)
         val vyCorrect = pidVY.update(errorY, chrono.dt)
@@ -175,7 +177,7 @@ class Follower(
             alpha = 0.0,
         )
 
-        FileLogger.debug("Follower", "Drive Command: $driveCommand")
+//        FileLogger.debug("Follower", "Drive Command: $driveCommand")
         drive.setDriveVA(driveCommand)
 
         return false // path not complete

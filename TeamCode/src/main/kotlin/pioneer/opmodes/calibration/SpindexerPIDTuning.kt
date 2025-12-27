@@ -1,5 +1,6 @@
 package pioneer.opmodes.calibration
 
+import com.acmerobotics.dashboard.FtcDashboard
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.hardware.Spindexer
@@ -40,5 +41,13 @@ class SpindexerPIDTuning : OpMode() {
         telemetry.addData("Target Position", spindexer.targetMotorPosition)
         telemetry.addData("Reached Target", spindexer.reachedTarget)
         telemetry.update()
+
+        FtcDashboard.getInstance().telemetry.apply {
+            addData("Spindexer Target", targetPosition)
+            addData("Spindexer Motor Position", spindexer.currentMotorPosition)
+            addData("Target Position", spindexer.targetMotorPosition)
+            addData("Reached Target", spindexer.reachedTarget)
+            update()
+        }
     }
 }

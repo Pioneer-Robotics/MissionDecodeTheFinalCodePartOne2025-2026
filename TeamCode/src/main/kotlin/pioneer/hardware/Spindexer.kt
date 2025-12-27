@@ -145,7 +145,7 @@ class Spindexer(
     private var offsetTicks = 0
     private var lastPower = 0.0
     private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
-    private val ticksPerRadian: Int = -(Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt() // FIXME: Negative
+    private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
     private val motorPID =
         PIDController(
             Constants.Spindexer.KP,
@@ -320,7 +320,7 @@ class Spindexer(
         val rawError = targetMotorPosition - currentMotorPosition
         val error = wrapTicks(rawError)
 
-        // PID -> -1..1 output
+        // PID
         var power = motorPID.update(error.toDouble(), chrono.dt)
 
         // Ramp power to prevent sudden acceleration
@@ -330,9 +330,9 @@ class Spindexer(
         val adjustedKS = Constants.Spindexer.KS_START + Constants.Spindexer.KS_STEP * numStoredArtifacts
         power += if (abs(error) > 100) adjustedKS * sign(error.toDouble()) else 0.0
 
-        // Apply power (inverted due to motor orientation)
-        val maxPower = 0.75
-        motor.power = -power.coerceIn(-maxPower, maxPower)
+        // Apply power
+        val maxPower = 1.0
+        motor.power = power.coerceIn(-maxPower, maxPower)
     }
 
     private fun checkForArtifact() {

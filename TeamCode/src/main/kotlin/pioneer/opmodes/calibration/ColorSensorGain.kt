@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.decode.Artifact
 import pioneer.hardware.RevColorSensor
 
-@Disabled
+//@Disabled
 @TeleOp(name = "Color Sensor Gain Calibration")
 class ColorSensorGain : OpMode() {
     private lateinit var sensor: RevColorSensor
