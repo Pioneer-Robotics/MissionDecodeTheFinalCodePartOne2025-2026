@@ -63,6 +63,9 @@ class Turret(
     val targetAngle: Double
         get() = turret.targetPosition / ticksPerRadian
 
+    val targetTicks: Int
+        get() = turret.targetPosition
+
     fun resetMotorPosition(resetTicks: Int = 0) {
         turret.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         offsetTicks = resetTicks
