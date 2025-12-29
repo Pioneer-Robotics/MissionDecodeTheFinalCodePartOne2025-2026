@@ -71,13 +71,18 @@ class Turret(
     fun gotoAngle(
         angle: Double,
         power: Double = 0.75,
+        overrideRange: Boolean = false
     ) {
         require(power in -1.0..1.0)
         check(::turret.isInitialized)
 
-        val desiredAngle =
-            MathUtils
-                .normalizeRadians(angle, motorRange)
+        var desiredAngle: Double
+
+        if (overrideRange){
+            desiredAngle = angle
+        } else {
+            desiredAngle = MathUtils.normalizeRadians(angle, motorRange)
+        }
 
         val currentAngle = currentTicks / ticksPerRadian
 
@@ -101,5 +106,15 @@ class Turret(
         val targetTheta = (shootPose angleTo target)
         val turretTheta = (PI / 2 + targetTheta) - shootPose.theta
         gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.85)
+    }
+
+    //FIXME
+    fun setCustomTarget(pose: Pose, distance: Double): Pose{
+        val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
+                Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
+        val theta = PI / 2 + currentAngle - shootPose.theta
+        val targetPose = shootPose + Pose(x = distance * sin(theta), y = distance * cos(theta))
+
+        return targetPose
     }
 }
