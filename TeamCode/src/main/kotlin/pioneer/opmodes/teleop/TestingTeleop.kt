@@ -9,7 +9,6 @@ import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.opmodes.teleop.drivers.TeleopDriver1
-import pioneer.opmodes.teleop.drivers.TeleopDriver2
 import pioneer.opmodes.teleop.drivers.TeleopDriver2Testing
 
 @TeleOp(name = "Testing Teleop")
@@ -62,6 +61,7 @@ class TestingTeleop : BaseOpMode() {
         telemetry.addData("Shoot State", driver2.shootState)
         telemetry.addData("Is Using Custom Target", driver2.customTrackingTarget.state)
         telemetry.addData("Custom Target Distance", driver2.customTargetDistance)
+        telemetry.addData("Custom Target Height", driver2.customTargetHeight)
         telemetry.addData("Estimating Flywheel Speed", driver2.isEstimateSpeed.state)
         telemetry.addData("Flywheel Target Speed", driver2.flywheelSpeed)
         telemetry.addData("Flywheel Speed", driver2.flywheelVelocityEnum)

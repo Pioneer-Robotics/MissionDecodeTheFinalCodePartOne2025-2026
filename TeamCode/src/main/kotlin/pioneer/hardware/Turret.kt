@@ -112,8 +112,9 @@ class Turret(
     fun setCustomTarget(pose: Pose, distance: Double): Pose{
         val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
                 Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
-        val theta = PI / 2 + currentAngle - shootPose.theta
-        val targetPose = shootPose + Pose(x = distance * sin(theta), y = distance * cos(theta))
+//        val theta = PI  + currentAngle - shootPose.theta
+        val theta = shootPose.theta + currentAngle
+        val targetPose = shootPose + Pose(x = distance * sin(theta), y = distance * -cos(theta))
 
         return targetPose
     }

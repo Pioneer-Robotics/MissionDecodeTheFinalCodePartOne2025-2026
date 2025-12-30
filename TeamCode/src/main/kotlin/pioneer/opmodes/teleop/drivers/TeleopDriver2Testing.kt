@@ -1,9 +1,7 @@
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
-import org.firstinspires.ftc.robotcore.external.Const
 import pioneer.Bot
-import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.decode.Points
@@ -15,9 +13,7 @@ import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.pow
-import kotlin.math.sin
 
 class TeleopDriver2Testing(
     private val gamepad: Gamepad,
@@ -35,6 +31,8 @@ class TeleopDriver2Testing(
     private val isAutoTracking = Toggle(false)
     private val incCustomTargetDistance = Toggle(false)
     private val decCustomTargetDistance = Toggle(false)
+    private val incCustomTargetHeight = Toggle(false)
+    private val decCustomTargetHeight = Toggle(false)
 
     private val flywheelToggle = Toggle(false)
     private val changeFlywheelRangeToggle = Toggle(false)
@@ -48,6 +46,8 @@ class TeleopDriver2Testing(
     var targetGoal = GoalTag.RED
     var customTrackingTarget = Toggle(false)
     lateinit var shootingTarget: Pose
+    var shootingHeight = 0.0
+    var customTargetHeight = 0.0
     var customTargetDistance = 0.0
     private var shootingAll = false
     private var remainingShots = 0
@@ -78,11 +78,14 @@ class TeleopDriver2Testing(
         customTrackingTarget.toggle(gamepad.dpad_right)
 
         if (customTrackingTarget.state){
+
             if (gamepad.left_stick_button){
                 shootingTarget = bot.turret?.setCustomTarget(bot.pinpoint?.pose ?: Pose(), customTargetDistance)!!
+                shootingHeight = customTargetHeight
             }
         } else {
             shootingTarget = targetGoal.shootingPose
+            shootingHeight = targetGoal.shootingHeight
         }
     }
 
@@ -90,11 +93,21 @@ class TeleopDriver2Testing(
         incCustomTargetDistance.toggle(gamepad.right_trigger.toDouble() != 0.0)
         decCustomTargetDistance.toggle(gamepad.left_trigger.toDouble() != 0.0)
 
+        incCustomTargetHeight.toggle(gamepad.right_trigger.toDouble() != 0.0 && gamepad.circle)
+        decCustomTargetHeight.toggle(gamepad.left_trigger.toDouble() != 0.0 && gamepad.circle)
+
         if (incCustomTargetDistance.justChanged){
             customTargetDistance += 5.0
         }
         if (decCustomTargetDistance.justChanged){
             customTargetDistance -= 5.0
+        }
+
+        if (incCustomTargetHeight.justChanged){
+            customTargetHeight += 5.0
+        }
+        if (decCustomTargetHeight.justChanged){
+            customTargetHeight -= 5.0
         }
 
     }
@@ -110,7 +123,7 @@ class TeleopDriver2Testing(
 //        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
 
         if (isEstimateSpeed.state) {
-            flywheelSpeed = bot.flywheel!!.estimateVelocity(shootingTarget, bot.pinpoint?.pose ?: Pose(), targetGoal.shootingHeight)
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(shootingTarget, bot.pinpoint?.pose ?: Pose(), shootingHeight)
         } else {
             flywheelSpeed = flywheelVelocityEnum.velocity
         }
