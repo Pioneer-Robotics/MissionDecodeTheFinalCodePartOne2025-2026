@@ -15,7 +15,7 @@ import kotlin.math.PI
 class OdometerOffsetCalculation : BaseOpMode() {
     private val numRotations = 10
     private var accumulatedTheta = 0.0
-    private var prevTheta = 0.0
+    private var prevTheta = 0.0F
     private var initialXEncoderTicks = 0
     private var initialYEncoderTicks = 0
 
@@ -49,7 +49,7 @@ class OdometerOffsetCalculation : BaseOpMode() {
 
             bot.mecanumBase!!.setDriveVA(Pose(omega = 0.75))
 
-            prevTheta = bot.pinpoint!!.pose.theta
+//            prevTheta = bot.pinpoint!!.pose.theta
         }
     }
 }

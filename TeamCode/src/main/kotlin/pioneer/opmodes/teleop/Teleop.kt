@@ -43,8 +43,8 @@ class Teleop : BaseOpMode() {
 
     override fun onLoop() {
         // Update gamepad inputs
-        driver1.update()
-        driver2.update()
+        driver1.update(dt)
+        driver2.update(dt)
 
         // Add telemetry data
         addTelemetryData()
@@ -54,21 +54,19 @@ class Teleop : BaseOpMode() {
 //        telemetry.addData("Transfer Data", Constants.TransferData.turretPositionTicks)
 //        telemetry.addData("Turret Offset Ticks", bot.turret?.offsetTicks)
 //        telemetry.addData("Turret Angle", bot.turret?.currentAngle)
-        telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
+        telemetry.addData("Drive Power", driver1.drivePower)
         telemetry.addData("Pose", bot.pinpoint!!.pose)
+        telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
         telemetry.addData("Target Goal", driver2.targetGoal)
         telemetry.addData("Turret Mode", bot.turret?.mode)
-        telemetry.addData("Shoot State", driver2.shootState)
-        telemetry.addData("Estimating Flywheel Speed", driver2.isEstimateSpeed.state)
         telemetry.addData("Flywheel Target Speed", driver2.flywheelSpeed)
-        telemetry.addData("Flywheel Speed", driver2.flywheelVelocityEnum)
         telemetry.addData("Flywheel TPS", bot.flywheel?.velocity)
         telemetry.addData("Turret Angle", driver2.turretAngle)
-        telemetry.addData("Drive Power", driver1.drivePower)
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy))
         telemetry.addData("Voltage", bot.batteryMonitor?.voltage)
         telemetry.addData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS))
-        telemetryPacket.addLine("Flywheel TPS" + (bot.flywheel?.velocity ?: 0.0))
+        telemetryPacket.put("Flywheel TPS", (bot.flywheel?.velocity ?: 0.0))
+        telemetryPacket.put("Target Flywheel TPS", (driver2.flywheelSpeed))
     }
 }

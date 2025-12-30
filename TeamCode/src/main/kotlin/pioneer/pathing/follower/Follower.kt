@@ -3,7 +3,6 @@ package pioneer.pathing.follower
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.hardware.MecanumBase
-import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.helpers.MathUtils
 import pioneer.helpers.PIDController
@@ -12,14 +11,12 @@ import pioneer.localization.Localizer
 import pioneer.pathing.motionprofile.*
 import pioneer.pathing.paths.Path
 import kotlin.math.*
-import kotlin.time.DurationUnit
 
 class Follower(
     private val localizer: Localizer,
     private val drive: MecanumBase,
 ) {
     private val timer = ElapsedTime()
-    private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
 
     private val pidVX = PIDController(Constants.Follower.X_KP, Constants.Follower.X_KI, Constants.Follower.X_KD)
     private val pidVY = PIDController(Constants.Follower.Y_KP, Constants.Follower.Y_KI, Constants.Follower.Y_KD)
@@ -91,12 +88,12 @@ class Follower(
     /**
      * Updates the follower and returns true if the path is complete.
      */
-    fun update(): Boolean {
+    fun update(dt: Double): Boolean {
         val path = path ?: return true
         val profile = profile ?: return true
         val t = timer.seconds()
 
-//        if (timer.seconds() > t) { // Untested
+//        if (t > profile.duration()) { // Untested
 //            // If path is done but not within tolerances
 //            if (!done) {
 //                // Switch to position PID control to correct final pose
@@ -163,9 +160,9 @@ class Follower(
 //        FileLogger.debug("Follower", "Position Error: $errorX, $errorY")
 
         // PID corrections
-        val vxCorrect = pidVX.update(errorX, chrono.dt)
-        val vyCorrect = pidVY.update(errorY, chrono.dt)
-        val omegaCorrect = pidVHeading.update(errorHeading, chrono.dt)
+        val vxCorrect = pidVX.update(errorX, dt)
+        val vyCorrect = pidVY.update(errorY, dt)
+        val omegaCorrect = pidVHeading.update(errorHeading, dt)
 
         // final drive command
         val driveCommand = Pose(

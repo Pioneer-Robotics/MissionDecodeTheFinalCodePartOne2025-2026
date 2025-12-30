@@ -123,22 +123,23 @@ object Constants {
         /** The maximum angular acceleration in rad per second squared. */
         const val MAX_ANGULAR_ACCELERATION = 10.0
 
+        // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 7.5
+        @JvmField var X_KP = 5.0 // was 7.0
         @JvmField var X_KI = 0.0
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 7.5
+        @JvmField var Y_KP = 5.0 // was 7.0
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 5.0
+        @JvmField var THETA_KP = 3.0 // was 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 
-        // Position PID coefficients for final pose correction
+        // --- Position PID coefficients tuned for final pose correction ---
         @JvmField var POS_X_KP = 0.0
         @JvmField var POS_X_KI = 0.0
         @JvmField var POS_X_KD = 0.0
@@ -208,8 +209,24 @@ object Constants {
     }
 
     object TransferData {
+        fun reset() {
+            allianceColor = AllianceColor.NEUTRAL
+            pose = Pose()
+            turretMotorTicks = 0
+            spindexerMotorTicks = 0
+        }
+
         var allianceColor = AllianceColor.NEUTRAL
-        var turretPositionTicks = 0
-        var spindexerPositionTicks = 0
+        var pose = Pose()
+        var turretMotorTicks = 0
+        var spindexerMotorTicks = 0
+    }
+
+    @Config
+    object Flywheel {
+        @JvmField var KP = 0.0075
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.0
+        @JvmField var KF = 0.000415
     }
 }

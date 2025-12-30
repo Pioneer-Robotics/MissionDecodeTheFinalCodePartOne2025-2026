@@ -167,8 +167,8 @@ class GoalSideAuto : BaseOpMode() {
     private fun handle_shoot_all() {
         when (launchState) {
             LaunchState.READY -> {
-                launchState = LaunchState.MOVING_TO_POSITION
                 bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
+                launchState = LaunchState.MOVING_TO_POSITION
             }
 
             LaunchState.MOVING_TO_POSITION -> {
@@ -217,7 +217,7 @@ class GoalSideAuto : BaseOpMode() {
             }
         }
 
-        if (bot.follower.done) { // Ending path
+        if (bot.follower.done || bot.spindexer?.isFull == true) { // Ending path
             bot.follower.reset()
             state = State.GOTO_SHOOT
             bot.intake?.stop()

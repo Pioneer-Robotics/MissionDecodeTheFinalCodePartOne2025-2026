@@ -61,9 +61,7 @@ class Bot private constructor(
     }
 
     fun updateAll(dt: Double) {
-        hardwareComponents.values.forEach { it.update() }
-        pinpoint?.update(dt)
-        // TODO: Add other update methods (ie. localizer, follower)
+        hardwareComponents.values.forEach { it.update(dt) }
     }
 
     // Companion for builder and fromType

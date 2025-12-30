@@ -34,7 +34,13 @@ class Turret(
     val currentTicks: Int
         get() {
             check(::turret.isInitialized)
-            return turret.currentPosition - offsetTicks
+            return turret.currentPosition + offsetTicks
+        }
+
+    val rawTicks: Int
+        get() {
+            check(::turret.isInitialized)
+            return turret.currentPosition
         }
 
     val reachedTarget: Boolean
@@ -61,11 +67,12 @@ class Turret(
         get() = currentTicks / ticksPerRadian
 
     val targetAngle: Double
-        get() = turret.targetPosition / ticksPerRadian
+        get() = (turret.targetPosition + offsetTicks) / ticksPerRadian
 
     fun resetMotorPosition(resetTicks: Int = 0) {
         turret.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         offsetTicks = resetTicks
+        turret.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
 
     fun gotoAngle(
@@ -84,13 +91,14 @@ class Turret(
             desiredAngle = MathUtils.normalizeRadians(angle, motorRange)
         }
 
-        val currentAngle = currentTicks / ticksPerRadian
-
-        val delta = desiredAngle - currentAngle
-        val targetTicks = (currentTicks + delta * ticksPerRadian).toInt()
+        // Logical ticks uses offset
+        val logicalCurrentTicks = currentTicks
+        val logicalTargetTicks =
+            (desiredAngle * ticksPerRadian).toInt()
+        val rawTargetTicks = logicalTargetTicks - offsetTicks
 
         with(turret) {
-            targetPosition = targetTicks
+            targetPosition = rawTargetTicks
             mode = DcMotor.RunMode.RUN_TO_POSITION
             this.power = power
         }
@@ -102,7 +110,7 @@ class Turret(
     ) {
         val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
                 Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
-        // General Angle(From robot 0 to target):
+        // General Angle (From robot 0 to target):
         val targetTheta = (shootPose angleTo target)
         val turretTheta = (PI / 2 + targetTheta) - shootPose.theta
         gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.85)

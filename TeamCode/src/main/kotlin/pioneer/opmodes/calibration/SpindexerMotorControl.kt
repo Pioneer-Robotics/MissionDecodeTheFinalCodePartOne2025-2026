@@ -5,8 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.hardware.Spindexer
+import pioneer.helpers.Chrono
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
+import kotlin.time.DurationUnit
 
 @Disabled
 @TeleOp(name = "Spindexer Motor Control", group = "Calibration")
@@ -15,6 +17,7 @@ class SpindexerMotorControl : OpMode() {
 
     val changePositionToggle = Toggle(false)
     val applyPositionToggle = Toggle(false)
+    val chrono = Chrono(autoUpdate = true, units = DurationUnit.MILLISECONDS)
 
     var targetPosition = Spindexer.MotorPosition.INTAKE_1
 
@@ -34,13 +37,13 @@ class SpindexerMotorControl : OpMode() {
             spindexer.motorState = targetPosition
         }
 
-        spindexer.update()
+        spindexer.update(chrono.dt)
 
         telemetry.addData("Target Position", targetPosition)
         telemetry.update()
 
-        FtcDashboard.getInstance().telemetry.addData("Motor position", spindexer.currentMotorPosition)
-        FtcDashboard.getInstance().telemetry.addData("Target position", spindexer.targetMotorPosition)
+        FtcDashboard.getInstance().telemetry.addData("Motor position", spindexer.currentMotorTicks)
+        FtcDashboard.getInstance().telemetry.addData("Target position", spindexer.targetMotorTicks)
         FtcDashboard.getInstance().telemetry.update()
     }
 }

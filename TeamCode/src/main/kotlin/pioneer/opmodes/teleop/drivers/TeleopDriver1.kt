@@ -25,7 +25,7 @@ class TeleopDriver1(
     private var fieldCentricToggle: Toggle = Toggle(false)
     private var intakeToggle: Toggle = Toggle(false)
 
-    fun update() {
+    fun update(dt: Double) {
         drive()
         updateDrivePower()
         updateFieldCentric()
@@ -34,11 +34,6 @@ class TeleopDriver1(
         handleCancelLastIntake()
         handleSpindexerReset()
         handleResetPose()
-        bot.spindexer?.update()
-
-        if (gamepad.right_stick_button) {
-            bot.spindexer?.resetMotorPosition()
-        }
     }
 
     private fun drive() {
@@ -93,12 +88,13 @@ class TeleopDriver1(
     }
 
     private fun moveSpindexerManual() {
-        // FIXME: Manual moving won't reset power back to 0
         if (gamepad.right_trigger > 0.1) {
-            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble() * 8000.0)
+            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
         }
         if (gamepad.left_trigger > 0.1) {
-            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble() * 8000.0)
+            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
+        } else if (bot.spindexer?.manualMove == true) {
+            bot.spindexer?.moveManual(0.0)
         }
     }
 
