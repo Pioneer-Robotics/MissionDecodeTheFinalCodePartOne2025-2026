@@ -135,6 +135,9 @@ class Spindexer(
             return motor.currentPosition
         }
 
+    val currentMotorVelocity: Double
+        get() = motor.velocity
+
     val currentMotorTicks: Int
         get() = rawMotorTicks + offsetTicks
 
@@ -395,7 +398,7 @@ class Spindexer(
     private fun detectArtifact(sensor: RevColorSensor): Artifact? {
         // Determine artifact based on hue thresholds
         return when {
-            sensor.distance > 8.0 -> null
+            sensor.distance > 15.0 -> null
             sensor.hue < 170 && sensor.hue > 140 -> Artifact.GREEN
             sensor.hue < 250 && sensor.hue > 170 -> Artifact.PURPLE
             else -> null
