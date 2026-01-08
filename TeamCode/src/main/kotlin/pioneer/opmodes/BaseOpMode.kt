@@ -3,9 +3,11 @@ package pioneer.opmodes
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
+import pioneer.Constants
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
+import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
 
 // Base OpMode class to be extended by all user-defined OpModes
@@ -36,6 +38,12 @@ abstract class BaseOpMode : OpMode() {
             throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
         }
         updateTelemetry()
+
+        // Transfer data
+        bot.allianceColor = Constants.TransferData.allianceColor
+        bot.pinpoint?.reset(Constants.TransferData.pose)
+        bot.turret?.resetMotorPosition(Constants.TransferData.turretMotorTicks)
+//        bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerMotorTicks) // FIXME
     }
 
     final override fun loop() {
@@ -47,7 +55,7 @@ abstract class BaseOpMode : OpMode() {
 
         // Update path follower
         if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
-            bot.follower.update()
+            bot.follower.update(dt)
             telemetry.addLine("Updated follower")
         }
 
@@ -56,6 +64,12 @@ abstract class BaseOpMode : OpMode() {
     }
 
     final override fun stop() {
+        // Transfer data
+        Constants.TransferData.allianceColor = bot.allianceColor
+        Constants.TransferData.pose = bot.pinpoint?.pose ?: Pose()
+        Constants.TransferData.turretMotorTicks = bot.turret?.currentTicks ?: 0
+        Constants.TransferData.spindexerMotorTicks = bot.spindexer?.currentMotorTicks ?: 0
+
         bot.mecanumBase?.stop() // Ensure motors are stopped
         FileLogger.flush() // Flush any logged data
         onStop() // Call user-defined stop method

@@ -28,10 +28,10 @@ class SpindexerTest : BaseOpMode() {
         if (gamepad1.touchpad) bot.spindexer!!.moveToNextOuttake()
         if (gamepad1.circle) bot.spindexer!!.popCurrentArtifact()
 
-        bot.spindexer!!.update()
+        bot.spindexer!!.update(-1.0)
 
-        telemetry.addData("Current Position", bot.spindexer!!.currentMotorPosition)
-        telemetry.addData("Target Position", bot.spindexer!!.targetMotorPosition)
+        telemetry.addData("Current Position", bot.spindexer!!.currentMotorTicks)
+        telemetry.addData("Target Position", bot.spindexer!!.targetMotorTicks)
         telemetry.addData("Spindexer Position", bot.spindexer!!.motorState.toString())
         telemetry.addData("Artifacts", bot.spindexer!!.artifacts.contentDeepToString())
         telemetry.addData("Current Scanned Artifact", bot.spindexer!!.currentScannedArtifact)

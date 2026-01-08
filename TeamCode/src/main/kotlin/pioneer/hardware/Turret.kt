@@ -34,7 +34,13 @@ class Turret(
     val currentTicks: Int
         get() {
             check(::turret.isInitialized)
-            return turret.currentPosition - offsetTicks
+            return turret.currentPosition + offsetTicks
+        }
+
+    val rawTicks: Int
+        get() {
+            check(::turret.isInitialized)
+            return turret.currentPosition
         }
 
     val reachedTarget: Boolean
@@ -61,7 +67,7 @@ class Turret(
         get() = currentTicks / ticksPerRadian
 
     val targetAngle: Double
-        get() = turret.targetPosition / ticksPerRadian
+        get() = (turret.targetPosition + offsetTicks) / ticksPerRadian
 
     val targetTicks: Int
         get() = turret.targetPosition
@@ -69,26 +75,33 @@ class Turret(
     fun resetMotorPosition(resetTicks: Int = 0) {
         turret.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         offsetTicks = resetTicks
+        turret.mode = DcMotor.RunMode.RUN_USING_ENCODER
     }
 
     fun gotoAngle(
         angle: Double,
         power: Double = 0.75,
+        overrideRange: Boolean = false
     ) {
         require(power in -1.0..1.0)
         check(::turret.isInitialized)
 
-        val desiredAngle =
-            MathUtils
-                .normalizeRadians(angle, motorRange)
+        var desiredAngle: Double
 
-        val currentAngle = currentTicks / ticksPerRadian
+        if (overrideRange){
+            desiredAngle = angle
+        } else {
+            desiredAngle = MathUtils.normalizeRadians(angle, motorRange)
+        }
 
-        val delta = desiredAngle - currentAngle
-        val targetTicks = (currentTicks + delta * ticksPerRadian).toInt()
+        // Logical ticks uses offset
+        val logicalCurrentTicks = currentTicks
+        val logicalTargetTicks =
+            (desiredAngle * ticksPerRadian).toInt()
+        val rawTargetTicks = logicalTargetTicks - offsetTicks
 
         with(turret) {
-            targetPosition = targetTicks
+            targetPosition = rawTargetTicks
             mode = DcMotor.RunMode.RUN_TO_POSITION
             this.power = power
         }
@@ -100,9 +113,20 @@ class Turret(
     ) {
         val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
                 Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
-        // General Angle(From robot 0 to target):
+        // General Angle (From robot 0 to target):
         val targetTheta = (shootPose angleTo target)
         val turretTheta = (PI / 2 + targetTheta) - shootPose.theta
         gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.85)
+    }
+
+    //FIXME
+    fun setCustomTarget(pose: Pose, distance: Double): Pose{
+        val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
+                Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
+//        val theta = PI  + currentAngle - shootPose.theta
+        val theta = shootPose.theta + currentAngle
+        val targetPose = shootPose + Pose(x = distance * sin(theta), y = distance * -cos(theta))
+
+        return targetPose
     }
 }

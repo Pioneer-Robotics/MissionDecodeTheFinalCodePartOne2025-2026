@@ -6,12 +6,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.decode.Artifact
-import pioneer.helpers.Chrono
+import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sign
-import kotlin.time.DurationUnit
 
 /*
 Positive ROT: CW due to under-mounted motor
@@ -79,7 +78,7 @@ class Spindexer(
 
             for (position in MotorPosition.entries) {
                 val targetTicks = (position.radians * ticksPerRadian).toInt()
-                val error = wrapTicks(targetTicks - currentMotorPosition).toDouble()
+                val error = wrapTicks(targetTicks - currentMotorTicks).toDouble()
                 if (abs(error) < abs(smallestError)) {
                     smallestError = error
                     closestPosition = position
@@ -94,7 +93,7 @@ class Spindexer(
             // Check if motor position matches any outtake position
             for (position in outtakePositions) {
                 val targetTicks = (position.radians * ticksPerRadian).toInt()
-                val error = wrapTicks(targetTicks - currentMotorPosition)
+                val error = wrapTicks(targetTicks - currentMotorTicks)
                 if (abs(error) < 300.0) {
                     return true
                 }
@@ -115,8 +114,8 @@ class Spindexer(
     val reachedTarget: Boolean
         get() {
             // Compute circular error
-            val error = wrapTicks(targetMotorPosition - currentMotorPosition)
-            return abs(error) < Constants.Spindexer.POSITION_TOLERANCE_TICKS
+            val error = wrapTicks(targetMotorTicks - currentMotorTicks)
+            return abs(error) < Constants.Spindexer.POSITION_TOLERANCE_TICKS && (motor.velocity < Constants.Spindexer.VELOCITY_TOLERANCE_TPS)
         }
 
     // Getters for artifact storage status
@@ -130,10 +129,16 @@ class Spindexer(
         get() = _artifacts.count { it != null }
 
     // Motor position accessors
-    val currentMotorPosition: Int
-        get() = motor.currentPosition - offsetTicks
+    private val rawMotorTicks: Int
+        get() {
+            check(::motor.isInitialized)
+            return motor.currentPosition
+        }
 
-    val targetMotorPosition: Int
+    val currentMotorTicks: Int
+        get() = rawMotorTicks + offsetTicks
+
+    val targetMotorTicks: Int
         get() = (motorState.radians * ticksPerRadian).toInt()
 
     val currentScannedArtifact: Artifact?
@@ -141,10 +146,11 @@ class Spindexer(
 
     var checkingForNewArtifacts = true
 
+    var manualMove = false
+
     // Private variables
     private var offsetTicks = 0
     private var lastPower = 0.0
-    private val chrono = Chrono(autoUpdate = false, units = DurationUnit.MILLISECONDS)
     private val ticksPerRadian: Int = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
     private val motorPID =
         PIDController(
@@ -157,7 +163,6 @@ class Spindexer(
     private var artifactSeen = false
     private var artifactWasSeenRecently = false
     private var lastStoredIndex = 0
-    private var manualMove = false
     private val intakePositions =
         listOf(MotorPosition.INTAKE_1, MotorPosition.INTAKE_2, MotorPosition.INTAKE_3)
     private val outtakePositions =
@@ -199,9 +204,8 @@ class Spindexer(
      * Updates the motor position to match the desired motor state.
      * Checks for new artifacts if in an intake position.
      */
-    override fun update() {
-        chrono.update()
-        runMotorToState()
+    override fun update(dt: Double) {
+        runMotorToState(dt)
         if (checkingForNewArtifacts) checkForArtifact()
     }
 
@@ -261,6 +265,7 @@ class Spindexer(
         _artifacts[index] = null
         // Automatically move to intake if empty
         if (isEmpty) moveToNextOpenIntake()
+        FileLogger.info("Spindexer", "Removed $artifact")
         return artifact
     }
 
@@ -314,25 +319,25 @@ class Spindexer(
         return lastPower
     }
 
-    private fun runMotorToState() {
+    private fun runMotorToState(dt: Double) {
         if (manualMove) return
 
-        val rawError = targetMotorPosition - currentMotorPosition
+        val rawError = targetMotorTicks - currentMotorTicks
         val error = wrapTicks(rawError)
 
-        // PID -> -1..1 output
-        var power = motorPID.update(error.toDouble(), chrono.dt)
+        // PID
+        var power = motorPID.update(error.toDouble(), dt)
 
         // Ramp power to prevent sudden acceleration
-        power = rampPower(power, chrono.dt)
+        power = rampPower(power, dt)
 
         // Static constant
         val adjustedKS = Constants.Spindexer.KS_START + Constants.Spindexer.KS_STEP * numStoredArtifacts
         power += if (abs(error) > 100) adjustedKS * sign(error.toDouble()) else 0.0
 
-        // Apply power (inverted due to motor orientation)
-        val maxPower = 0.75
-        motor.power = -power.coerceIn(-maxPower, maxPower)
+        // Apply power
+        val maxPower = 1.0
+        motor.power = power.coerceIn(-maxPower, maxPower)
     }
 
     private fun checkForArtifact() {
@@ -390,7 +395,7 @@ class Spindexer(
     private fun detectArtifact(sensor: RevColorSensor): Artifact? {
         // Determine artifact based on hue thresholds
         return when {
-            sensor.distance > 15.0 -> null
+            sensor.distance > 8.0 -> null
             sensor.hue < 170 && sensor.hue > 140 -> Artifact.GREEN
             sensor.hue < 250 && sensor.hue > 170 -> Artifact.PURPLE
             else -> null
@@ -417,6 +422,9 @@ class Spindexer(
             // If visible long enough, confirm intake
             if (artifactVisibleTimer.milliseconds() >= Constants.Spindexer.CONFIRM_INTAKE_MS) {
                 storeArtifact(artifact)
+
+                // Log stored artifact
+                FileLogger.info("Spindexer", "Stored $artifact")
 
                 // Reset state
                 artifactSeen = false

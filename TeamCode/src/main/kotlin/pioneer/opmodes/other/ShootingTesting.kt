@@ -46,7 +46,7 @@ class ShootingTesting : BaseOpMode() {
 
     override fun onLoop() {
         // Update gamepad inputs
-        driver1.update()
+        driver1.update(dt)
         driver2.update()
 
         // Add telemetry data

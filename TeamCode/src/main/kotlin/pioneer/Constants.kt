@@ -103,10 +103,10 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 1.0
+        const val POSITION_THRESHOLD = 2.0
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.05
+        const val ROTATION_THRESHOLD = 0.075
 
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 110.0
@@ -123,20 +123,35 @@ object Constants {
         /** The maximum angular acceleration in rad per second squared. */
         const val MAX_ANGULAR_ACCELERATION = 10.0
 
+        // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 7.5
+        @JvmField var X_KP = 5.0 // was 7.0
         @JvmField var X_KI = 0.0
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 7.5
+        @JvmField var Y_KP = 5.0 // was 7.0
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 5.0
+        @JvmField var THETA_KP = 3.0 // was 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
+
+        // --- Position PID coefficients tuned for final pose correction ---
+        @JvmField var POS_X_KP = 0.0
+        @JvmField var POS_X_KI = 0.0
+        @JvmField var POS_X_KD = 0.0
+
+        @JvmField var POS_Y_KP = 0.0
+        @JvmField var POS_Y_KI = 0.0
+        @JvmField var POS_Y_KD = 0.0
+
+        @JvmField var POS_THETA_KP = 0.0
+        @JvmField var POS_THETA_KI = 0.0
+        @JvmField var POS_THETA_KD = 0.0
+
     }
 
     object Camera {
@@ -159,23 +174,21 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.00045
-
-        @JvmField var KI = 0.0
-
-        @JvmField var KD = 0.04
+        @JvmField var KP = 0.00025
+        @JvmField var KI = 0.0035
+        @JvmField var KD = 0.0075
 
         @JvmField var KS_START = 0.05
-        @JvmField var KS_STEP = 0.01
+        @JvmField var KS_STEP = 0.015
 
-        @JvmField var MAX_POWER_RATE = 5.0
+        @JvmField var MAX_POWER_RATE = 15.0
 
         const val POSITION_TOLERANCE_TICKS = 100
+        const val VELOCITY_TOLERANCE_TPS = 100
         const val TICKS_PER_REV = 8192
 
-        // TODO: Tune these values when we test on the real hardware
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 50
+        const val CONFIRM_INTAKE_MS = 25
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10
@@ -191,13 +204,29 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.067
+        const val LAUNCHER_REST = 0.065
         const val LAUNCHER_TRIGGERED = 0.315
     }
 
     object TransferData {
+        fun reset() {
+            allianceColor = AllianceColor.NEUTRAL
+            pose = Pose()
+            turretMotorTicks = 0
+            spindexerMotorTicks = 0
+        }
+
         var allianceColor = AllianceColor.NEUTRAL
-        var turretPositionTicks = 0
-        var spindexerPositionTicks = 0
+        var pose = Pose()
+        var turretMotorTicks = 0
+        var spindexerMotorTicks = 0
+    }
+
+    @Config
+    object Flywheel {
+        @JvmField var KP = 0.0075
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.0
+        @JvmField var KF = 0.000415
     }
 }

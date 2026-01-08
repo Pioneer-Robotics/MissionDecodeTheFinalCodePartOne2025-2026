@@ -36,7 +36,7 @@ class LaunchServos(
         timer.reset()
     }
 
-    override fun update() {
+    override fun update(dt: Double) {
         if (timer.milliseconds() < 250) {
             if (launch) {
                 setPower(1.0)

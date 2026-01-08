@@ -4,14 +4,11 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
-import pioneer.decode.GoalTag
-import pioneer.helpers.FileLogger
+import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
 import kotlin.math.cos
-import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
@@ -21,14 +18,21 @@ class Flywheel(
     private val motorName: String = Constants.HardwareNames.FLYWHEEL,
 ) : HardwareComponent {
     private lateinit var flywheel: DcMotorEx
+    private val motorPID = PIDController(
+        Constants.Flywheel.KP,
+        Constants.Flywheel.KI,
+        Constants.Flywheel.KD,
+    )
 
     val motor: DcMotorEx
         get() = flywheel
 
+    var targetVelocity = 0.0
+
     var velocity
         get() = flywheel.velocity
         set(value) {
-            flywheel.velocity = value
+            targetVelocity = value
         }
 
     val current
@@ -42,16 +46,16 @@ class Flywheel(
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 direction = DcMotorSimple.Direction.FORWARD
             }
-        FileLogger.info(name, flywheel.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString())
-        flywheel.setPIDFCoefficients(
-            DcMotor.RunMode.RUN_USING_ENCODER,
-            PIDFCoefficients(
-                50.0,
-                3.0,
-                0.0,
-                0.0,
-            ),
-        )
+    }
+
+    override fun update(dt: Double) {
+        if (targetVelocity == 0.0) {
+            flywheel.power = 0.0
+            return
+        }
+        val correction = motorPID.update(targetVelocity - velocity, dt)
+        flywheel.power = Constants.Flywheel.KF * targetVelocity + correction
+//        FileLogger.debug("Flywheel","Set Power: ${Constants.Flywheel.KF * targetVelocity + correction}")
     }
 
     // https://www.desmos.com/calculator/uofqeqqyn1
