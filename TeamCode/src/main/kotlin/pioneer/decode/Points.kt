@@ -47,9 +47,10 @@ class Points(
 
     private fun collectY(i: Int) = 30 - (i * 60.0) // 30, -30, -90
 
-    private val prepCollectX = 80.0
+    private val prepCollectX = 77.5
     private val collectTheta = -PI / 2 // Point to right
     val PREP_COLLECT_GOAL = Pose(prepCollectX, collectY(0), theta=collectTheta).T(color)
+    val PREP_COLLECT_GOAL_VEL = Pose(-50.0, 0.0).T(color)
     val PREP_COLLECT_MID = Pose(prepCollectX, collectY(1), theta=collectTheta).T(color)
     val PREP_COLLECT_AUDIENCE = Pose(prepCollectX, collectY(2), theta=collectTheta).T(color)
 
