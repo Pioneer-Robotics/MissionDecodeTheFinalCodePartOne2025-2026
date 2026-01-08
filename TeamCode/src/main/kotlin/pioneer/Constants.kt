@@ -174,18 +174,33 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.0075
-        @JvmField var KI = 0.0025
-        @JvmField var KD = 0.00127
+
+        @JvmField var KP = 0.001067
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.0
 
         @JvmField var KS_START = 0.035
         @JvmField var KS_STEP = 0.015
 
-        @JvmField var MAX_POWER_RATE = 15.0
+        @JvmField var MAX_POWER_RATE = 100.0
 
-        const val POSITION_TOLERANCE_TICKS = 20
+        const val POSITION_TOLERANCE_TICKS = 40
         const val VELOCITY_TOLERANCE_TPS = 10
-        const val TICKS_PER_REV = 755
+        const val TICKS_PER_REV = 28 * 5 * 5 * 4
+
+        //External Encoder
+//        @JvmField var KP = 0.001067
+//        @JvmField var KI = 0.0
+//        @JvmField var KD = 0.0
+//
+//        @JvmField var KS_START = 0.035
+//        @JvmField var KS_STEP = 0.015
+//
+//        @JvmField var MAX_POWER_RATE = 15.0
+//
+//        const val POSITION_TOLERANCE_TICKS = 40
+//        const val VELOCITY_TOLERANCE_TPS = 10
+//        const val TICKS_PER_REV = 8192
 
         // Time required to confirm an artifact has been intaken (ms)
         const val CONFIRM_INTAKE_MS = 25

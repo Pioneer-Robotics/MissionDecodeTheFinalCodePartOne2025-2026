@@ -132,7 +132,7 @@ class Spindexer(
     private val rawMotorTicks: Int
         get() {
             check(::motor.isInitialized)
-            return motor.currentPosition
+            return -motor.currentPosition
         }
 
     val currentMotorVelocity: Double
@@ -340,7 +340,7 @@ class Spindexer(
 
         // Apply power
         val maxPower = 1.0
-        motor.power = power.coerceIn(-maxPower, maxPower)
+        motor.power = -power.coerceIn(-maxPower, maxPower)
     }
 
     private fun checkForArtifact() {
