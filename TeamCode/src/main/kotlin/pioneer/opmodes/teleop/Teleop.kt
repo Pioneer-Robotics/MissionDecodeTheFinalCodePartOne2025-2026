@@ -1,6 +1,5 @@
 package pioneer.opmodes.teleop
 
-import com.acmerobotics.dashboard.FtcDashboard
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
@@ -66,6 +65,14 @@ class Teleop : BaseOpMode() {
         telemetry.addData("Turret Target Ticks", bot.turret?.targetTicks)
         telemetry.addData("Turret Real Ticks", bot.turret?.currentTicks)
         telemetry.addData("Drive Power", driver1.drivePower)
+        telemetry.addData("Spindexer State", bot.spindexer?.motorState)
+
+        telemetry.addData("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks)
+        telemetry.addData("Spindexer Ticks", bot.spindexer?.currentMotorTicks)
+        telemetryPacket.put("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks)
+        telemetryPacket.put("Spindexer Ticks", bot.spindexer?.currentMotorTicks)
+        telemetryPacket.put("Spindexer Velocity", bot.spindexer?.currentMotorVelocity)
+
         telemetry.addData("Field Centric", driver1.fieldCentric)
         telemetry.addData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy))
         telemetry.addData("Voltage", bot.batteryMonitor?.voltage)

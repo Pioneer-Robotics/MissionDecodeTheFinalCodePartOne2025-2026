@@ -17,9 +17,10 @@ class ManualSpindexerControl : OpMode() {
     override fun loop() {
         if (gamepad1.right_trigger > 0.05) {
             motor.power = gamepad1.right_trigger.toDouble()
-        }
-        if (gamepad1.left_trigger > 0.05) {
+        } else if (gamepad1.left_trigger > 0.05) {
             motor.power = -gamepad1.left_trigger.toDouble()
+        } else {
+            motor.power = 0.0
         }
 
         telemetry.addData("Motor Power", gamepad1.right_trigger)
