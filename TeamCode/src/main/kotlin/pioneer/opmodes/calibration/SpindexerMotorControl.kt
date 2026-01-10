@@ -10,7 +10,7 @@ import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import kotlin.time.DurationUnit
 
-@Disabled
+//@Disabled
 @TeleOp(name = "Spindexer Motor Control", group = "Calibration")
 class SpindexerMotorControl : OpMode() {
     lateinit var spindexer: Spindexer

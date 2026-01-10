@@ -44,7 +44,7 @@ class TestingTeleop : BaseOpMode() {
     override fun onLoop() {
         // Update gamepad inputs
         driver1.update(dt)
-        driver2.update()
+        driver2.update(dt)
 
         // Add telemetry data
         addTelemetryData()
