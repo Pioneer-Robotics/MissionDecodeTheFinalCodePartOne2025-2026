@@ -123,7 +123,7 @@ class TeleopDriver2Testing(
 //        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
 
         if (isEstimateSpeed.state) {
-            flywheelSpeed = bot.flywheel!!.estimateVelocity(shootingTarget, bot.pinpoint?.pose ?: Pose(), shootingHeight)
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), shootingTarget, shootingHeight)
         } else {
             flywheelSpeed = flywheelVelocityEnum.velocity
         }
@@ -163,26 +163,7 @@ class TeleopDriver2Testing(
     }
 
     private fun processShooting() {
-//        when (shootState) {
-//            ShootState.MOVING_TO_POSITION -> {
-//                if (bot.spindexer?.reachedTarget == true) {
-//                    bot.launcher?.triggerLaunch()
-//                    bot.spindexer?.popCurrentArtifact()
-//                    shootState = ShootState.LAUNCHING
-//                }
-//            }
-//            ShootState.LAUNCHING -> {
-//                if (bot.launcher?.isReset == true) {
-//                    if (shootingAll && remainingShots > 0) {
-//                        shootNextForAll()
-//                    } else {
-//                        shootState = ShootState.READY
-//                        shootingAll = false
-//                    }
-//                }
-//            }
-//            else -> {}
-//        }
+
         if (!flywheelToggle.state) return
         if (gamepad.square &&
             bot.spindexer?.reachedTarget == true &&
@@ -204,27 +185,6 @@ class TeleopDriver2Testing(
             }
 //        if (moved == true) shootState = ShootState.MOVING_TO_POSITION
     }
-
-//    private fun startShootingAll() {
-//        shootingAll = true
-//        remainingShots = bot.spindexer?.numStoredArtifacts ?: 0
-//        if (remainingShots > 0) {
-//            shootNextForAll()
-//        } else {
-//            shootingAll = false
-//        }
-//    }
-
-//    private fun shootNextForAll() {
-//        if (remainingShots > 0) {
-//            remainingShots--
-//            shootArtifact()
-//            shootState = ShootState.MOVING_TO_POSITION
-//        } else {
-//            shootingAll = false
-//            shootState = ShootState.READY
-//        }
-//    }
 
     private fun handleManualTrack(dt: Double) {
         if (abs(gamepad.right_stick_x) > 0.02) {
