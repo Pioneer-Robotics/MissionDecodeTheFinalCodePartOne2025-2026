@@ -17,14 +17,16 @@ class TeleopDriver2(
 ) {
     private val chrono = Chrono(autoUpdate = false)
     private val isAutoTracking = Toggle(false)
+    private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
     var targetGoal = GoalTag.RED
     var turretAngle = 0.0
     var flywheelSpeed = 0.0
+    var manualFlywheelSpeed = 0.0
 
     fun update(dt: Double) {
         checkTargetGoal()
-        updateFlywheelSpeed(dt)
+        updateFlywheelSpeed()
         handleFlywheel()
         handleTurret(dt)
         handleShootInput()
@@ -38,16 +40,19 @@ class TeleopDriver2(
         } else { return }
     }
 
-    private fun updateFlywheelSpeed(dt: Double) {
-//        if (flywheelSpeed < 1200.0 && gamepad.dpad_up) {
-//            flywheelSpeed += chrono.dt * 0.5 * 1200.0
-//        }
-//        if (flywheelSpeed > 0.0 && gamepad.dpad_down) {
-//            flywheelSpeed -= chrono.dt * 0.5 * 1200.0
-//        }
-//        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1200.0)
-
-        flywheelSpeed = bot.flywheel!!.estimateVelocity(targetGoal.shootingPose, bot.pinpoint?.pose ?: Pose(), targetGoal.shootingHeight)
+    private fun updateFlywheelSpeed() {
+        isEstimatingSpeed.toggle(gamepad.dpad_right)
+        if (!isEstimatingSpeed.state){
+            if (gamepad.dpad_up){
+                manualFlywheelSpeed += 50.0
+            }
+            if (gamepad.dpad_down){
+                manualFlywheelSpeed -= 50.0
+            }
+            flywheelSpeed = manualFlywheelSpeed
+        } else {
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), targetGoal.shootingPose, targetGoal.shootingHeight)
+        }
     }
 
     private fun handleFlywheel() {

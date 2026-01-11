@@ -50,6 +50,7 @@ class GoalSideAuto : BaseOpMode() {
 
     private val allianceToggle = Toggle(false)
     private lateinit var P: Points
+    private lateinit var targetGoal: GoalTag
     private var autoType = AutoOptions.ALL
     private var state = State.GOTO_SHOOT
     private var collectState = CollectState.GOAL
@@ -84,6 +85,7 @@ class GoalSideAuto : BaseOpMode() {
             spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
             follower.reset()
         }
+        targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
     }
 
     override fun onLoop() {
@@ -95,8 +97,7 @@ class GoalSideAuto : BaseOpMode() {
             State.STOP -> state_stop()
         }
 
-        val targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
-        targetVelocity = bot.flywheel!!.estimateVelocity(targetGoal.shootingPose, bot.pinpoint!!.pose, targetGoal.shootingHeight)
+        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
         bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
