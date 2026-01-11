@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
+import pioneer.opmodes.BaseOpMode.Verbose
 import kotlin.math.PI
 
 object Constants {
@@ -238,5 +239,9 @@ object Constants {
         @JvmField var KI = 0.0
         @JvmField var KD = 0.0
         @JvmField var KF = 0.000415
+    }
+
+    object Misc {
+        val VERBOSE_LEVEL = Verbose.INFO
     }
 }

@@ -75,6 +75,18 @@ abstract class BaseOpMode : OpMode() {
         onStop() // Call user-defined stop method
     }
 
+    enum class Verbose() {
+        DEBUG,
+        INFO,
+        FATAL
+    }
+
+    fun addTelemetryData(caption: String, value: Any ?= null, verbose: Verbose) {
+        if (verbose.ordinal >= Constants.Misc.VERBOSE_LEVEL.ordinal) {
+            telemetry.addData(caption, value)
+        }
+    }
+
     private fun updateTelemetry() {
         telemetry.update()
         dashboard.sendTelemetryPacket(telemetryPacket)
