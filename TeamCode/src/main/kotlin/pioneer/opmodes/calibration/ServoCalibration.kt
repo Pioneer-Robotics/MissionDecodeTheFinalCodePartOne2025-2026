@@ -14,9 +14,9 @@ class ServoCalibration : OpMode() {
     }
 
     override fun loop() {
-        servo.position = if (gamepad1.right_bumper) 0.067 else 0.3
+        servo.position = if (gamepad1.right_bumper) 0.3 else 0.7
 
-        servo.position = gamepad1.right_trigger.toDouble() * 0.2
+        if (gamepad1.right_trigger > 0.05) servo.position = gamepad1.right_trigger.toDouble()
 
         telemetry.addData("Servo Pos", servo.position)
         telemetry.update()

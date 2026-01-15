@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.Constants
+import pioneer.helpers.FileLogger
 
 class Intake(
     private val hardwareMap: HardwareMap,

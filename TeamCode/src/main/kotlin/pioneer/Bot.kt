@@ -60,8 +60,8 @@ class Bot private constructor(
         )
     }
 
-    fun updateAll(dt: Double) {
-        hardwareComponents.values.forEach { it.update(dt) }
+    fun updateAll() {
+        hardwareComponents.values.forEach { it.update() }
     }
 
     // Companion for builder and fromType

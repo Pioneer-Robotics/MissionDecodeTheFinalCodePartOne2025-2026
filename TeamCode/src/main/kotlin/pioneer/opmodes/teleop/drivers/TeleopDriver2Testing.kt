@@ -55,13 +55,13 @@ class TeleopDriver2Testing(
     var flywheelSpeed = 0.0
 
 
-    fun update(dt: Double) {
+    fun update() {
         checkTargetGoal()
         checkShootingTarget()
         customTargetHandling()
-        updateFlywheelSpeed(dt)
+        updateFlywheelSpeed()
         handleFlywheel()
-        handleTurret(dt)
+        handleTurret()
         handleShootInput()
         processShooting()
         updateIndicatorLED()
@@ -112,7 +112,7 @@ class TeleopDriver2Testing(
 
     }
 
-    private fun updateFlywheelSpeed(dt: Double) {
+    private fun updateFlywheelSpeed() {
         isEstimateSpeed.toggle(gamepad.dpad_right)
 //        if (flywheelSpeed < 1.0 && gamepad.dpad_up) {
 //            flywheelSpeed += chrono.dt * 0.5
@@ -144,10 +144,10 @@ class TeleopDriver2Testing(
         }
     }
 
-    private fun handleTurret(dt: Double) {
+    private fun handleTurret() {
         isAutoTracking.toggle(gamepad.cross)
         bot.turret?.mode = if (isAutoTracking.state) Turret.Mode.AUTO_TRACK else Turret.Mode.MANUAL
-        if (bot.turret?.mode == Turret.Mode.MANUAL) handleManualTrack(dt) else handleAutoTrack()
+        if (bot.turret?.mode == Turret.Mode.MANUAL) handleManualTrack() else handleAutoTrack()
     }
 
     private fun handleShootInput() {
@@ -186,9 +186,9 @@ class TeleopDriver2Testing(
 //        if (moved == true) shootState = ShootState.MOVING_TO_POSITION
     }
 
-    private fun handleManualTrack(dt: Double) {
+    private fun handleManualTrack() {
         if (abs(gamepad.right_stick_x) > 0.02) {
-            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * dt/1000.0 * 5.0
+            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * chrono.dt/1000.0 * 5.0
             turretAngle.coerceIn(
                 -PI,
                 PI,

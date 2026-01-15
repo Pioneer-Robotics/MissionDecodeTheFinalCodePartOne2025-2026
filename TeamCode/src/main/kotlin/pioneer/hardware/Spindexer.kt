@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.decode.Artifact
+import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import kotlin.math.PI
@@ -114,8 +115,7 @@ class Spindexer(
     val reachedTarget: Boolean
         get() {
             // Compute circular error
-            val error = wrapTicks(targetMotorTicks - currentMotorTicks)
-            return abs(error) < Constants.Spindexer.POSITION_TOLERANCE_TICKS && (motor.velocity < Constants.Spindexer.VELOCITY_TOLERANCE_TPS)
+            return abs(motorTicksError) < Constants.Spindexer.POSITION_TOLERANCE_TICKS && (motor.velocity < Constants.Spindexer.VELOCITY_TOLERANCE_TPS)
         }
 
     // Getters for artifact storage status
@@ -143,6 +143,9 @@ class Spindexer(
 
     val targetMotorTicks: Int
         get() = (motorState.radians * ticksPerRadian).toInt()
+
+    val motorTicksError: Int
+        get() = wrapTicks(targetMotorTicks - currentMotorTicks)
 
     val currentScannedArtifact: Artifact?
         get() = scanArtifact()
@@ -172,6 +175,7 @@ class Spindexer(
         listOf(MotorPosition.OUTTAKE_1, MotorPosition.OUTTAKE_2, MotorPosition.OUTTAKE_3)
     private lateinit var motor: DcMotorEx
     private lateinit var intakeSensor: RevColorSensor
+    private val chrono = Chrono(false)
 
     /**
      * Returns the index of the current motor position in the intake/outtake lists.
@@ -207,8 +211,8 @@ class Spindexer(
      * Updates the motor position to match the desired motor state.
      * Checks for new artifacts if in an intake position.
      */
-    override fun update(dt: Double) {
-        runMotorToState(dt)
+    override fun update() {
+        runMotorToState()
         if (checkingForNewArtifacts) checkForArtifact()
     }
 
@@ -322,21 +326,21 @@ class Spindexer(
         return lastPower
     }
 
-    private fun runMotorToState(dt: Double) {
+    private fun runMotorToState() {
         if (manualMove) return
 
-        val rawError = targetMotorTicks - currentMotorTicks
-        val error = wrapTicks(rawError)
-
         // PID
-        var power = motorPID.update(error.toDouble(), dt)
+        chrono.update()
+        var power = motorPID.update(motorTicksError.toDouble(), chrono.dt)
 
         // Ramp power to prevent sudden acceleration
-        power = rampPower(power, dt)
+        power = rampPower(power, chrono.dt)
 
         // Static constant
         val adjustedKS = Constants.Spindexer.KS_START + Constants.Spindexer.KS_STEP * numStoredArtifacts
-        power += if (abs(error) > 100) adjustedKS * sign(error.toDouble()) else 0.0
+        power += if (abs(motorTicksError) > 100) adjustedKS * sign(motorTicksError.toDouble()) else 0.0
+
+        if (abs(motorTicksError) < Constants.Spindexer.PID_TOLERANCE_TICKS) power = 0.0
 
         // Apply power
         val maxPower = 1.0

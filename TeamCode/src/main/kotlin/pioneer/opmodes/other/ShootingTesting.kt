@@ -46,8 +46,8 @@ class ShootingTesting : BaseOpMode() {
 
     override fun onLoop() {
         // Update gamepad inputs
-        driver1.update(dt)
-        driver2.update(dt)
+        driver1.update()
+        driver2.update()
 
         // Add telemetry data
         addTelemetryData()
@@ -73,5 +73,4 @@ class ShootingTesting : BaseOpMode() {
         telemetry.addData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS))
         telemetryPacket.addLine("Flywheel TPS" + (bot.flywheel?.velocity ?: 0.0))
     }
-
 }

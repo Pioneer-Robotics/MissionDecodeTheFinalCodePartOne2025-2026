@@ -28,7 +28,7 @@ class SpindexerTest : BaseOpMode() {
         if (gamepad1.touchpad) bot.spindexer!!.moveToNextOuttake()
         if (gamepad1.circle) bot.spindexer!!.popCurrentArtifact()
 
-        bot.spindexer!!.update(-1.0)
+        bot.spindexer!!.update()
 
         telemetry.addData("Current Position", bot.spindexer!!.currentMotorTicks)
         telemetry.addData("Target Position", bot.spindexer!!.targetMotorTicks)

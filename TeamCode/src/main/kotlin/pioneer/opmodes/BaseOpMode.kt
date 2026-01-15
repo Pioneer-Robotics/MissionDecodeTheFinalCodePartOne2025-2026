@@ -9,6 +9,7 @@ import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
+import kotlin.time.DurationUnit
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode : OpMode() {
@@ -22,11 +23,6 @@ abstract class BaseOpMode : OpMode() {
     private val dashboard =
         com.acmerobotics.dashboard.FtcDashboard
             .getInstance()
-
-    // Tracker and getter for dt
-    protected val chrono = Chrono()
-    protected val dt: Double
-        get() = chrono.dt
 
     val elapsedTime: Double
         get() = getRuntime()
@@ -48,14 +44,14 @@ abstract class BaseOpMode : OpMode() {
 
     final override fun loop() {
         // Update bot systems
-        bot.updateAll(dt)
+        bot.updateAll()
 
         // Call user-defined loop logic
         onLoop()
 
         // Update path follower
         if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
-            bot.follower.update(dt)
+            bot.follower.update()
             telemetry.addLine("Updated follower")
         }
 
@@ -75,7 +71,7 @@ abstract class BaseOpMode : OpMode() {
         onStop() // Call user-defined stop method
     }
 
-    enum class Verbose() {
+    enum class Verbose {
         DEBUG,
         INFO,
         FATAL

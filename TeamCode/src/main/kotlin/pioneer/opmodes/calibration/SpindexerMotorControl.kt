@@ -17,7 +17,6 @@ class SpindexerMotorControl : OpMode() {
 
     val changePositionToggle = Toggle(false)
     val applyPositionToggle = Toggle(false)
-    val chrono = Chrono(autoUpdate = true, units = DurationUnit.MILLISECONDS)
 
     var targetPosition = Spindexer.MotorPosition.INTAKE_1
 
@@ -37,7 +36,7 @@ class SpindexerMotorControl : OpMode() {
             spindexer.motorState = targetPosition
         }
 
-        spindexer.update(chrono.dt)
+        spindexer.update()
 
         telemetry.addData("Target Position", targetPosition)
         telemetry.update()

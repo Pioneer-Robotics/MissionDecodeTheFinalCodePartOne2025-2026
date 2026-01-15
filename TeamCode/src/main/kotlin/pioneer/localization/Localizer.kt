@@ -15,9 +15,8 @@ interface Localizer : HardwareComponent {
 
     /**
      * Updates the pose of the robot based on sensor data
-     * @param dt The time since the last update in seconds
      */
-    override fun update(dt: Double)
+    override fun update()
 
     /**
      * Resets the localizer to a specific pose

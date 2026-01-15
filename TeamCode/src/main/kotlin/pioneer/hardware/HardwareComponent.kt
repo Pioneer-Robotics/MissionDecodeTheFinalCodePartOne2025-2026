@@ -6,5 +6,5 @@ interface HardwareComponent {
 
     fun init()
 
-    fun update(dt: Double) {}
+    fun update() {}
 }

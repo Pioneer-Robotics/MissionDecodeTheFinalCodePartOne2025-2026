@@ -22,7 +22,7 @@ class OdometerOffsetCalculation : BaseOpMode() {
     override fun onInit() {
         bot = Bot.fromType(BotType.MECANUM_BOT, hardwareMap)
         bot.initAll() // Init before using pinpoint
-        bot.pinpoint!!.update(dt) // Get initial encoder values
+        bot.pinpoint!!.update() // Get initial encoder values
         initialXEncoderTicks = bot.pinpoint!!.encoderXTicks
         initialYEncoderTicks = bot.pinpoint!!.encoderYTicks
     }

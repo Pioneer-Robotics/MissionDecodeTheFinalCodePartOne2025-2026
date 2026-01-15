@@ -25,7 +25,7 @@ class TeleopDriver1(
     private var fieldCentricToggle: Toggle = Toggle(false)
     private var intakeToggle: Toggle = Toggle(false)
 
-    fun update(dt: Double) {
+    fun update() {
         drive()
         updateDrivePower()
         updateFieldCentric()

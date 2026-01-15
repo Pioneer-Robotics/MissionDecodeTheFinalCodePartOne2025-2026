@@ -194,7 +194,8 @@ object Constants {
 
         @JvmField var MAX_POWER_RATE = 50.0
 
-        const val POSITION_TOLERANCE_TICKS = 40
+        const val POSITION_TOLERANCE_TICKS = 50
+        const val PID_TOLERANCE_TICKS = 20
         const val VELOCITY_TOLERANCE_TPS = 10
         const val TICKS_PER_REV = 8192
 
@@ -215,8 +216,8 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.065
-        const val LAUNCHER_TRIGGERED = 0.315
+        const val LAUNCHER_REST = 0.3
+        const val LAUNCHER_TRIGGERED = 0.7
     }
 
     object TransferData {

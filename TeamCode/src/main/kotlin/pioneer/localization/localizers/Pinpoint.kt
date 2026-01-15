@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import pioneer.Constants
+import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.localization.Localizer
 
@@ -20,6 +21,8 @@ class Pinpoint(
     private val startPose: Pose = Pose(),
 ) : Localizer {
     override val name = "PinpointLocalizer"
+
+    private val chrono = Chrono(false)
 
     override var pose: Pose = startPose
     override var prevPose: Pose = startPose.copy()
@@ -40,7 +43,7 @@ class Pinpoint(
         pinpoint.update()
     }
 
-    override fun update(dt: Double) {
+    override fun update() {
         pinpoint.update()
 
         // Coordinate conversion: robot_x = -pinpoint_y, robot_y = pinpoint_x
@@ -49,14 +52,16 @@ class Pinpoint(
         val vx = -pinpoint.getVelY(DistanceUnit.CM)
         val vy = pinpoint.getVelX(DistanceUnit.CM)
 
+        chrono.update() // Update before using dt
+
         // Numerical differentiation for acceleration
-        val ax = (vx - prevPose.vx) / dt
-        val ay = (vy - prevPose.vy) / dt
+        val ax = (vx - prevPose.vx) / chrono.dt
+        val ay = (vy - prevPose.vy) / chrono.dt
 
         // Angular motion with coordinate conversion
         val theta = pinpoint.getHeading(AngleUnit.RADIANS)
         val omega = pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
-        val alpha = (omega - prevPose.omega) / dt
+        val alpha = (omega - prevPose.omega) / chrono.dt
 
         prevPose = pose
         pose = Pose(x, y, vx, vy, ax, ay, theta, omega, alpha)

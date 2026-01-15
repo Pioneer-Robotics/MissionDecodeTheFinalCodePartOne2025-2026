@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
+import pioneer.helpers.Chrono
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
 import kotlin.math.cos
@@ -23,6 +24,8 @@ class Flywheel(
         Constants.Flywheel.KI,
         Constants.Flywheel.KD,
     )
+
+    private val chrono = Chrono()
 
     val motor: DcMotorEx
         get() = flywheel
@@ -48,12 +51,12 @@ class Flywheel(
             }
     }
 
-    override fun update(dt: Double) {
+    override fun update() {
         if (targetVelocity == 0.0) {
             flywheel.power = 0.0
             return
         }
-        val correction = motorPID.update(targetVelocity - velocity, dt)
+        val correction = motorPID.update(targetVelocity - velocity, chrono.dt)
         flywheel.power = Constants.Flywheel.KF * targetVelocity + correction
 //        FileLogger.debug("Flywheel","Set Power: ${Constants.Flywheel.KF * targetVelocity + correction}")
     }
