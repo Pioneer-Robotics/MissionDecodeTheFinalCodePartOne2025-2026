@@ -4,7 +4,7 @@
 //import com.qualcomm.robotcore.eventloop.opmode.Disabled
 //import com.qualcomm.robotcore.eventloop.opmode.OpMode
 //import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-//import pioneer.hardware.Spindexer
+//import pioneer.hardware.spindexer.Spindexer
 //import pioneer.helpers.Toggle
 //import pioneer.helpers.next
 //

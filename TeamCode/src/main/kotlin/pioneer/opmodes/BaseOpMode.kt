@@ -5,11 +5,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
 import pioneer.Constants
 import pioneer.hardware.MecanumBase
-import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
-import kotlin.time.DurationUnit
 
 // Base OpMode class to be extended by all user-defined OpModes
 abstract class BaseOpMode : OpMode() {
@@ -39,7 +37,7 @@ abstract class BaseOpMode : OpMode() {
         bot.allianceColor = Constants.TransferData.allianceColor
         bot.pinpoint?.reset(Constants.TransferData.pose)
         bot.turret?.resetMotorPosition(Constants.TransferData.turretMotorTicks)
-//        bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerMotorTicks) // FIXME
+        bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerMotorTicks)
     }
 
     final override fun loop() {
@@ -52,7 +50,6 @@ abstract class BaseOpMode : OpMode() {
         // Update path follower
         if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
             bot.follower.update()
-            telemetry.addLine("Updated follower")
         }
 
         // Automatically handle telemetry updates

@@ -5,6 +5,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.Constants
+import pioneer.general.AllianceColor
+import pioneer.hardware.prism.Color
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
@@ -17,7 +19,6 @@ class Teleop : BaseOpMode() {
     private lateinit var driver2: TeleopDriver2
     private val allianceToggle = Toggle(false)
     private var changedAllianceColor = false
-    private val verbose = Verbose.INFO
 
     override fun onInit() {
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
@@ -31,6 +32,13 @@ class Teleop : BaseOpMode() {
         if (allianceToggle.justChanged) {
             changedAllianceColor = true
             bot.allianceColor = bot.allianceColor.next()
+            bot.led?.setColor(
+                when(bot.allianceColor) {
+                    AllianceColor.RED -> Color.RED
+                    AllianceColor.BLUE -> Color.BLUE
+                    AllianceColor.NEUTRAL -> Color.PURPLE
+                }
+            )
         }
         telemetry.addData("Alliance Color", bot.allianceColor)
         telemetry.update()
@@ -44,8 +52,8 @@ class Teleop : BaseOpMode() {
 
     override fun onLoop() {
         // Update gamepad inputs
-        //driver1.update(dt)
-        //driver2.update(dt)
+        driver1.update()
+        driver2.update()
 
         // Add telemetry data
         addTelemetryData()

@@ -40,6 +40,7 @@ object Constants {
         // Other
         const val WEBCAM = "Webcam 1"
         const val INTAKE_SENSOR = "intakeSensor"
+        const val LED_DRIVER = "prism"
     }
 
     // -------- Odometry (3-wheel) --------
@@ -104,10 +105,10 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 2.0
+        const val POSITION_THRESHOLD = 1.25
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.075
+        const val ROTATION_THRESHOLD = 0.06
 
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 110.0
@@ -175,28 +176,25 @@ object Constants {
 
     @Config
     object Spindexer {
-
-//        @JvmField var KP = 0.001067
-//        @JvmField var KI = 0.0
-//        @JvmField var KD = 0.0
-//
-//        @JvmField var KS_START = 0.035
-//        @JvmField var KS_STEP = 0.015
-//
-
         // External Encoder
-        @JvmField var KP = 0.0002
+        @JvmField var KP = 0.000175
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.005
+        @JvmField var KD = 0.00025
 
-        @JvmField var KS_START = 0.0
+        @JvmField var KS_START = 0.05
         @JvmField var KS_STEP = 0.0
 
-        @JvmField var MAX_POWER_RATE = 50.0
+        @JvmField var MAX_POWER_RATE = 100.0
 
-        const val POSITION_TOLERANCE_TICKS = 50
-        const val PID_TOLERANCE_TICKS = 20
-        const val VELOCITY_TOLERANCE_TPS = 10
+        @JvmField var MOTOR_TOLERANCE_TICKS = 75 // stops moving within tolerance
+        @JvmField var PID_TOLERANCE_TICKS = 100 // stops using pid within tolerance
+
+        // constant power within PID_TOLERANCE_TICKS in output position
+        @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
+
+        const val SHOOTING_TOLERANCE_TICKS = 100
+        const val DETECTION_TOLERANCE_TICKS = 150
+        const val VELOCITY_TOLERANCE_TPS = 260
         const val TICKS_PER_REV = 8192
 
         // Time required to confirm an artifact has been intaken (ms)
@@ -216,8 +214,9 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.3
-        const val LAUNCHER_TRIGGERED = 0.7
+        const val LAUNCHER_REST = 0.235
+        //Was 0.3
+        const val LAUNCHER_TRIGGERED = 0.75
     }
 
     object TransferData {
@@ -243,6 +242,6 @@ object Constants {
     }
 
     object Misc {
-        val VERBOSE_LEVEL = Verbose.INFO
+        val VERBOSE_LEVEL = Verbose.DEBUG
     }
 }

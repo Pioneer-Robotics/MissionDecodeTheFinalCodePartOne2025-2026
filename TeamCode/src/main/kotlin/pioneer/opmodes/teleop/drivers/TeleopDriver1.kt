@@ -31,7 +31,6 @@ class TeleopDriver1(
         updateFieldCentric()
         updateIntake()
         moveSpindexerManual()
-        handleCancelLastIntake()
         handleSpindexerReset()
         handleResetPose()
     }
@@ -93,14 +92,8 @@ class TeleopDriver1(
         }
         if (gamepad.left_trigger > 0.1) {
             bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
-        } else if (bot.spindexer?.manualMove == true) {
+        } else if (bot.spindexer?.manualOverride == true) {
             bot.spindexer?.moveManual(0.0)
-        }
-    }
-
-    private fun handleCancelLastIntake() {
-        if (gamepad.cross) {
-            bot.spindexer?.cancelLastIntake()
         }
     }
 

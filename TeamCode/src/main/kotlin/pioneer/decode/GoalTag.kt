@@ -7,8 +7,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import pioneer.general.AllianceColor
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
-import kotlin.math.PI
-import kotlin.math.sqrt
 
 private val tagLibrary by lazy { AprilTagGameDatabase.getDecodeTagLibrary() }
 
@@ -50,8 +48,8 @@ enum class GoalTag(
     val shootingPose: Pose
         get() =
             when (this) {
-                BLUE -> this.pose + Pose(x = -37.5, y = 32.5) // -X +Y
-                RED -> this.pose + Pose(x = 37.5, y = 32.5) // +X +Y
+                BLUE -> this.pose + Pose(x = -37.5, y = 35.5) // -X +Y
+                RED -> this.pose + Pose(x = 37.5, y = 35.5) // +X +Y
             }
 }
 
