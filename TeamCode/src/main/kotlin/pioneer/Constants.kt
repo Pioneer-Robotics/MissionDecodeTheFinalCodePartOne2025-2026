@@ -114,7 +114,7 @@ object Constants {
         const val MAX_DRIVE_VELOCITY = 110.0
 
         /** The maximum drive acceleration in cm per second squared. */
-        const val MAX_DRIVE_ACCELERATION = 30.0
+        const val MAX_DRIVE_ACCELERATION = 50.0
 
         /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
         const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
@@ -178,15 +178,15 @@ object Constants {
     object Spindexer {
         // External Encoder
         @JvmField var KP = 0.000175
-        @JvmField var KI = 0.0
-        @JvmField var KD = 0.00025
+        @JvmField var KI = 0.001
+        @JvmField var KD = 0.00045 // was 0.00025
 
-        @JvmField var KS_START = 0.05
+        @JvmField var KS_START = 0.03
         @JvmField var KS_STEP = 0.0
 
         @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 75 // stops moving within tolerance
+        @JvmField var MOTOR_TOLERANCE_TICKS = 125 // stops moving within tolerance (in outtake for magnets)
         @JvmField var PID_TOLERANCE_TICKS = 100 // stops using pid within tolerance
 
         // constant power within PID_TOLERANCE_TICKS in output position
@@ -194,7 +194,7 @@ object Constants {
 
         const val SHOOTING_TOLERANCE_TICKS = 100
         const val DETECTION_TOLERANCE_TICKS = 150
-        const val VELOCITY_TOLERANCE_TPS = 260
+        const val VELOCITY_TOLERANCE_TPS = 750
         const val TICKS_PER_REV = 8192
 
         // Time required to confirm an artifact has been intaken (ms)

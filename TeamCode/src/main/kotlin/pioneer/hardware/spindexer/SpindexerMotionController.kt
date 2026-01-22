@@ -148,7 +148,7 @@ class SpindexerMotionController(
 //            power = sign(errorTicks.toDouble()) * Constants.Spindexer.FINAL_ADJUSTMENT_POWER
 //        }
 
-        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
+        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS && target in outtakePositions) {
             power = 0.0
         }
 

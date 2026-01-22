@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
 import pioneer.helpers.Chrono
+import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
 import kotlin.math.cos
@@ -57,8 +58,7 @@ class Flywheel(
             return
         }
         val correction = motorPID.update(targetVelocity - velocity, chrono.dt)
-        flywheel.power = Constants.Flywheel.KF * targetVelocity + correction
-//        FileLogger.debug("Flywheel","Set Power: ${Constants.Flywheel.KF * targetVelocity + correction}")
+        flywheel.power = (Constants.Flywheel.KF * targetVelocity + correction).coerceIn(-1.0, 1.0)
     }
 
     // https://www.desmos.com/calculator/uofqeqqyn1

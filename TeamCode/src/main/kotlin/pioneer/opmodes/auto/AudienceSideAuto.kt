@@ -1,7 +1,6 @@
 package pioneer.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.BotType
@@ -58,7 +57,7 @@ class AudienceSideAuto : BaseOpMode() {
     private var state = State.GOTO_SHOOT
     private var collectState = CollectState.AUDIENCE
     private var launchState = LaunchState.READY
-    private var targetVelocity = 0.0
+    private var targetVelocity = 980.0
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
 
@@ -96,7 +95,7 @@ class AudienceSideAuto : BaseOpMode() {
     override fun start() {
         P = Points(bot.allianceColor)
         bot.apply{
-            pinpoint?.reset(P.START_GOAL)
+            pinpoint?.reset(P.START_FAR)
             spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
             spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
             follower.reset()
@@ -113,11 +112,12 @@ class AudienceSideAuto : BaseOpMode() {
             State.STOP -> state_stop()
         }
 
-        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
+//        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
         bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
+        telemetry.addData("Flywheel Speed", bot.flywheel?.velocity)
         telemetry.addData("Next Artifact", motifOrder.currentArtifact)
         telemetry.addData("Detected Motif", motifOrder.toString())
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
@@ -130,7 +130,7 @@ class AudienceSideAuto : BaseOpMode() {
         bot.flywheel?.velocity = targetVelocity
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
-            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR))
+            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR), 150.0)
         }
         if (bot.follower.done) { // Ending path
             bot.follower.reset()
@@ -179,7 +179,7 @@ class AudienceSideAuto : BaseOpMode() {
             }
 
             LaunchState.MOVING_TO_POSITION -> {
-                if (bot.spindexer?.reachedTarget == true) {
+                if (bot.spindexer?.reachedTarget == true && flywheelAtSpeed()) {
                     bot.launcher?.triggerLaunch()
                     launchState = LaunchState.LAUNCHING
                 }
@@ -195,13 +195,18 @@ class AudienceSideAuto : BaseOpMode() {
         }
     }
 
+    private fun flywheelAtSpeed(): Boolean {
+        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 10) &&
+                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
+    }
+
     private fun state_goto_collect() {
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer!!.moveToNextOpenIntake()
             when (collectState) {
-                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL))
-                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID))
-                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE))
+                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL), 150.0)
+                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID), 150.0)
+                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE), 150.0)
                 CollectState.DONE -> state = State.STOP
             }
         }
@@ -214,12 +219,11 @@ class AudienceSideAuto : BaseOpMode() {
 
     private fun state_collect() {
         bot.intake?.forward()
-        bot.flywheel?.velocity = 0.0
         if (!bot.follower.isFollowing) { // Starting path
             when (collectState) {
-                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 5.0)
-                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID), 5.0)
-                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE), 5.0)
+                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 6.7)
+                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID), 6.7)
+                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE), 6.7)
                 CollectState.DONE -> {}
             }
         }

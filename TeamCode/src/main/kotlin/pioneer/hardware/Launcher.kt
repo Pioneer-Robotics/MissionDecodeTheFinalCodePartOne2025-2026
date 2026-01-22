@@ -13,8 +13,8 @@ class Launcher(
     private val servoName: String = Constants.HardwareNames.LAUNCH_SERVO,
 ) : HardwareComponent {
     companion object {
-        private const val SERVO_CYCLE_TIME_MS = 500L
-        private const val RESET_THRESHOLD_MS = 100.0
+        private const val SERVO_CYCLE_TIME_MS = 400L
+        private const val RESET_THRESHOLD_MS = 0.0
     }
 
     private lateinit var launchServo: Servo

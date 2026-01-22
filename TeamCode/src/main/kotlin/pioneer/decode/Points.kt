@@ -41,20 +41,20 @@ class Points(
     val START_FAR = Pose(43.0, -157.0, theta = 0.0).T(color)
 
     val SHOOT_GOAL_CLOSE = Pose(55.0, 30.0, theta = -PI/2).T(color)
-    val SHOOT_GOAL_FAR = Pose(43.0, -145.0, theta = 0.0).T(color)
+    val SHOOT_GOAL_FAR = Pose(43.0, -140.0, theta = -PI/2).T(color)
 
     val LEAVE_POSITION = Pose(55.0, 120.0).T(color)
 
     private fun collectY(i: Int) = 30 - (i * 60.0) // 30, -30, -90
 
-    private val prepCollectX = 77.5
+    private val prepCollectX = 78.5
     private val collectTheta = -PI / 2 // Point to right
     val PREP_COLLECT_GOAL = Pose(prepCollectX, collectY(0), theta=collectTheta).T(color)
     val PREP_COLLECT_GOAL_VEL = Pose(-50.0, 0.0).T(color)
     val PREP_COLLECT_MID = Pose(prepCollectX, collectY(1), theta=collectTheta).T(color)
     val PREP_COLLECT_AUDIENCE = Pose(prepCollectX, collectY(2), theta=collectTheta).T(color)
 
-    private val collectX = 117.5
+    private val collectX = 116.5
     val COLLECT_GOAL = Pose(collectX, collectY(0), theta=collectTheta).T(color)
     val COLLECT_MID = Pose(collectX, collectY(1), theta=collectTheta).T(color)
     val COLLECT_AUDIENCE = Pose(collectX, collectY(2), theta=collectTheta).T(color)
