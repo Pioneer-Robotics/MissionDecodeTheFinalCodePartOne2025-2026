@@ -35,7 +35,7 @@ class TestingTeleop : BaseOpMode() {
         telemetry.update()
     }
 
-    override fun start() {
+    override fun onStart() {
         if (!changedAllianceColor) bot.allianceColor = Constants.TransferData.allianceColor
 //        bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerPositionTicks)
 //        bot.turret?.resetMotorPosition(Constants.TransferData.turretPositionTicks)

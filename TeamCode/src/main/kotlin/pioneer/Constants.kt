@@ -159,7 +159,7 @@ object Constants {
     object Camera {
         // Camera position constants (cm)
         val XYZ_UNITS = DistanceUnit.CM
-        val XYZ_OFFSET: List<Double> = listOf(0.0, 0.0, 0.0)
+        val XYZ_OFFSET: List<Double> = listOf(17.5, 24.0, 30.5)
 
         // Camera orientation constants (degrees)
         val RPY_UNITS = AngleUnit.DEGREES
@@ -178,7 +178,7 @@ object Constants {
     object Spindexer {
         // External Encoder
         @JvmField var KP = 0.000175
-        @JvmField var KI = 0.001
+        @JvmField var KI = 0.00001
         @JvmField var KD = 0.00045 // was 0.00025
 
         @JvmField var KS_START = 0.03
@@ -186,7 +186,7 @@ object Constants {
 
         @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 125 // stops moving within tolerance (in outtake for magnets)
+        @JvmField var MOTOR_TOLERANCE_TICKS = 75 // stops moving within tolerance (in outtake for magnets)
         @JvmField var PID_TOLERANCE_TICKS = 100 // stops using pid within tolerance
 
         // constant power within PID_TOLERANCE_TICKS in output position

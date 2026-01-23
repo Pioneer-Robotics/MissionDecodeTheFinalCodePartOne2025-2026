@@ -12,6 +12,7 @@ import pioneer.decode.Obelisk
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import pioneer.hardware.prism.Color
+import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
@@ -34,6 +35,7 @@ class AudienceSideAuto : BaseOpMode() {
         SHOOT,
         GOTO_COLLECT,
         COLLECT,
+        LEAVE,
         STOP,
     }
 
@@ -53,6 +55,7 @@ class AudienceSideAuto : BaseOpMode() {
     private val allianceToggle = Toggle(false)
     private lateinit var P: Points
     private lateinit var targetGoal: GoalTag
+    private var startLeave = true
     private var autoType = AutoOptions.ALL
     private var state = State.GOTO_SHOOT
     private var collectState = CollectState.AUDIENCE
@@ -92,7 +95,7 @@ class AudienceSideAuto : BaseOpMode() {
         }
     }
 
-    override fun start() {
+    override fun onStart() {
         P = Points(bot.allianceColor)
         bot.apply{
             pinpoint?.reset(P.START_FAR)
@@ -109,8 +112,11 @@ class AudienceSideAuto : BaseOpMode() {
             State.SHOOT -> state_shoot()
             State.GOTO_COLLECT -> state_goto_collect()
             State.COLLECT -> state_collect()
+            State.LEAVE -> state_leave()
             State.STOP -> state_stop()
         }
+
+        checkForTimeUp()
 
 //        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
         bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
@@ -124,6 +130,12 @@ class AudienceSideAuto : BaseOpMode() {
         telemetry.addData("State", state)
         telemetry.addData("Collect State", collectState)
         telemetry.addData("Launch State", launchState)
+    }
+
+    private fun checkForTimeUp() {
+        if ((30.0 - elapsedTime) < 1.5) {
+            state = State.LEAVE
+        }
     }
 
     private fun state_goto_shoot() {
@@ -243,6 +255,18 @@ class AudienceSideAuto : BaseOpMode() {
                 CollectState.GOAL -> collectState = CollectState.DONE
                 CollectState.DONE -> {}
             }
+        }
+    }
+
+    private fun state_leave() {
+        if (startLeave) {
+            bot.flywheel?.velocity = 0.0
+            bot.intake?.stop()
+            bot.follower.followPath(LinearPath(bot.pinpoint?.pose ?: Pose(), P.LEAVE_POSITION))
+            startLeave = false
+        }
+        if (bot.follower.done) {
+            bot.follower.reset()
         }
     }
 

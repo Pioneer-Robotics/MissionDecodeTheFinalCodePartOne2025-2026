@@ -112,6 +112,7 @@ class SpindexerMotionController(
     fun init() {
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        pid.integralClamp = 1_000.0
     }
 
     fun calibrateEncoder(calibrationTicks: Int = 0) {
@@ -148,8 +149,9 @@ class SpindexerMotionController(
 //            power = sign(errorTicks.toDouble()) * Constants.Spindexer.FINAL_ADJUSTMENT_POWER
 //        }
 
-        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS && target in outtakePositions) {
+        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
             power = 0.0
+            pid.reset()
         }
 
         motor.power = -power.coerceIn(-0.6, 0.6)

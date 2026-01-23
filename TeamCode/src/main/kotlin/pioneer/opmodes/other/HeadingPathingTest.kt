@@ -30,7 +30,7 @@ class HeadingPathingTest : BaseOpMode() {
                 .build()
     }
 
-    override fun start() {
+    override fun onStart() {
         bot.pinpoint!!.reset(Pose(50.0, 0.0, theta=PI/2))
     }
 

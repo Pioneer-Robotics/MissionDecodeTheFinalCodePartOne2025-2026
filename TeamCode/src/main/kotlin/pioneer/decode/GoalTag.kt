@@ -48,8 +48,8 @@ enum class GoalTag(
     val shootingPose: Pose
         get() =
             when (this) {
-                BLUE -> this.pose + Pose(x = -39.0, y = 35.0) // -X +Y
-                RED -> this.pose + Pose(x = 39.0, y = 35.0) // +X +Y
+                BLUE -> this.pose + Pose(x = -36.7, y = 32.0) // -X +Y
+                RED -> this.pose + Pose(x = 36.7, y = 32.0) // +X +Y
             }
 }
 

@@ -49,6 +49,15 @@ class Motif(
 
     fun nextMotif(): Motif? {
         return when (aprilTagId) {
+            21 -> Motif(22)
+            22 -> Motif(23)
+            23 -> Motif(21)
+            else -> null
+        }
+    }
+
+    fun prevMotif(): Motif? {
+        return when (aprilTagId) {
             21 -> Motif(23)
             22 -> Motif(21)
             23 -> Motif(22)

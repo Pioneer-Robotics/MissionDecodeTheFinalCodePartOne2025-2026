@@ -23,6 +23,7 @@ class TeleopDriver2(
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
+    private var shootingTarget = Pose()
     private var shootingArtifact = false
     var targetGoal = GoalTag.RED
     var turretAngle = 0.0
@@ -30,7 +31,6 @@ class TeleopDriver2(
     var manualFlywheelSpeed = 0.0
 
     fun update() {
-        checkTargetGoal()
         updateFlywheelSpeed()
         handleFlywheel()
         handleTurret()
@@ -39,10 +39,11 @@ class TeleopDriver2(
         updateIndicatorLED()
     }
 
-    private fun checkTargetGoal() {
+    fun onStart() {
         if (bot.allianceColor == AllianceColor.BLUE) {
             targetGoal = GoalTag.BLUE
-        } else { return }
+        }
+        shootingTarget = targetGoal.shootingPose
     }
 
     private fun updateFlywheelSpeed() {
@@ -131,8 +132,11 @@ class TeleopDriver2(
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
             bot.turret?.autoTrack(
                 bot.pinpoint?.pose ?: Pose(),
-                targetGoal.shootingPose,
+                shootingTarget,
             )
+        }
+        if (abs(gamepad.right_stick_x) > 0.02) {
+            shootingTarget = shootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 10.0)
         }
     }
 

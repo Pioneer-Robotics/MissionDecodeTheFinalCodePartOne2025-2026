@@ -7,6 +7,7 @@ import pioneer.BotType
 import pioneer.Constants
 import pioneer.general.AllianceColor
 import pioneer.hardware.prism.Color
+import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
@@ -44,10 +45,9 @@ class Teleop : BaseOpMode() {
         telemetry.update()
     }
 
-    override fun start() {
+    override fun onStart() {
         if (!changedAllianceColor) bot.allianceColor = Constants.TransferData.allianceColor
-//        bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerPositionTicks)
-//        bot.turret?.resetMotorPosition(Constants.TransferData.turretPositionTicks)
+        driver2.onStart()
     }
 
     override fun onLoop() {
@@ -75,6 +75,9 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.DEBUG)
         addTelemetryData("Spindexer State", bot.spindexer?.motorState, Verbose.INFO)
+
+        addTelemetryData("Relative Tag Pose", Pose(driver1.detection?.ftcPose?.x ?: 0.0, driver1.detection?.ftcPose?.y ?: 0.0), Verbose.FATAL)
+        addTelemetryData("Robot Pose Tag", driver1.robotPoseTag, Verbose.FATAL)
 
         addTelemetryData("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks, Verbose.DEBUG)
         addTelemetryData("Spindexer Ticks", bot.spindexer?.currentMotorTicks, Verbose.DEBUG)

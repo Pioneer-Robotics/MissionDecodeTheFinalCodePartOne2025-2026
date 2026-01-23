@@ -2,6 +2,7 @@ package pioneer.opmodes
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
 import pioneer.Constants
 import pioneer.hardware.MecanumBase
@@ -22,8 +23,10 @@ abstract class BaseOpMode : OpMode() {
         com.acmerobotics.dashboard.FtcDashboard
             .getInstance()
 
+    val run_timer = ElapsedTime()
+
     val elapsedTime: Double
-        get() = getRuntime()
+        get() = run_timer.seconds()
 
     final override fun init() {
         onInit() // Call user-defined init method
@@ -38,6 +41,11 @@ abstract class BaseOpMode : OpMode() {
         bot.pinpoint?.reset(Constants.TransferData.pose)
         bot.turret?.resetMotorPosition(Constants.TransferData.turretMotorTicks)
         bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerMotorTicks)
+    }
+
+    final override fun start() {
+        onStart()
+        run_timer.reset()
     }
 
     final override fun loop() {
@@ -88,6 +96,8 @@ abstract class BaseOpMode : OpMode() {
 
     // These functions are meant to be overridden in subclasses
     protected open fun onInit() {}
+
+    protected open fun onStart() {}
 
     protected open fun onLoop() {}
 
