@@ -23,12 +23,16 @@ class TeleopDriver2(
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
-    private var shootingTarget = Pose()
+    private var tagShootingTarget = Pose() //Shooting target from goal tag class
+    private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
+    private var finalShootingTarget = Pose() //Final target that the turret tracks
     private var shootingArtifact = false
+    var useAutoTrackOffset = false
     var targetGoal = GoalTag.RED
     var turretAngle = 0.0
     var flywheelSpeed = 0.0
     var manualFlywheelSpeed = 0.0
+    var flywheelSpeedOffset = 0.0
 
     fun update() {
         updateFlywheelSpeed()
@@ -43,7 +47,15 @@ class TeleopDriver2(
         if (bot.allianceColor == AllianceColor.BLUE) {
             targetGoal = GoalTag.BLUE
         }
-        shootingTarget = targetGoal.shootingPose
+        tagShootingTarget = targetGoal.shootingPose
+        offsetShootingTarget = tagShootingTarget
+    }
+
+    fun resetTurretOffsets(){
+        flywheelSpeedOffset = 0.0
+        useAutoTrackOffset = false
+        offsetShootingTarget = tagShootingTarget
+        //TODO Sync with driver 1 reset pose
     }
 
     private fun updateFlywheelSpeed() {
@@ -57,7 +69,17 @@ class TeleopDriver2(
             }
             flywheelSpeed = manualFlywheelSpeed
         } else {
-            flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), targetGoal.shootingPose, targetGoal.shootingHeight)
+            if (gamepad.dpad_up){
+                flywheelSpeedOffset += 10.0
+            }
+            if (gamepad.dpad_down){
+                flywheelSpeedOffset -= 10.0
+            }
+            if (gamepad.left_stick_button) {
+                flywheelSpeedOffset = 0.0
+            }
+
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), tagShootingTarget, targetGoal.shootingHeight) + flywheelSpeedOffset
         }
     }
 
@@ -132,11 +154,21 @@ class TeleopDriver2(
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
             bot.turret?.autoTrack(
                 bot.pinpoint?.pose ?: Pose(),
-                shootingTarget,
+                finalShootingTarget,
             )
         }
         if (abs(gamepad.right_stick_x) > 0.02) {
-            shootingTarget = shootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 10.0)
+            useAutoTrackOffset = true
+            offsetShootingTarget = offsetShootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 15.0)
+        }
+        if (gamepad.right_stick_button){
+            useAutoTrackOffset = false
+            offsetShootingTarget = tagShootingTarget
+        }
+        if (useAutoTrackOffset){
+            finalShootingTarget = offsetShootingTarget
+        } else {
+            finalShootingTarget = tagShootingTarget
         }
     }
 

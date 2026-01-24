@@ -214,9 +214,13 @@ object Constants {
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.235
+//        const val LAUNCHER_REST = 0.235
+//        //Was 0.3
+//        const val LAUNCHER_TRIGGERED = 0.75
+
+        const val LAUNCHER_REST = 0.47
         //Was 0.3
-        const val LAUNCHER_TRIGGERED = 0.75
+        const val LAUNCHER_TRIGGERED = 0.235
     }
 
     object TransferData {

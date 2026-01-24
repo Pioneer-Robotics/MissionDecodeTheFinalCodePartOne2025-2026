@@ -67,12 +67,16 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.INFO)
         addTelemetryData("Pose", bot.pinpoint!!.pose, Verbose.DEBUG)
         addTelemetryData("Artifacts", bot.spindexer?.artifacts.contentDeepToString(), Verbose.INFO)
+
         addTelemetryData("Turret Mode", bot.turret?.mode, Verbose.INFO)
+        addTelemetryData("Use Auto Track Offset", driver2.useAutoTrackOffset, Verbose.DEBUG)
+        addTelemetryData("Flywheel Speed Offset", driver2.flywheelSpeedOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Target Speed", driver2.flywheelSpeed, Verbose.DEBUG)
         addTelemetryData("Flywheel TPS", bot.flywheel?.velocity, Verbose.DEBUG)
         addTelemetryData("Turret Angle", driver2.turretAngle, Verbose.DEBUG)
-        addTelemetryData("Turret Target Ticks", bot.turret?.targetTicks, Verbose.DEBUG)
-        addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
+//        addTelemetryData("Turret Target Ticks", bot.turret?.targetTicks, Verbose.DEBUG)
+//        addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
+
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.DEBUG)
         addTelemetryData("Spindexer State", bot.spindexer?.motorState, Verbose.INFO)
 
