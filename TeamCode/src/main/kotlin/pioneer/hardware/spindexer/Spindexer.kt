@@ -68,6 +68,7 @@ class Spindexer(
     // --- Update Loop --- //
     override fun update() {
         motion.update()
+        motion.manualOverride = this.manualOverride
         checkForArtifact()
     }
 

@@ -6,6 +6,7 @@ import pioneer.Bot
 import pioneer.Constants
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
+import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import kotlin.math.PI
@@ -93,6 +94,7 @@ class TeleopDriver1(
     }
 
     private fun moveSpindexerManual() {
+//        FileLogger.debug("Teleop Driver 1", "Manual override = ${bot.spindexer?.manualOverride}")
         if (gamepad.right_trigger > 0.1) {
             bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
         }

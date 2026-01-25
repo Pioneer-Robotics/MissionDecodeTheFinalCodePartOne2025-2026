@@ -159,7 +159,7 @@ class TeleopDriver2(
         }
         if (abs(gamepad.right_stick_x) > 0.02) {
             useAutoTrackOffset = true
-            offsetShootingTarget = offsetShootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 15.0)
+            offsetShootingTarget = offsetShootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 17.5)
         }
         if (gamepad.right_stick_button){
             useAutoTrackOffset = false

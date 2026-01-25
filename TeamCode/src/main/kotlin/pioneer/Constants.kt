@@ -198,7 +198,7 @@ object Constants {
         const val TICKS_PER_REV = 8192
 
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 25
+        const val CONFIRM_INTAKE_MS = 67.0
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10
