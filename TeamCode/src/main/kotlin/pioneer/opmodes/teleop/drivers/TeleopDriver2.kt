@@ -1,47 +1,38 @@
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
+import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
-import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import pioneer.hardware.Turret
+import pioneer.hardware.prism.Color
 import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
-import pioneer.helpers.next
-import java.lang.Math.pow
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.pow
+import kotlin.math.*
 
 class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
-    enum class FlywheelSpeed(
-        val velocity: Double,
-    ) {
-        SHORT_RANGE(800.0),
-        LONG_RANGE(1000.0),
-    }
-
     private val chrono = Chrono(autoUpdate = false)
     private val isAutoTracking = Toggle(false)
+    private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
-    private val changeFlywheelSpeedToggle = Toggle(false)
-
-    var P = Points(bot.allianceColor)
-
-    enum class ShootState { READY, MOVING_TO_POSITION, LAUNCHING }
-
-    var flywheelVelocityEnum = FlywheelSpeed.SHORT_RANGE
-    var shootState = ShootState.READY
-    var targetGoal = Pose()
-    private var shootingAll = false
-    private var remainingShots = 0
+    private val launchToggle = Toggle(false)
+    private val launchPressedTimer = ElapsedTime()
+    private var tagShootingTarget = Pose() //Shooting target from goal tag class
+    private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
+    private var finalShootingTarget = Pose() //Final target that the turret tracks
+    private var shootingArtifact = false
+    var useAutoTrackOffset = false
+    var targetGoal = GoalTag.RED
     var turretAngle = 0.0
+    var flywheelSpeed = 0.0
+    var manualFlywheelSpeed = 0.0
+    var flywheelSpeedOffset = 0.0
 
     fun update() {
         updateFlywheelSpeed()
@@ -49,27 +40,53 @@ class TeleopDriver2(
         handleTurret()
         handleShootInput()
         processShooting()
-        chrono.update() // Manual update to allow dt to match across the loop.
+        updateIndicatorLED()
+    }
+
+    fun onStart() {
+        if (bot.allianceColor == AllianceColor.BLUE) {
+            targetGoal = GoalTag.BLUE
+        }
+        tagShootingTarget = targetGoal.shootingPose
+        offsetShootingTarget = tagShootingTarget
+    }
+
+    fun resetTurretOffsets(){
+        flywheelSpeedOffset = 0.0
+        useAutoTrackOffset = false
+        offsetShootingTarget = tagShootingTarget
+        //TODO Sync with driver 1 reset pose
     }
 
     private fun updateFlywheelSpeed() {
-//        if (flywheelSpeed < 1.0 && gamepad.dpad_up) {
-//            flywheelSpeed += chrono.dt * 0.5
-//        }
-//        if (flywheelSpeed > 0.0 && gamepad.dpad_down) {
-//            flywheelSpeed -= chrono.dt * 0.5
-//        }
-//        flywheelSpeed = flywheelSpeed.coerceIn(0.0, 1.0)
-        changeFlywheelSpeedToggle.toggle(gamepad.dpad_up)
-        if (changeFlywheelSpeedToggle.justChanged) {
-            flywheelVelocityEnum = flywheelVelocityEnum.next()
+        isEstimatingSpeed.toggle(gamepad.dpad_left)
+        if (!isEstimatingSpeed.state){
+            if (gamepad.dpad_up){
+                manualFlywheelSpeed += 50.0
+            }
+            if (gamepad.dpad_down){
+                manualFlywheelSpeed -= 50.0
+            }
+            flywheelSpeed = manualFlywheelSpeed
+        } else {
+            if (gamepad.dpad_up){
+                flywheelSpeedOffset += 10.0
+            }
+            if (gamepad.dpad_down){
+                flywheelSpeedOffset -= 10.0
+            }
+            if (gamepad.left_stick_button) {
+                flywheelSpeedOffset = 0.0
+            }
+
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), tagShootingTarget, targetGoal.shootingHeight) + flywheelSpeedOffset
         }
     }
 
     private fun handleFlywheel() {
-        flywheelToggle.toggle(gamepad.dpad_left)
+        flywheelToggle.toggle(gamepad.dpad_right)
         if (flywheelToggle.state) {
-            bot.flywheel?.velocity = flywheelVelocityEnum.velocity
+            bot.flywheel?.velocity = flywheelSpeed
         } else {
             bot.flywheel?.velocity = 0.0
         }
@@ -82,46 +99,31 @@ class TeleopDriver2(
     }
 
     private fun handleShootInput() {
-        if (shootState == ShootState.READY && !shootingAll) {
-            when {
-                gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
-                gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
-                gamepad.triangle -> shootArtifact()
-//                gamepad.touchpad -> startShootingAll()
-//                gamepad.touchpad -> startShootingAll()
-            }
+        when {
+            gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
+            gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
+            gamepad.triangle -> shootArtifact()
         }
     }
 
     private fun processShooting() {
-//        when (shootState) {
-//            ShootState.MOVING_TO_POSITION -> {
-//                if (bot.spindexer?.reachedTarget == true) {
-//                    bot.launcher?.triggerLaunch()
-//                    bot.spindexer?.popCurrentArtifact()
-//                    shootState = ShootState.LAUNCHING
-//                }
-//            }
-//            ShootState.LAUNCHING -> {
-//                if (bot.launcher?.isReset == true) {
-//                    if (shootingAll && remainingShots > 0) {
-//                        shootNextForAll()
-//                    } else {
-//                        shootState = ShootState.READY
-//                        shootingAll = false
-//                    }
-//                }
-//            }
-//            else -> {}
-//        }
+        if (shootingArtifact && bot.launcher?.isReset == true ) {
+            shootingArtifact = false
+            bot.spindexer?.popCurrentArtifact()
+        }
         if (!flywheelToggle.state) return
-        if (gamepad.square &&
-            bot.spindexer?.reachedTarget == true &&
+        launchToggle.toggle(gamepad.square)
+        if (launchToggle.justChanged &&
+            bot.spindexer?.withinDetectionTolerance == true &&
             bot.spindexer?.isOuttakePosition == true
         ) {
             bot.launcher?.triggerLaunch()
-            bot.spindexer?.popCurrentArtifact()
+            shootingArtifact = true
+        } else if (launchToggle.justChanged && launchPressedTimer.seconds() < 0.5) {
+            bot.launcher?.triggerLaunch()
+            shootingArtifact = true
         }
+        if (launchToggle.justChanged) launchPressedTimer.reset()
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {
@@ -133,37 +135,13 @@ class TeleopDriver2(
             } else {
                 bot.spindexer?.moveToNextOuttake()
             }
-//        if (moved == true) shootState = ShootState.MOVING_TO_POSITION
     }
-
-//    private fun startShootingAll() {
-//        shootingAll = true
-//        remainingShots = bot.spindexer?.numStoredArtifacts ?: 0
-//        if (remainingShots > 0) {
-//            shootNextForAll()
-//        } else {
-//            shootingAll = false
-//        }
-//    }
-
-//    private fun shootNextForAll() {
-//        if (remainingShots > 0) {
-//            remainingShots--
-//            shootArtifact()
-//            shootState = ShootState.MOVING_TO_POSITION
-//        } else {
-//            shootingAll = false
-//            shootState = ShootState.READY
-//        }
-//    }
 
     private fun handleManualTrack() {
         if (abs(gamepad.right_stick_x) > 0.02) {
-            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * chrono.dt * 2.5
-            turretAngle.coerceIn(
-                -PI,
-                PI,
-            ) // FIX: This will break if the turret has a different range. Try to hand off this to the Turret class
+//            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * chrono.dt/1000.0
+            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) / 10.0
+
         }
 
         if (gamepad.right_stick_button) {
@@ -174,21 +152,39 @@ class TeleopDriver2(
 
     private fun handleAutoTrack() {
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
-            if (bot.allianceColor == AllianceColor.RED) {
-                targetGoal = GoalTag.RED.pose
-            } else {
-                targetGoal = GoalTag.BLUE.pose
-            }
             bot.turret?.autoTrack(
                 bot.pinpoint?.pose ?: Pose(),
-                if (bot.allianceColor ==
-                    AllianceColor.BLUE
-                ) {
-                    GoalTag.BLUE.shootingPose
-                } else {
-                    GoalTag.RED.shootingPose
-                },
+                finalShootingTarget,
             )
+        }
+        if (abs(gamepad.right_stick_x) > 0.02) {
+            useAutoTrackOffset = true
+            offsetShootingTarget = offsetShootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 17.5)
+        }
+        if (gamepad.right_stick_button){
+            useAutoTrackOffset = false
+            offsetShootingTarget = tagShootingTarget
+        }
+        if (useAutoTrackOffset){
+            finalShootingTarget = offsetShootingTarget
+        } else {
+            finalShootingTarget = tagShootingTarget
+        }
+    }
+
+    private fun updateIndicatorLED() {
+        bot.flywheel?.velocity?.let {
+            if (abs(flywheelSpeed - it) < 20.0) {
+                bot.led?.setColor(Color.GREEN)
+                gamepad.setLedColor(0.0, 1.0, 0.0, -1)
+            } else if (it < flywheelSpeed - 20.0){
+                bot.led?.setColor(Color.YELLOW)
+                gamepad.setLedColor(255.0,165.0,0.0, -1)
+            }
+            else {
+                bot.led?.setColor(Color.RED)
+                gamepad.setLedColor(1.0, 0.0, 0.0, -1)
+            }
         }
     }
 }

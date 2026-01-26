@@ -89,4 +89,8 @@ object MathUtils {
 
         return YawPitchRollAngles(AngleUnit.RADIANS, yaw, pitch, roll, 0)
     }
+
+    fun lerp(x1: Double, x2: Double, t: Double) : Double {
+        return x1 + (x2-x1) * t
+    }
 }

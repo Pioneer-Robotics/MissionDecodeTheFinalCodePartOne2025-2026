@@ -49,7 +49,7 @@ class ThreeWheelOdometry(
     override val encoderYTicks: Int
         get() = prevCenterTicks
 
-    override fun update(dt: Double) {
+    override fun update() {
         // Get current encoder values
         val dLeftCM = odoLeft.toCentimeters()
         val dRightCM = odoRight.toCentimeters()

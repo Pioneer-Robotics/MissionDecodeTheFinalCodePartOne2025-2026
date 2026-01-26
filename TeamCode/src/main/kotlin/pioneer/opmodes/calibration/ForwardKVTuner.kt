@@ -8,7 +8,7 @@ import pioneer.BotType
 import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode
 
-@Disabled
+//@Disabled
 @Autonomous(name = "Forward KV Tuner", group = "Calibration")
 class ForwardKVTuner : BaseOpMode() {
     override fun onInit() {

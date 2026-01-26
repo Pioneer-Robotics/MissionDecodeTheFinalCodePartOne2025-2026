@@ -7,10 +7,11 @@ import pioneer.hardware.Camera
 import pioneer.hardware.Flywheel
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.Intake
+import pioneer.hardware.LED
 import pioneer.hardware.LaunchServos
 import pioneer.hardware.Launcher
 import pioneer.hardware.MecanumBase
-import pioneer.hardware.Spindexer
+import pioneer.hardware.spindexer.Spindexer
 import pioneer.hardware.Turret
 import pioneer.localization.localizers.Pinpoint
 import pioneer.pathing.follower.Follower
@@ -50,20 +51,19 @@ class Bot private constructor(
     val batteryMonitor get() = get<BatteryMonitor>()
     val spindexer get() = get<Spindexer>()
     val launcher get() = get<Launcher>()
+    val led get() = get<LED>()
 
     // Follower is lazily initialized (only if accessed)
     // and will error if localizer or mecanumBase is missing
     val follower: Follower by lazy {
         Follower(
             localizer = pinpoint!!,
-            mecanumBase = mecanumBase!!,
+            drive = mecanumBase!!,
         )
     }
 
-    fun updateAll(dt: Double) {
+    fun updateAll() {
         hardwareComponents.values.forEach { it.update() }
-        pinpoint?.update(dt)
-        // TODO: Add other update methods (ie. localizer, follower)
     }
 
     // Companion for builder and fromType
@@ -99,6 +99,7 @@ class Bot private constructor(
                         .add(Turret(hardwareMap))
                         .add(Spindexer(hardwareMap))
                         .add(Launcher(hardwareMap))
+                        //.add(LED(hardwareMap))
                         .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
                         .add(BatteryMonitor(hardwareMap))
                         .build()

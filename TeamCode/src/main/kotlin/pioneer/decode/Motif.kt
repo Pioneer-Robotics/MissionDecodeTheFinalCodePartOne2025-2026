@@ -16,17 +16,17 @@ class Motif(
     // Returns the next artifact in the motif's sequence, cycling back to the start if needed
     fun getNextArtifact(): Artifact? {
         if (artifacts.isEmpty()) return null
-
         val artifact = artifacts[currentIndex]
         currentIndex = (currentIndex + 1) % artifacts.size
         return artifact
     }
 
     // Returns the current artifact without advancing the index
-    fun currentArtifact(): Artifact? {
-        if (artifacts.isEmpty()) return null
-        return artifacts[currentIndex]
-    }
+    val currentArtifact: Artifact?
+        get() {
+            if (artifacts.isEmpty()) return null
+            return artifacts[currentIndex]
+        }
 
     // Returns the artifact at a specific position in the pattern (0-indexed)
     fun getArtifactAt(index: Int): Artifact? {
@@ -45,6 +45,24 @@ class Motif(
 
     fun reset() {
         currentIndex = 0
+    }
+
+    fun nextMotif(): Motif? {
+        return when (aprilTagId) {
+            21 -> Motif(22)
+            22 -> Motif(23)
+            23 -> Motif(21)
+            else -> null
+        }
+    }
+
+    fun prevMotif(): Motif? {
+        return when (aprilTagId) {
+            21 -> Motif(23)
+            22 -> Motif(21)
+            23 -> Motif(22)
+            else -> null
+        }
     }
 
     override fun toString(): String = getPattern().toString()

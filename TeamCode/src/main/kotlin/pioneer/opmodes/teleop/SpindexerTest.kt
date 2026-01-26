@@ -3,7 +3,7 @@ package pioneer.opmodes.teleop
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.decode.Artifact
-import pioneer.hardware.Spindexer
+import pioneer.hardware.spindexer.Spindexer
 import pioneer.opmodes.BaseOpMode
 
 // Controls:
@@ -30,11 +30,10 @@ class SpindexerTest : BaseOpMode() {
 
         bot.spindexer!!.update()
 
-        telemetry.addData("Current Position", bot.spindexer!!.currentMotorPosition)
-        telemetry.addData("Target Position", bot.spindexer!!.targetMotorPosition)
+        telemetry.addData("Current Position", bot.spindexer!!.currentMotorTicks)
+        telemetry.addData("Target Position", bot.spindexer!!.targetMotorTicks)
         telemetry.addData("Spindexer Position", bot.spindexer!!.motorState.toString())
         telemetry.addData("Artifacts", bot.spindexer!!.artifacts.contentDeepToString())
-        telemetry.addData("Current Scanned Artifact", bot.spindexer!!.currentScannedArtifact)
         telemetry.addData("Reached Target", bot.spindexer!!.reachedTarget)
     }
 }

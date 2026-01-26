@@ -5,7 +5,9 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
+import pioneer.opmodes.BaseOpMode.Verbose
 import kotlin.math.PI
 
 object Constants {
@@ -38,6 +40,7 @@ object Constants {
         // Other
         const val WEBCAM = "Webcam 1"
         const val INTAKE_SENSOR = "intakeSensor"
+        const val LED_DRIVER = "prism"
     }
 
     // -------- Odometry (3-wheel) --------
@@ -61,8 +64,7 @@ object Constants {
 
         // limits
         const val MAX_MOTOR_VELOCITY_TPS = 2500.0
-        const val MAX_FWD_VEL_CMPS = 150.0
-        const val MAX_STRAFE_VEL_CMPS = 125.0
+        const val MAX_DRIVE_VEL_CMPS = 150.0
         const val DEFAULT_POWER = 0.7
 
         // Feedforward gains using Pose(x,y,theta)
@@ -74,8 +76,8 @@ object Constants {
 //        @JvmField var kAT = 0.0
 
         val kV = Pose(x = 0.0063, y = 0.0055, theta = -0.147)
-        val kA = Pose(x = 0.0025, y = 0.001, theta = 0.0)
-        val kS = Pose(x = 0.0, y = 0.0, theta = 0.0)
+        val kA = Pose(x = 0.00125, y = 0.001, theta = 0.0)
+        val kS = Pose(x = 0.11, y = 0.06, theta = 0.0)
 
         val MOTOR_CONFIG =
             mapOf(
@@ -103,13 +105,13 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 0.5
+        const val POSITION_THRESHOLD = 1.25
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.05
+        const val ROTATION_THRESHOLD = 0.06
 
         /** The maximum drive velocity in cm per second. */
-        const val MAX_DRIVE_VELOCITY = 100.0
+        const val MAX_DRIVE_VELOCITY = 110.0
 
         /** The maximum drive acceleration in cm per second squared. */
         const val MAX_DRIVE_ACCELERATION = 50.0
@@ -123,32 +125,41 @@ object Constants {
         /** The maximum angular acceleration in rad per second squared. */
         const val MAX_ANGULAR_ACCELERATION = 10.0
 
+        // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 10.0
-
+        @JvmField var X_KP = 5.0 // was 7.0
         @JvmField var X_KI = 0.0
-
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 10.0
-
+        @JvmField var Y_KP = 5.0 // was 7.0
         @JvmField var Y_KI = 0.0
-
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 0.5
-
+        @JvmField var THETA_KP = 3.0 // was 5.0
         @JvmField var THETA_KI = 0.0
-
         @JvmField var THETA_KD = 0.0
+
+        // --- Position PID coefficients tuned for final pose correction ---
+        @JvmField var POS_X_KP = 0.0
+        @JvmField var POS_X_KI = 0.0
+        @JvmField var POS_X_KD = 0.0
+
+        @JvmField var POS_Y_KP = 0.0
+        @JvmField var POS_Y_KI = 0.0
+        @JvmField var POS_Y_KD = 0.0
+
+        @JvmField var POS_THETA_KP = 0.0
+        @JvmField var POS_THETA_KI = 0.0
+        @JvmField var POS_THETA_KD = 0.0
+
     }
 
     object Camera {
         // Camera position constants (cm)
         val XYZ_UNITS = DistanceUnit.CM
-        val XYZ_OFFSET: List<Double> = listOf(0.0, 0.0, 0.0)
+        val XYZ_OFFSET: List<Double> = listOf(17.5, 24.0, 30.5)
 
         // Camera orientation constants (degrees)
         val RPY_UNITS = AngleUnit.DEGREES
@@ -165,22 +176,29 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.00045
+        // External Encoder
+        @JvmField var KP = 0.000175
+        @JvmField var KI = 0.00001
+        @JvmField var KD = 0.00045 // was 0.00025
 
-        @JvmField var KI = 0.0
+        @JvmField var KS_START = 0.03
+        @JvmField var KS_STEP = 0.0
 
-        @JvmField var KD = 0.025
+        @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var KS = 0.075
+        @JvmField var MOTOR_TOLERANCE_TICKS = 75 // stops moving within tolerance (in outtake for magnets)
+        @JvmField var PID_TOLERANCE_TICKS = 100 // stops using pid within tolerance
 
-        @JvmField var MAX_POWER_RATE = 5.0
+        // constant power within PID_TOLERANCE_TICKS in output position
+        @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
 
-        const val POSITION_TOLERANCE_TICKS = 200
+        const val SHOOTING_TOLERANCE_TICKS = 100
+        const val DETECTION_TOLERANCE_TICKS = 150
+        const val VELOCITY_TOLERANCE_TPS = 750
         const val TICKS_PER_REV = 8192
 
-        // TODO: Tune these values when we test on the real hardware
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 50
+        const val CONFIRM_INTAKE_MS = 67.0
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10
@@ -188,12 +206,46 @@ object Constants {
 
     object Turret {
         const val TICKS_PER_REV = 384.5 * 3
-        const val HEIGHT = 0.0 // TODO MEASURE
+        const val HEIGHT = 30.48
         const val THETA = 0.93
+        const val ANGLE_TOLERANCE_RADIANS = 0.075
+        const val LAUNCH_TIME = 0.125
+        const val OFFSET = -10.0
     }
 
     object ServoPositions {
-        const val LAUNCHER_REST = 0.067
-        const val LAUNCHER_TRIGGERED = 0.315
+//        const val LAUNCHER_REST = 0.235
+//        //Was 0.3
+//        const val LAUNCHER_TRIGGERED = 0.75
+
+        const val LAUNCHER_REST = 0.47
+        //Was 0.3
+        const val LAUNCHER_TRIGGERED = 0.235
+    }
+
+    object TransferData {
+        fun reset() {
+            allianceColor = AllianceColor.NEUTRAL
+            pose = Pose()
+            turretMotorTicks = 0
+            spindexerMotorTicks = 0
+        }
+
+        var allianceColor = AllianceColor.NEUTRAL
+        var pose = Pose()
+        var turretMotorTicks = 0
+        var spindexerMotorTicks = 0
+    }
+
+    @Config
+    object Flywheel {
+        @JvmField var KP = 0.0075
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.0
+        @JvmField var KF = 0.000415
+    }
+
+    object Misc {
+        val VERBOSE_LEVEL = Verbose.DEBUG
     }
 }

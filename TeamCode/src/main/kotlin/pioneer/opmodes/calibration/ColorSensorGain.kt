@@ -1,17 +1,15 @@
 package pioneer.opmodes.calibration
 
 import android.icu.text.DecimalFormat
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.decode.Artifact
 import pioneer.hardware.RevColorSensor
 
-@Disabled
+//@Disabled
 @TeleOp(name = "Color Sensor Gain Calibration")
 class ColorSensorGain : OpMode() {
     private lateinit var sensor: RevColorSensor
-    private val formatter = DecimalFormat("###.##")
     private var gain: Float = 3.0f
 
     override fun init() {
@@ -23,9 +21,12 @@ class ColorSensorGain : OpMode() {
             when {
                 // Purple 165-240
                 // Green 150-163
-                sensor.distance > 15.0 -> null
-                sensor.hue < 175 && sensor.hue > 150 -> Artifact.GREEN
-                sensor.hue < 240 && sensor.hue > 175 -> Artifact.PURPLE
+                sensor.distance > 20.0 -> null
+//                sensor.hue < 175 && sensor.hue > 150 -> Artifact.GREEN
+//                sensor.hue < 240 && sensor.hue > 175 -> Artifact.PURPLE
+//                sensor.distance > 8.0 -> null
+                sensor.hue < 170 && sensor.hue > 130 -> Artifact.GREEN
+                sensor.hue < 250 && sensor.hue > 170 -> Artifact.PURPLE
                 else -> null
             }
 

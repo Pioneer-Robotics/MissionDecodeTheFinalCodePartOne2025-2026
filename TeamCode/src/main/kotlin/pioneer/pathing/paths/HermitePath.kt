@@ -16,6 +16,7 @@ class HermitePath(
     override var endPose: Pose,
     startVelocity: Pose = Pose(),
     endVelocity: Pose = Pose(),
+    override var headingInterpolationMode: Path.HeadingInterpolationMode = Path.HeadingInterpolationMode.LINEAR
 ) : Path {
     // Hermite basis functions
     private val basis00 = Polynomial(arrayOf(1.0, 0.0, -3.0, 2.0))
@@ -61,12 +62,14 @@ class HermitePath(
         Pose(
             x = xHermite.eval(t),
             y = yHermite.eval(t),
+            theta = getHeadingTarget(t),
         )
 
     override fun getPose(t: Double): Pose =
         Pose(
             x = xHermite.eval(t),
             y = yHermite.eval(t),
+            theta = getHeadingTarget(t),
             vx = xHermite.nDerEval(t, 1),
             vy = yHermite.nDerEval(t, 1),
             ax = xHermite.nDerEval(t, 2),

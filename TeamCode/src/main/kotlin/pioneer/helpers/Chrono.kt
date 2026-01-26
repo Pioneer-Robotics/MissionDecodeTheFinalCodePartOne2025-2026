@@ -14,7 +14,7 @@ import kotlin.time.TimeSource
 class Chrono(
     private val autoUpdate: Boolean = true,
     private val source: TimeSource = TimeSource.Monotonic,
-    private val units: DurationUnit = DurationUnit.SECONDS,
+    private val units: DurationUnit = DurationUnit.MILLISECONDS,
 ) {
     private var last = source.markNow()
 

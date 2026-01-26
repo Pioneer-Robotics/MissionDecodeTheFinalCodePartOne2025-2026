@@ -1,15 +1,15 @@
-package pioneer.opmodes.auto
+package pioneer.opmodes.other
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import pioneer.Bot
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
+import kotlin.math.PI
 
-@Disabled
+//@Disabled
 @Autonomous(name = "Heading Pathing Test", group = "Testing")
 class HeadingPathingTest : BaseOpMode() {
     enum class State {
@@ -30,6 +30,10 @@ class HeadingPathingTest : BaseOpMode() {
                 .build()
     }
 
+    override fun onStart() {
+        bot.pinpoint!!.reset(Pose(50.0, 0.0, theta=PI/2))
+    }
+
     override fun onLoop() {
         when (state) {
             State.INIT -> state_init()
@@ -41,24 +45,23 @@ class HeadingPathingTest : BaseOpMode() {
     }
 
     private fun state_init() {
-        bot.pinpoint!!.reset(Pose(0.0, 0.0))
-        bot.follower.path =
+        bot.follower.followPath(
             LinearPath(
-                Pose(x = 0.0, y = 0.0, theta = 0.0),
+                bot.pinpoint!!.pose,
                 Pose(x = 0.0, y = 100.0, theta = 3.14),
             )
-        bot.follower.start()
+        )
         state = State.FORWARD
     }
 
     private fun state_forward() {
         if (bot.follower.done) {
-            bot.follower.path =
+            bot.follower.followPath(
                 LinearPath(
                     bot.pinpoint!!.pose,
                     Pose(x = 0.0, y = 0.0, theta = 0.0),
                 )
-            bot.follower.start()
+            )
             state = State.BACKWARD
         }
     }

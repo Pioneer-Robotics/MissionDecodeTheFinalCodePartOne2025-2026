@@ -2,10 +2,12 @@ package pioneer.opmodes
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
+import pioneer.Constants
 import pioneer.hardware.MecanumBase
-import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
+import pioneer.helpers.Pose
 import pioneer.localization.localizers.Pinpoint
 
 // Base OpMode class to be extended by all user-defined OpModes
@@ -21,13 +23,10 @@ abstract class BaseOpMode : OpMode() {
         com.acmerobotics.dashboard.FtcDashboard
             .getInstance()
 
-    // Tracker and getter for dt
-    protected val chrono = Chrono()
-    protected val dt: Double
-        get() = chrono.dt
+    val run_timer = ElapsedTime()
 
     val elapsedTime: Double
-        get() = getRuntime()
+        get() = run_timer.seconds()
 
     final override fun init() {
         onInit() // Call user-defined init method
@@ -36,19 +35,29 @@ abstract class BaseOpMode : OpMode() {
             throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
         }
         updateTelemetry()
+
+        // Transfer data
+        bot.allianceColor = Constants.TransferData.allianceColor
+        bot.pinpoint?.reset(Constants.TransferData.pose)
+        bot.turret?.resetMotorPosition(Constants.TransferData.turretMotorTicks)
+        bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerMotorTicks)
+    }
+
+    final override fun start() {
+        onStart()
+        run_timer.reset()
     }
 
     final override fun loop() {
         // Update bot systems
-        bot.updateAll(dt)
+        bot.updateAll()
 
         // Call user-defined loop logic
         onLoop()
 
         // Update path follower
         if (bot.has<Pinpoint>() && bot.has<MecanumBase>()) {
-            bot.follower.update(dt)
-            telemetry.addLine("Updated follower")
+            bot.follower.update()
         }
 
         // Automatically handle telemetry updates
@@ -56,9 +65,27 @@ abstract class BaseOpMode : OpMode() {
     }
 
     final override fun stop() {
+        // Transfer data
+        Constants.TransferData.allianceColor = bot.allianceColor
+        Constants.TransferData.pose = bot.pinpoint?.pose ?: Pose()
+        Constants.TransferData.turretMotorTicks = bot.turret?.currentTicks ?: 0
+        Constants.TransferData.spindexerMotorTicks = bot.spindexer?.currentMotorTicks ?: 0
+
         bot.mecanumBase?.stop() // Ensure motors are stopped
         FileLogger.flush() // Flush any logged data
         onStop() // Call user-defined stop method
+    }
+
+    enum class Verbose {
+        DEBUG,
+        INFO,
+        FATAL
+    }
+
+    fun addTelemetryData(caption: String, value: Any ?= null, verbose: Verbose) {
+        if (verbose.ordinal >= Constants.Misc.VERBOSE_LEVEL.ordinal) {
+            telemetry.addData(caption, value)
+        }
     }
 
     private fun updateTelemetry() {
@@ -69,6 +96,8 @@ abstract class BaseOpMode : OpMode() {
 
     // These functions are meant to be overridden in subclasses
     protected open fun onInit() {}
+
+    protected open fun onStart() {}
 
     protected open fun onLoop() {}
 
