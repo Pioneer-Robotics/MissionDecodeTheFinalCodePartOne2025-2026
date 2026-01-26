@@ -309,10 +309,12 @@ open class EnhancedPioneerPathVisualizer : JFrame("Pioneer Robotics - DECODE 202
                     Point2D.Double(-halfSize, halfSize)
                 )
 
-                // Rotate corners by theta
+                // FIXED: Rotate corners by theta, accounting for theta=0 being +Y direction
+                // Apply same rotation correction as in drawRobotAtPosition
                 val rotatedCorners = corners.map { corner ->
-                    val cos = cos(-pose.theta)
-                    val sin = sin(-pose.theta)
+                    val adjustedTheta = -pose.theta - PI/2  // Same correction as drawRobotAtPosition
+                    val cos = cos(adjustedTheta)
+                    val sin = sin(adjustedTheta)
                     Point2D.Double(
                         x + corner.x * cos - corner.y * sin,
                         y + corner.x * sin + corner.y * cos
@@ -441,7 +443,11 @@ open class EnhancedPioneerPathVisualizer : JFrame("Pioneer Robotics - DECODE 202
 
             val robotSize = (18.0 * scale).toInt()
 
-            // Use actual theta from pose (robot's heading/rotation)
+            // CRITICAL FIX: Robot coordinate system has theta=0 pointing in +Y direction (forward/toward goal)
+            // The visualizer needs to:
+            // 1. Add PI/2 to rotate from +Y reference to +X reference (standard graphics rotation)
+            // 2. Negate to account for screen Y-axis being flipped (increases downward)
+            // So: screen_rotation = -(theta + PI/2) = -theta - PI/2
             val heading = pose.theta
 
             // Save graphics state for rotation
@@ -449,7 +455,9 @@ open class EnhancedPioneerPathVisualizer : JFrame("Pioneer Robotics - DECODE 202
 
             // Translate to robot center, rotate, then draw
             g2d.translate(x, y)
-            g2d.rotate(-heading)  // Negative because screen Y is flipped
+            // FIXED: Account for theta=0 being +Y direction in robot frame
+            // Add -PI/2 to make theta=0 point upward (which is +Y in field coords, -Y in screen coords)
+            g2d.rotate(-heading - PI/2)
 
             // Draw robot body (centered at origin after translation)
             g2d.color = Color(0, 100, 255, 200)
@@ -465,7 +473,7 @@ open class EnhancedPioneerPathVisualizer : JFrame("Pioneer Robotics - DECODE 202
             g2d.stroke = BasicStroke(2f)
             g2d.draw(rect)
 
-            // Draw heading indicator (front arrow)
+            // Draw heading indicator (front arrow) - points in +X direction of rotated frame
             g2d.color = Color.RED
             g2d.stroke = BasicStroke(3f)
             val frontLength = robotSize / 2

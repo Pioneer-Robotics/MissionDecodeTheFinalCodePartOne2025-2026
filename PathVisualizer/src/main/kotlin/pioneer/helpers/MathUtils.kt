@@ -1,85 +1,83 @@
 package pioneer.helpers
 
-import kotlin.math.*
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 object MathUtils {
-
     /**
-     * Normalize an angle to the range [-PI, PI]
+     * Normalizes an angle to the range (-π, π].
+     * @param angle The angle in radians to normalize.
+     * @return The normalized angle in radians.
      */
-    fun normalizeAngle(angle: Double): Double {
-        var normalized = angle % (2 * PI)
-        if (normalized > PI) normalized -= 2 * PI
-        if (normalized < -PI) normalized += 2 * PI
+    fun normalizeRadians(angle: Double): Double {
+        var normalized = angle
+        while (normalized > PI) normalized -= 2 * PI
+        while (normalized <= -PI) normalized += 2 * PI
+        return normalized
+    }
+
+    fun normalizeRadians(
+        angle: Double,
+        range: Pair<Double, Double>,
+    ): Double {
+        var normalized = angle
+        while (normalized > range.second) normalized -= 2 * PI
+        while (normalized <= range.first) normalized += 2 * PI
         return normalized
     }
 
     /**
-     * Calculate the difference between two angles, normalized to [-PI, PI]
+     * Creates a linearly spaced array of values.
+     * @param start Starting value
+     * @param end Ending value (inclusive)
+     * @param num Number of points to generate
+     * @return List of evenly spaced values
      */
-    fun angleDifference(target: Double, current: Double): Double {
-        return normalizeAngle(target - current)
+    fun linspace(
+        start: Double,
+        end: Double,
+        num: Int,
+    ): List<Double> {
+        if (num <= 0) return emptyList()
+        if (num == 1) return listOf(start)
+
+        val step = (end - start) / (num - 1)
+        return List(num) { i -> start + i * step }
+    }
+
+    fun inToCM(inch: Double): Double = (inch * 2.54)
+
+    /**
+     * Rotates a 2D vector by a given heading angle.
+     * @param x X component of the vector
+     * @param y Y component of the vector
+     * @param heading Angle in radians to rotate the vector
+     * @return Pair of rotated (x, y) components
+     */
+    fun rotateVector(
+        x: Double,
+        y: Double,
+        heading: Double,
+    ): Pair<Double, Double> {
+        val cos = cos(heading)
+        val sin = sin(heading)
+        return Pair(
+            x * cos - y * sin,
+            x * sin + y * cos,
+        )
     }
 
     /**
      * Linear interpolation between two values
+     * @param x1 Starting value
+     * @param x2 Ending value
+     * @param t Interpolation parameter (0.0 to 1.0)
+     * @return Interpolated value
      */
-    fun lerp(start: Double, end: Double, t: Double): Double {
-        return start + (end - start) * t
-    }
-
-    /**
-     * Clamp a value between min and max
-     */
-    fun clamp(value: Double, min: Double, max: Double): Double {
-        return when {
-            value < min -> min
-            value > max -> max
-            else -> value
-        }
-    }
-
-    /**
-     * Convert degrees to radians
-     */
-    fun degreesToRadians(degrees: Double): Double {
-        return degrees * PI / 180.0
-    }
-
-    /**
-     * Convert radians to degrees
-     */
-    fun radiansToDegrees(radians: Double): Double {
-        return radians * 180.0 / PI
-    }
-
-    /**
-     * Calculate distance between two points
-     */
-    fun distance(x1: Double, y1: Double, x2: Double, y2: Double): Double {
-        val dx = x2 - x1
-        val dy = y2 - y1
-        return sqrt(dx * dx + dy * dy)
-    }
-
-    /**
-     * Calculate the sign of a number (-1, 0, or 1)
-     */
-    fun sign(value: Double): Int {
-        return when {
-            value > 0 -> 1
-            value < 0 -> -1
-            else -> 0
-        }
-    }
-
-    /**
-     * Normalize an angle in radians to the range [-PI, PI]
-     */
-    fun normalizeRadians(angle: Double): Double {
-        var normalized = angle % (2 * PI)
-        if (normalized > PI) normalized -= 2 * PI
-        if (normalized < -PI) normalized += 2 * PI
-        return normalized
+    fun lerp(x1: Double, x2: Double, t: Double): Double {
+        return x1 + (x2 - x1) * t
     }
 }

@@ -10,6 +10,7 @@ import pioneer.helpers.Pose
 class LinearPath(
     override var startPose: Pose = Pose(),
     override var endPose: Pose = Pose(),
+    override var headingInterpolationMode: Path.HeadingInterpolationMode = Path.HeadingInterpolationMode.LINEAR
 ) : Path {
     // Constructor overloads
     constructor(startX: Double, startY: Double, endX: Double, endY: Double) : this(Pose(startX, startY), Pose(endX, endY))
@@ -23,13 +24,14 @@ class LinearPath(
     override fun getPoint(t: Double): Pose {
         val x = startPose.x + (endPose.x - startPose.x) * t
         val y = startPose.y + (endPose.y - startPose.y) * t
-        return Pose(x, y)
+        return Pose(x, y, theta=getHeadingTarget(t))
     }
 
     override fun getPose(t: Double): Pose =
         Pose(
             x = startPose.x + (endPose.x - startPose.x) * t,
             y = startPose.y + (endPose.y - startPose.y) * t,
+            theta = getHeadingTarget(t),
             vx = (endPose.x - startPose.x) / getLength(),
             vy = (endPose.y - startPose.y) / getLength(),
         )

@@ -1,4 +1,5 @@
 package pioneer.pathing.paths
+
 import pioneer.helpers.Pose
 
 /**
@@ -9,6 +10,7 @@ import pioneer.helpers.Pose
  */
 class CompoundPath(
     private val paths: List<Path>,
+    override var headingInterpolationMode: Path.HeadingInterpolationMode = Path.HeadingInterpolationMode.LINEAR
 ) : Path {
     override var startPose: Pose = paths.first().startPose
     override var endPose: Pose = paths.last().endPose

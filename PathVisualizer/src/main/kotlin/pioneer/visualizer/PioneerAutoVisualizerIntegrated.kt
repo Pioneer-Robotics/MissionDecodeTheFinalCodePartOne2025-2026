@@ -5,6 +5,7 @@ import pioneer.pathing.paths.*
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import javax.swing.SwingUtilities
+import kotlin.math.PI
 
 /**
  * PIONEER ROBOTICS - AUTONOMOUS PATH VISUALIZER
@@ -62,9 +63,9 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
     override fun getAvailablePaths(): Array<String> {
         return arrayOf(
             // Test paths
-            "Test: Simple Line",
-            "Test: Square Path",
-            "Test: Diagonal",
+//            "Test: Simple Line",
+//            "Test: Square Path",
+//            "Test: Diagonal",
 
             // AUDIENCE SIDE AUTO (Far Start)
             "Red: Audience Side - To Shoot",
@@ -101,6 +102,8 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
             "Test: Diagonal" -> LinearPath(Pose(12.0, 12.0), Pose(132.0, 132.0))
 
             // ========== AUDIENCE SIDE AUTO ==========
+            // Note: Audience side uses simpler LinearPath for all movements
+            // Collection happens in reverse order: AUDIENCE -> MID -> GOAL
             "Red: Audience Side - To Shoot" -> {
                 val P = Points(AllianceColor.RED)
                 LinearPath(P.START_FAR.toViz(), P.SHOOT_GOAL_FAR.toViz())
@@ -112,8 +115,20 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
             "Red: Audience Side FULL" -> {
                 val P = Points(AllianceColor.RED)
                 CompoundPath(listOf(
+                    // Initial shot
                     LinearPath(P.START_FAR.toViz(), P.SHOOT_GOAL_FAR.toViz()),
-                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_AUDIENCE.toViz())
+                    // Audience row (first cycle)
+                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_AUDIENCE.toViz()),
+                    LinearPath(P.PREP_COLLECT_AUDIENCE.toViz(), P.COLLECT_AUDIENCE.toViz()),
+                    LinearPath(P.COLLECT_AUDIENCE.toViz(), P.SHOOT_GOAL_FAR.toViz()),
+                    // Mid row (second cycle)
+                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_MID.toViz()),
+                    LinearPath(P.PREP_COLLECT_MID.toViz(), P.COLLECT_MID.toViz()),
+                    LinearPath(P.COLLECT_MID.toViz(), P.SHOOT_GOAL_FAR.toViz()),
+                    // Goal row (third cycle)
+                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_GOAL.toViz()),
+                    LinearPath(P.PREP_COLLECT_GOAL.toViz(), P.COLLECT_GOAL.toViz()),
+                    LinearPath(P.COLLECT_GOAL.toViz(), P.SHOOT_GOAL_FAR.toViz())
                 ))
             }
 
@@ -128,20 +143,38 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
             "Blue: Audience Side FULL" -> {
                 val P = Points(AllianceColor.BLUE)
                 CompoundPath(listOf(
+                    // Initial shot
                     LinearPath(P.START_FAR.toViz(), P.SHOOT_GOAL_FAR.toViz()),
-                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_AUDIENCE.toViz())
+                    // Audience row (first cycle)
+                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_AUDIENCE.toViz()),
+                    LinearPath(P.PREP_COLLECT_AUDIENCE.toViz(), P.COLLECT_AUDIENCE.toViz()),
+                    LinearPath(P.COLLECT_AUDIENCE.toViz(), P.SHOOT_GOAL_FAR.toViz()),
+                    // Mid row (second cycle)
+                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_MID.toViz()),
+                    LinearPath(P.PREP_COLLECT_MID.toViz(), P.COLLECT_MID.toViz()),
+                    LinearPath(P.COLLECT_MID.toViz(), P.SHOOT_GOAL_FAR.toViz()),
+                    // Goal row (third cycle)
+                    LinearPath(P.SHOOT_GOAL_FAR.toViz(), P.PREP_COLLECT_GOAL.toViz()),
+                    LinearPath(P.PREP_COLLECT_GOAL.toViz(), P.COLLECT_GOAL.toViz()),
+                    LinearPath(P.COLLECT_GOAL.toViz(), P.SHOOT_GOAL_FAR.toViz())
                 ))
             }
 
             // ========== GOAL SIDE AUTO ==========
             "Red: Goal Side - To Shoot" -> {
                 val P = Points(AllianceColor.RED)
-                LinearPath(P.START_GOAL.copy(theta = 0.1).toViz(), P.SHOOT_GOAL_CLOSE.toViz())
+                // Start with theta = 0.0 initially, then switches to actual theta after camera detection
+                LinearPath(P.START_GOAL.copy(theta = 0.0).toViz(), P.SHOOT_GOAL_CLOSE.toViz())
             }
             "Red: Goal Side - Collect Goal Row" -> {
                 val P = Points(AllianceColor.RED)
                 CompoundPath(listOf(
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_GOAL.toViz()),
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_GOAL.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_GOAL.toViz(), P.COLLECT_GOAL.toViz())
                 ))
             }
@@ -149,7 +182,12 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
                 val P = Points(AllianceColor.RED)
                 CompoundPath(listOf(
                     LinearPath(P.COLLECT_GOAL.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_MID.toViz()),
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_MID.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_MID.toViz(), P.COLLECT_MID.toViz())
                 ))
             }
@@ -157,21 +195,45 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
                 val P = Points(AllianceColor.RED)
                 CompoundPath(listOf(
                     LinearPath(P.COLLECT_MID.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_AUDIENCE.toViz()),
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_AUDIENCE.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_AUDIENCE.toViz(), P.COLLECT_AUDIENCE.toViz())
                 ))
             }
             "Red: Goal Side FULL (All Cycles)" -> {
                 val P = Points(AllianceColor.RED)
                 CompoundPath(listOf(
-                    LinearPath(P.START_GOAL.copy(theta = 0.1).toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_GOAL.toViz()),
+                    // Initial shot
+                    LinearPath(P.START_GOAL.copy(theta = 0.0).toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
+                    // Goal row cycle
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_GOAL.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_GOAL.toViz(), P.COLLECT_GOAL.toViz()),
                     LinearPath(P.COLLECT_GOAL.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_MID.toViz()),
+                    // Mid row cycle
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_MID.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_MID.toViz(), P.COLLECT_MID.toViz()),
                     LinearPath(P.COLLECT_MID.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_AUDIENCE.toViz()),
+                    // Audience row cycle
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_AUDIENCE.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_AUDIENCE.toViz(), P.COLLECT_AUDIENCE.toViz()),
                     LinearPath(P.COLLECT_AUDIENCE.toViz(), P.SHOOT_GOAL_CLOSE.toViz())
                 ))
@@ -179,12 +241,17 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
 
             "Blue: Goal Side - To Shoot" -> {
                 val P = Points(AllianceColor.BLUE)
-                LinearPath(P.START_GOAL.copy(theta = 0.1).toViz(), P.SHOOT_GOAL_CLOSE.toViz())
+                LinearPath(P.START_GOAL.copy(theta = 0.0).toViz(), P.SHOOT_GOAL_CLOSE.toViz())
             }
             "Blue: Goal Side - Collect Goal Row" -> {
                 val P = Points(AllianceColor.BLUE)
                 CompoundPath(listOf(
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_GOAL.toViz()),
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_GOAL.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_GOAL.toViz(), P.COLLECT_GOAL.toViz())
                 ))
             }
@@ -192,7 +259,12 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
                 val P = Points(AllianceColor.BLUE)
                 CompoundPath(listOf(
                     LinearPath(P.COLLECT_GOAL.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_MID.toViz()),
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_MID.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_MID.toViz(), P.COLLECT_MID.toViz())
                 ))
             }
@@ -200,21 +272,45 @@ class PioneerAutoVisualizerIntegrated : EnhancedPioneerPathVisualizer() {
                 val P = Points(AllianceColor.BLUE)
                 CompoundPath(listOf(
                     LinearPath(P.COLLECT_MID.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_AUDIENCE.toViz()),
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_AUDIENCE.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_AUDIENCE.toViz(), P.COLLECT_AUDIENCE.toViz())
                 ))
             }
             "Blue: Goal Side FULL (All Cycles)" -> {
                 val P = Points(AllianceColor.BLUE)
                 CompoundPath(listOf(
-                    LinearPath(P.START_GOAL.copy(theta = 0.1).toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_GOAL.toViz()),
+                    // Initial shot
+                    LinearPath(P.START_GOAL.copy(theta = 0.0).toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
+                    // Goal row cycle
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_GOAL.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_GOAL.toViz(), P.COLLECT_GOAL.toViz()),
                     LinearPath(P.COLLECT_GOAL.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_MID.toViz()),
+                    // Mid row cycle
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_MID.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_MID.toViz(), P.COLLECT_MID.toViz()),
                     LinearPath(P.COLLECT_MID.toViz(), P.SHOOT_GOAL_CLOSE.toViz()),
-                    LinearPath(P.SHOOT_GOAL_CLOSE.toViz(), P.PREP_COLLECT_AUDIENCE.toViz()),
+                    // Audience row cycle
+                    HermitePath(
+                        P.SHOOT_GOAL_CLOSE.toViz(),
+                        P.PREP_COLLECT_AUDIENCE.toViz(),
+                        P.PREP_COLLECT_START_VELOCITY.toViz(),
+                        P.PREP_COLLECT_END_VELOCITY.toViz()
+                    ),
                     LinearPath(P.PREP_COLLECT_AUDIENCE.toViz(), P.COLLECT_AUDIENCE.toViz()),
                     LinearPath(P.COLLECT_AUDIENCE.toViz(), P.SHOOT_GOAL_CLOSE.toViz())
                 ))
