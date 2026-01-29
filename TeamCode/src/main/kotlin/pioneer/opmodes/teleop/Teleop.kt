@@ -2,9 +2,11 @@ package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.Constants
+import pioneer.decode.GoalTagProcessor
 import pioneer.general.AllianceColor
 import pioneer.hardware.prism.Color
 import pioneer.helpers.Pose
@@ -13,6 +15,7 @@ import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.opmodes.teleop.drivers.TeleopDriver1
 import pioneer.opmodes.teleop.drivers.TeleopDriver2
+import kotlin.math.*
 
 @TeleOp(name = "Teleop")
 class Teleop : BaseOpMode() {
@@ -21,11 +24,19 @@ class Teleop : BaseOpMode() {
     private val allianceToggle = Toggle(false)
     private var changedAllianceColor = false
 
+    // NEW: AprilTag drift correction settings
+    private var enableAprilTagCorrection = true
+    private var lastCorrectionTime = 0L
+    private val CORRECTION_INTERVAL_MS = 500L
+    private var visionBlendFactor = 0.3  // 30% vision, 70% odometry
+    private val MIN_TAG_CONFIDENCE = 0.7
+    private val MAX_CORRECTION_DISTANCE = 20.0  // cm
+
     override fun onInit() {
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
 
-        driver1 = TeleopDriver1(gamepad1, bot)
         driver2 = TeleopDriver2(gamepad2, bot)
+        driver1 = TeleopDriver1(gamepad1, bot, driver2)  // NEW: Pass driver2 reference
     }
 
     override fun init_loop() {
@@ -40,14 +51,20 @@ class Teleop : BaseOpMode() {
                     AllianceColor.NEUTRAL -> Color.PURPLE
                 }
             )
+            // NEW: Update field points when alliance changes
+            driver1.updateFieldPoints()
         }
         telemetry.addData("Alliance Color", bot.allianceColor)
+        // NEW: Show drift correction status
+        telemetry.addData("AprilTag Correction", if (enableAprilTagCorrection) "ENABLED" else "DISABLED")
         telemetry.update()
     }
 
     override fun onStart() {
         if (!changedAllianceColor) bot.allianceColor = Constants.TransferData.allianceColor
         driver2.onStart()
+        // NEW: Initialize field points
+        driver1.updateFieldPoints()
     }
 
     override fun onLoop() {
@@ -55,8 +72,91 @@ class Teleop : BaseOpMode() {
         driver1.update()
         driver2.update()
 
+        // NEW: Automatic AprilTag drift correction
+        if (enableAprilTagCorrection) {
+            correctOdometryWithAprilTags()
+        }
+
+        // NEW: Toggle drift correction with gamepad1.left_stick_button
+        if (gamepad1.left_stick_button) {
+            enableAprilTagCorrection = !enableAprilTagCorrection
+            gamepad1.rumble(200)
+        }
+
         // Add telemetry data
         addTelemetryData()
+    }
+
+    // NEW: Automatic drift correction using AprilTags
+    private fun correctOdometryWithAprilTags() {
+        val currentTime = System.currentTimeMillis()
+
+        // Rate limiting
+        if (currentTime - lastCorrectionTime < CORRECTION_INTERVAL_MS) {
+            return
+        }
+
+        // Get AprilTag detections
+        val detections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
+
+        if (detections.isNullOrEmpty()) {
+            return
+        }
+
+        // Get current odometry pose
+        val currentPose = bot.pinpoint?.pose ?: return
+
+        // Filter for high-quality detections
+        val goodDetections = detections.filter { detection ->
+            detection.ftcPose != null &&
+                    detection.hamming <= 2 &&
+                    detection.decisionMargin > MIN_TAG_CONFIDENCE &&
+                    GoalTagProcessor.isValidGoalTag(detection.id)
+        }
+
+        if (goodDetections.isEmpty()) {
+            return
+        }
+
+        // Use existing GoalTagProcessor to calculate robot pose from tags
+        val robotPoseFromTag = GoalTagProcessor.getRobotFieldPose(goodDetections) ?: return
+
+        // Calculate correction distance
+        val correctionDistance = sqrt(
+            (robotPoseFromTag.x - currentPose.x).pow(2) +
+                    (robotPoseFromTag.y - currentPose.y).pow(2)
+        )
+
+        // Ignore corrections that are too large
+        if (correctionDistance > MAX_CORRECTION_DISTANCE) {
+            return
+        }
+
+        // Blend vision pose with odometry pose
+        val blendedPose = Pose(
+            x = (1 - visionBlendFactor) * currentPose.x + visionBlendFactor * robotPoseFromTag.x,
+            y = (1 - visionBlendFactor) * currentPose.y + visionBlendFactor * robotPoseFromTag.y,
+            theta = blendAngles(currentPose.theta, robotPoseFromTag.theta, visionBlendFactor)
+        )
+
+        // Reset odometry to blended pose
+        bot.pinpoint?.reset(blendedPose)
+
+        // Update last correction time
+        lastCorrectionTime = currentTime
+    }
+
+    // NEW: Blend two angles with proper wrapping
+    private fun blendAngles(angle1: Double, angle2: Double, blendFactor: Double): Double {
+        val x1 = cos(angle1)
+        val y1 = sin(angle1)
+        val x2 = cos(angle2)
+        val y2 = sin(angle2)
+
+        val xBlended = (1 - blendFactor) * x1 + blendFactor * x2
+        val yBlended = (1 - blendFactor) * y1 + blendFactor * y2
+
+        return atan2(yBlended, xBlended)
     }
 
     private fun addTelemetryData() {
@@ -100,5 +200,10 @@ class Teleop : BaseOpMode() {
         telemetryPacket.put("Turret Target Ticks", bot.turret?.targetTicks)
         telemetryPacket.put("Turret Current Ticks", bot.turret?.currentTicks)
 
+        // NEW: Drift correction telemetry
+        addTelemetryData("AprilTag Correction", if (enableAprilTagCorrection) "ON" else "OFF", Verbose.INFO)
+        val visibleGoalTags = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
+            ?.count { GoalTagProcessor.isValidGoalTag(it.id) } ?: 0
+        addTelemetryData("Visible Goal Tags", visibleGoalTags, Verbose.INFO)
     }
 }

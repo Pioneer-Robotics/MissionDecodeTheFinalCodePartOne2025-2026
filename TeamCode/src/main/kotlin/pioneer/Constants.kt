@@ -113,11 +113,17 @@ object Constants {
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 110.0
 
-        /** The maximum drive acceleration in cm per second squared. */
-        const val MAX_DRIVE_ACCELERATION = 50.0
+        /**
+         * The maximum drive acceleration in cm per second squared.
+         * UPDATED: Reduced from 50.0 to 35.0 to prevent wheel slip
+         */
+        const val MAX_DRIVE_ACCELERATION = 35.0  // Was 50.0
 
-        /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
-        const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
+        /**
+         * The maximum centripetal acceleration that the robot can handle in cm/s^2.
+         * UPDATED: Reduced from 196.0 to 60.0 to prevent lateral sliding in turns
+         */
+        const val MAX_CENTRIPETAL_ACCELERATION = 60.0  // Was (70.0 * 70.0) / 25.0 = 196.0
 
         /** The maximum angular velocity in rad per second. */
         const val MAX_ANGULAR_VELOCITY = 1.0
@@ -127,17 +133,20 @@ object Constants {
 
         // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 5.0 // was 7.0
+        // UPDATED: Increased from 5.0 to 10.0 for more aggressive error correction
+        @JvmField var X_KP = 10.0  // Was 5.0 (was 7.0 before that)
         @JvmField var X_KI = 0.0
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 5.0 // was 7.0
+        // UPDATED: Increased from 5.0 to 10.0 for more aggressive error correction
+        @JvmField var Y_KP = 10.0  // Was 5.0 (was 7.0 before that)
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 3.0 // was 5.0
+        // UPDATED: Increased from 3.0 to 6.0 for better heading control
+        @JvmField var THETA_KP = 6.0  // Was 3.0 (was 5.0 before that)
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 

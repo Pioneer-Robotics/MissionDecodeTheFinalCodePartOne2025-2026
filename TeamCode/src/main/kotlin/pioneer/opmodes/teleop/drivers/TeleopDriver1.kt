@@ -17,6 +17,7 @@ import kotlin.math.sin
 class TeleopDriver1(
     var gamepad: Gamepad,
     val bot: Bot,
+    private val driver2: pioneer.opmodes.teleop.drivers.TeleopDriver2? = null,  // NEW: Reference to driver2 for sync
 ) {
     var drivePower = Constants.Drive.DEFAULT_POWER
     val fieldCentric: Boolean
@@ -30,7 +31,13 @@ class TeleopDriver1(
 
     var detection: AprilTagDetection? = null
     var robotPoseTag: Pose? = null
+
+    // NEW: Field points for drift correction reset
     private lateinit var P: Points
+
+    // NEW: Drift correction state
+    private var lastResetTime = 0L
+    private val RESET_COOLDOWN_MS = 2000L
 
     fun update() {
         drive()
@@ -40,6 +47,12 @@ class TeleopDriver1(
         moveSpindexerManual()
         handleSpindexerReset()
         handleResetPose()
+        handleDriftCorrectionReset()  // NEW: Add drift correction reset
+    }
+
+    // NEW: Initialize field points when alliance changes
+    fun updateFieldPoints() {
+        P = Points(bot.allianceColor)
     }
 
     private fun drive() {
@@ -118,6 +131,8 @@ class TeleopDriver1(
             } else {
                 bot.pinpoint?.reset(Pose(86.7, -99.0, theta = 0.0))
             }
+            // NEW: Sync with driver2 when resetting
+            driver2?.resetTurretOffsets()
         }
 
 //        detection = bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.firstOrNull()
@@ -135,5 +150,42 @@ class TeleopDriver1(
 //        }
 //
 //        if (gamepad.options && robotPoseTag != null) bot.pinpoint?.reset(robotPoseTag!!.copy(theta=robotTheta))
+    }
+
+    // NEW: Drift correction reset with BACK+START
+    private fun handleDriftCorrectionReset() {
+        // Check if BACK + START are both pressed
+        if (gamepad.back && gamepad.start) {
+            val currentTime = System.currentTimeMillis()
+
+            // Cooldown to prevent accidental double-resets
+            if (currentTime - lastResetTime < RESET_COOLDOWN_MS) {
+                return
+            }
+
+            // Select position based on D-pad
+            val position = when {
+                gamepad.dpad_up -> P.SHOOT_GOAL_CLOSE      // Shooting position
+                gamepad.dpad_down -> P.START_GOAL           // Starting position
+                gamepad.dpad_left -> P.COLLECT_AUDIENCE     // Audience collection
+                gamepad.dpad_right -> P.COLLECT_GOAL        // Goal collection
+                else -> P.SHOOT_GOAL_CLOSE                  // Default: shooting
+            }
+
+            // Reset odometry
+            bot.pinpoint?.reset(position)
+
+            // Sync with driver2
+            driver2?.resetTurretOffsets()
+
+            // Haptic feedback
+            gamepad.rumble(500)
+
+            // Update last reset time
+            lastResetTime = currentTime
+
+            // Log for debugging
+            FileLogger.debug("TeleopDriver1", "DRIFT CORRECTION RESET to: $position")
+        }
     }
 }
