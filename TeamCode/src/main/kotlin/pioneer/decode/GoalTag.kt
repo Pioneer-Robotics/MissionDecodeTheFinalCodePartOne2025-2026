@@ -4,9 +4,12 @@ import org.firstinspires.ftc.robotcore.external.matrices.VectorF
 import org.firstinspires.ftc.robotcore.external.navigation.Quaternion
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
+import pioneer.Constants
 import pioneer.general.AllianceColor
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
+import kotlin.math.cos
+import kotlin.math.sin
 
 private val tagLibrary by lazy { AprilTagGameDatabase.getDecodeTagLibrary() }
 
@@ -90,7 +93,20 @@ object GoalTagProcessor {
         }
     }
 
-    // Computes the robot's field pose based on detected goal tags.
+    /**
+     * Computes the robot's field pose based on detected goal tags.
+     *
+     * FIXED: Now properly accounts for camera offset from robot center.
+     *
+     * Camera is mounted at:
+     * - X: +17.5 cm (right from robot center)
+     * - Y: +24.0 cm (forward from robot center)
+     *
+     * This function:
+     * 1. Gets camera position from AprilTag detection
+     * 2. Transforms from camera position to robot center position
+     * 3. Accounts for robot heading when applying offset
+     */
     fun getRobotFieldPose(detections: List<AprilTagDetection>): Pose? {
         val tag =
             detections.firstNotNullOfOrNull { detection ->
@@ -102,10 +118,33 @@ object GoalTagProcessor {
                 when (detection.id) {
                     GoalTag.BLUE.id, GoalTag.RED.id -> {
                         detection.ftcPose?.let { ftcPose ->
-                            Pose(
+                            // Step 1: Calculate camera position from tag
+                            val cameraPose = Pose(
                                 x = tagPose.x + MathUtils.inToCM(ftcPose.x),
                                 y = tagPose.y + MathUtils.inToCM(ftcPose.y),
                                 theta = tagPose.theta + ftcPose.bearing,
+                            )
+
+                            // Step 2: Get camera offset from Constants
+                            // Camera is at (17.5, 24.0) cm from robot center
+                            val cameraOffsetX = Constants.Camera.XYZ_OFFSET[0]  // 17.5 cm
+                            val cameraOffsetY = Constants.Camera.XYZ_OFFSET[1]  // 24.0 cm
+
+                            // Step 3: Rotate camera offset by robot heading
+                            // Camera offset is in robot frame, need to convert to field frame
+                            val robotHeading = cameraPose.theta
+                            val cosHeading = cos(robotHeading)
+                            val sinHeading = sin(robotHeading)
+
+                            // Rotate offset vector by robot heading
+                            val fieldOffsetX = cameraOffsetX * cosHeading - cameraOffsetY * sinHeading
+                            val fieldOffsetY = cameraOffsetX * sinHeading + cameraOffsetY * cosHeading
+
+                            // Step 4: Robot center = Camera position - rotated offset
+                            Pose(
+                                x = cameraPose.x - fieldOffsetX,
+                                y = cameraPose.y - fieldOffsetY,
+                                theta = cameraPose.theta
                             )
                         }
                     }
