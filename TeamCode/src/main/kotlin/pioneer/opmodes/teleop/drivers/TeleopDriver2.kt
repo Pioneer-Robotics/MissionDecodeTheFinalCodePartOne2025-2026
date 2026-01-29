@@ -34,11 +34,30 @@ class TeleopDriver2(
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
 
+    // Multi-shot state machine
+    private enum class MultiShotState {
+        IDLE,
+        WAITING_FOR_LAUNCHER,
+        WAITING_FOR_SPINDEXER,
+        COMPLETE
+    }
+
+    private var multiShotState = MultiShotState.IDLE
+    private var multiShotCount = 0
+    private var multiShotTarget = 0
+    private var multiShotUseFastMode = false
+    private val multiShotTimer = ElapsedTime()
+
+    // Telemetry info
+    var multiShotStatus = ""
+        private set
+
     fun update() {
         updateFlywheelSpeed()
         handleFlywheel()
         handleTurret()
         handleShootInput()
+        handleMultiShot()
         processShooting()
         updateIndicatorLED()
     }
@@ -106,10 +125,127 @@ class TeleopDriver2(
         }
     }
 
+    private fun handleMultiShot() {
+        // Start multi-shot sequences
+        if (multiShotState == MultiShotState.IDLE) {
+            if (gamepad.circle) {
+                startMultiShot(fastMode = false)
+            } else if (gamepad.options) {
+                startMultiShot(fastMode = true)
+            }
+        }
+
+        // Process active multi-shot
+        when (multiShotState) {
+            MultiShotState.IDLE -> {
+                multiShotStatus = ""
+            }
+
+            MultiShotState.WAITING_FOR_LAUNCHER -> {
+                multiShotStatus = "Multi-shot ${if (multiShotUseFastMode) "[FAST]" else "[SAFE]"}: Shot $multiShotCount/$multiShotTarget - Waiting for launcher..."
+
+                // Wait for launcher to reset
+                if (bot.launcher?.isReset == true) {
+                    // Pop the artifact we just shot
+                    bot.spindexer?.popCurrentArtifact()
+
+                    // Check if we're done
+                    if (multiShotCount >= multiShotTarget) {
+                        completeMultiShot()
+                    } else {
+                        // Move to next artifact
+                        val moved = bot.spindexer?.moveToNextOuttake()
+                        if (moved == true) {
+                            multiShotState = MultiShotState.WAITING_FOR_SPINDEXER
+                            multiShotTimer.reset()
+                        } else {
+                            // No more artifacts available
+                            completeMultiShot()
+                        }
+                    }
+                }
+            }
+
+            MultiShotState.WAITING_FOR_SPINDEXER -> {
+                multiShotStatus = "Multi-shot ${if (multiShotUseFastMode) "[FAST]" else "[SAFE]"}: Shot $multiShotCount/$multiShotTarget - Positioning..."
+
+                // Wait for spindexer to reach position
+                val ready = if (multiShotUseFastMode) {
+                    // Fast mode: just check position tolerance
+                    bot.spindexer?.withinDetectionTolerance == true &&
+                            multiShotTimer.milliseconds() > 100 // Small delay for stability
+                } else {
+                    // Safe mode: wait for full settle
+                    bot.spindexer?.reachedTarget == true
+                }
+
+                if (ready) {
+                    // Fire next shot
+                    bot.launcher?.triggerLaunch()
+                    multiShotCount++
+                    shootingArtifact = true
+                    multiShotState = MultiShotState.WAITING_FOR_LAUNCHER
+                }
+            }
+
+            MultiShotState.COMPLETE -> {
+                // This state is just for one cycle to allow completion actions
+                multiShotState = MultiShotState.IDLE
+            }
+        }
+    }
+
+    private fun startMultiShot(fastMode: Boolean) {
+        // Make sure flywheel is running
+        if (!flywheelToggle.state) {
+            flywheelToggle.state = true
+            bot.flywheel?.velocity = flywheelSpeed
+        }
+
+        // Check how many artifacts we have
+        val numArtifacts = bot.spindexer?.numStoredArtifacts ?: 0
+        if (numArtifacts == 0) {
+            multiShotStatus = "Multi-shot: No artifacts loaded!"
+            return
+        }
+
+        // Determine target (shoot up to 3, but only what we have)
+        multiShotTarget = minOf(3, numArtifacts)
+        multiShotCount = 0
+        multiShotUseFastMode = fastMode
+
+        // Make sure we're at an outtake position
+        if (bot.spindexer?.isOuttakePosition != true) {
+            bot.spindexer?.moveToNextOuttake()
+            multiShotState = MultiShotState.WAITING_FOR_SPINDEXER
+            multiShotTimer.reset()
+        } else {
+            // Already positioned, fire first shot immediately
+            bot.launcher?.triggerLaunch()
+            multiShotCount++
+            shootingArtifact = true
+            multiShotState = MultiShotState.WAITING_FOR_LAUNCHER
+        }
+
+        multiShotStatus = "Multi-shot ${if (fastMode) "[FAST]" else "[SAFE]"}: Starting ($multiShotTarget artifacts)"
+    }
+
+    private fun completeMultiShot() {
+        multiShotState = MultiShotState.COMPLETE
+        multiShotStatus = "Multi-shot complete! ($multiShotCount shots)"
+
+        // Rumble gamepad to indicate completion
+        gamepad.rumble(200)  // 200ms rumble
+    }
+
     private fun processShooting() {
         if (shootingArtifact && bot.launcher?.isReset == true ) {
             shootingArtifact = false
-            bot.spindexer?.popCurrentArtifact()
+            // Only pop if we're NOT in a multi-shot sequence
+            // (multi-shot handles its own popping)
+            if (multiShotState == MultiShotState.IDLE) {
+                bot.spindexer?.popCurrentArtifact()
+            }
         }
         if (!flywheelToggle.state) return
         launchToggle.toggle(gamepad.square)
