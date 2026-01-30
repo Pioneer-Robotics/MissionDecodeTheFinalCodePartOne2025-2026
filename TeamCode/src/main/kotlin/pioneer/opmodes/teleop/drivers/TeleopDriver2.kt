@@ -147,7 +147,7 @@ class TeleopDriver2(
                 // Wait for launcher to reset
                 if (bot.launcher?.isReset == true) {
                     // Pop the artifact we just shot
-                    bot.spindexer?.popCurrentArtifact()
+                    bot.spindexer?.popCurrentArtifact(false)
 
                     // Check if we're done
                     if (multiShotCount >= multiShotTarget) {
@@ -244,7 +244,7 @@ class TeleopDriver2(
             // Only pop if we're NOT in a multi-shot sequence
             // (multi-shot handles its own popping)
             if (multiShotState == MultiShotState.IDLE) {
-                bot.spindexer?.popCurrentArtifact()
+                bot.spindexer?.popCurrentArtifact(false)
             }
         }
         if (!flywheelToggle.state) return

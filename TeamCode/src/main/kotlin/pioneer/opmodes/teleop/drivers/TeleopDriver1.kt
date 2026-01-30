@@ -155,7 +155,7 @@ class TeleopDriver1(
     // NEW: Drift correction reset with BACK+START
     private fun handleDriftCorrectionReset() {
         // Check if BACK + START are both pressed
-        if (gamepad.back && gamepad.start) {
+        if (gamepad.square) {
             val currentTime = System.currentTimeMillis()
 
             // Cooldown to prevent accidental double-resets
@@ -164,13 +164,14 @@ class TeleopDriver1(
             }
 
             // Select position based on D-pad
-            val position = when {
+            var position = when {
                 gamepad.dpad_up -> P.SHOOT_GOAL_CLOSE      // Shooting position
                 gamepad.dpad_down -> P.START_GOAL           // Starting position
                 gamepad.dpad_left -> P.COLLECT_AUDIENCE     // Audience collection
                 gamepad.dpad_right -> P.COLLECT_GOAL        // Goal collection
                 else -> P.SHOOT_GOAL_CLOSE                  // Default: shooting
             }
+            position = Pose(position.x, position.y, theta=0.0)
 
             // Reset odometry
             bot.pinpoint?.reset(position)

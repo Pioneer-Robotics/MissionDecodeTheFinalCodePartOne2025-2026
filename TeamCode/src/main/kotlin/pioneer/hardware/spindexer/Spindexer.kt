@@ -92,11 +92,13 @@ class Spindexer(
         motion.target = position
     }
 
-    fun popCurrentArtifact(): Artifact? {
+    fun popCurrentArtifact(autoSwitchToIntake: Boolean = true): Artifact? {
         if (motion.target !in outtakePositions) return null
         val index = outtakePositions.indexOf(motion.target)
         val artifact = indexer.pop(index)
-        if (indexer.isEmpty) moveToNextOpenIntake()
+        if (autoSwitchToIntake){
+            if (indexer.isEmpty) moveToNextOpenIntake()
+        }
         return artifact
     }
 
