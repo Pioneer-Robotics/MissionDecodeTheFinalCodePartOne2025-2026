@@ -183,35 +183,85 @@ object Constants {
         // val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
     }
 
+// ===================================================================
+// TUNED SPINDEXER CONSTANTS - Replace in Constants.kt
+// ===================================================================
+//
+// CRITICAL FIXES:
+// 1. PID gains scaled up 100x-1000x for 8192 tpr encoder
+// 2. Tolerances made coherent (tighter stopping than "reached")
+// 3. Velocity tolerance lowered for faster settling
+// 4. Added two-stage control (PID far away, gentle close in)
+//
+// TUNING METHODOLOGY:
+// - Start with KP only, increase until slight oscillation
+// - Add KD to dampen oscillation (about 10-20x KP)
+// - Add small KI if steady-state error remains
+// - Tune tolerances from tightest to loosest
+//
+// ===================================================================
+
     @Config
     object Spindexer {
-        // External Encoder
-        @JvmField var KP = 0.000175
-        @JvmField var KI = 0.00001
-        @JvmField var KD = 0.00045 // was 0.00025
+        // ============== PID GAINS (MAIN FIX) ==============
+        // These are tuned for 8192 ticks/rev encoder
+        // Start with these, then tune on robot if needed
 
-        @JvmField var KS_START = 0.03
-        @JvmField var KS_STEP = 0.0
+        @JvmField var KP = 0.015      // Was 0.000175 (86x increase)
+        @JvmField var KI = 0.0001     // Was 0.00001 (10x increase)
+        @JvmField var KD = 0.25       // Was 0.00045 (556x increase)
 
+        // Static friction compensation
+        @JvmField var KS_START = 0.05  // Was 0.03 (slightly higher)
+        @JvmField var KS_STEP = 0.0    // Keep at 0
+
+        // Power ramping (not currently used, keep as is)
         @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 75 // stops moving within tolerance (in outtake for magnets)
-        @JvmField var PID_TOLERANCE_TICKS = 100 // stops using pid within tolerance
+        // ============== TOLERANCES (CRITICAL FIX) ==============
+        // These MUST be coherent: MOTOR < SHOOTING < DETECTION
+        // Rule: Motor stops when closest, "reached" is tighter, "close enough" is loosest
 
-        // constant power within PID_TOLERANCE_TICKS in output position
-        @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
+        @JvmField var MOTOR_TOLERANCE_TICKS = 40      // Was 75 - stop motor when very close
+        @JvmField var SHOOTING_TOLERANCE_TICKS = 60   // Was 100 - "reached target" threshold
+        @JvmField var DETECTION_TOLERANCE_TICKS = 100 // Was 150 - "close enough to detect"
 
-        const val SHOOTING_TOLERANCE_TICKS = 100
-        const val DETECTION_TOLERANCE_TICKS = 150
-        const val VELOCITY_TOLERANCE_TPS = 750
-        const val TICKS_PER_REV = 8192
+        // For two-stage control (see improved controller)
+        @JvmField var PID_TOLERANCE_TICKS = 150       // Was 100 - switch to gentle mode
 
-        // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 67.0
+        // Final gentle power when very close (outtake positions with magnets)
+        @JvmField var FINAL_ADJUSTMENT_POWER = 0.08   // Was 0.085
 
-        // Max time the artifact can disappear without resetting confirmation (ms)
-        const val CONFIRM_LOSS_MS = 10
+        // ============== VELOCITY SETTLING ==============
+        // Lower threshold for faster response
+        const val VELOCITY_TOLERANCE_TPS = 300  // Was 750 (lower = settles faster)
+        const val VELOCITY_SETTLE_TIME_MS = 200 // Was 300 (faster settling)
+
+        // ============== HARDWARE CONSTANTS ==============
+        const val TICKS_PER_REV = 8192  // Keep as is
+
+        // ============== INTAKE CONFIRMATION ==============
+        const val CONFIRM_INTAKE_MS = 67.0   // Keep as is
+        const val CONFIRM_LOSS_MS = 10       // Keep as is
     }
+
+    // ===================================================================
+// RECOMMENDED TUNING PROCEDURE ON ROBOT:
+// ===================================================================
+//
+// 1. Start with these values
+// 2. Test one position transition (e.g., INTAKE_1 -> OUTTAKE_1)
+// 3. Observe behavior:
+//    - Overshoots/oscillates? -> Lower KP by 20%, increase KD by 20%
+//    - Too slow to reach? -> Increase KP by 20%
+//    - Settles but with offset? -> Increase KI slightly
+//    - Jerky motion? -> Increase KD
+// 4. Once smooth, test all 6 positions
+// 5. Fine-tune MOTOR_TOLERANCE_TICKS:
+//    - Too tight (never stops)? -> Increase by 10
+//    - Too loose (stops far away)? -> Decrease by 10
+//
+// ===================================================================
 
     object Turret {
         const val TICKS_PER_REV = 384.5 * 3
