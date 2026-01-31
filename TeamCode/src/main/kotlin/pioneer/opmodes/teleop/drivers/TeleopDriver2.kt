@@ -3,12 +3,16 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
+import pioneer.Constants
+import pioneer.FlywheelOperatingMode
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.general.AllianceColor
+import pioneer.hardware.Flywheel
 import pioneer.hardware.Turret
 import pioneer.hardware.prism.Color
 import pioneer.helpers.Chrono
+import pioneer.helpers.FlywheelLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import kotlin.math.*
@@ -16,6 +20,7 @@ import kotlin.math.*
 class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
+    private var flywheelLogger: FlywheelLogger? = null  // NEW: Optional logger
 ) {
     private val chrono = Chrono(autoUpdate = false)
     private val isAutoTracking = Toggle(false)
@@ -23,9 +28,9 @@ class TeleopDriver2(
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
-    private var tagShootingTarget = Pose() //Shooting target from goal tag class
-    private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
-    private var finalShootingTarget = Pose() //Final target that the turret tracks
+    private var tagShootingTarget = Pose()
+    private var offsetShootingTarget = Pose()
+    private var finalShootingTarget = Pose()
     private var shootingArtifact = false
     var useAutoTrackOffset = false
     var targetGoal = GoalTag.RED
@@ -48,6 +53,9 @@ class TeleopDriver2(
     private var multiShotUseFastMode = false
     private val multiShotTimer = ElapsedTime()
 
+    // NEW: Shot tracking for logger
+    private var currentShotNumber = 0
+
     // Telemetry info
     var multiShotStatus = ""
         private set
@@ -60,6 +68,9 @@ class TeleopDriver2(
         handleMultiShot()
         processShooting()
         updateIndicatorLED()
+
+        // NEW: Log flywheel data
+        flywheelLogger?.log()
     }
 
     fun onStart() {
@@ -68,13 +79,19 @@ class TeleopDriver2(
         }
         tagShootingTarget = targetGoal.shootingPose
         offsetShootingTarget = tagShootingTarget
+
+        // NEW: Set flywheel to idle state at start
+        bot.flywheel?.state = when (Constants.Flywheel.OPERATING_MODE) {
+            FlywheelOperatingMode.ALWAYS_IDLE -> Flywheel.FlywheelState.IDLE
+            FlywheelOperatingMode.SMART_IDLE -> Flywheel.FlywheelState.IDLE
+            FlywheelOperatingMode.CONSERVATIVE_IDLE -> Flywheel.FlywheelState.IDLE
+        }
     }
 
     fun resetTurretOffsets(){
         flywheelSpeedOffset = 0.0
         useAutoTrackOffset = false
         offsetShootingTarget = tagShootingTarget
-        //TODO Sync with driver 1 reset pose
     }
 
     private fun updateFlywheelSpeed() {
@@ -98,16 +115,36 @@ class TeleopDriver2(
                 flywheelSpeedOffset = 0.0
             }
 
-            flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), tagShootingTarget, targetGoal.shootingHeight) + flywheelSpeedOffset
+            flywheelSpeed = bot.flywheel!!.estimateVelocity(
+                bot.pinpoint?.pose ?: Pose(),
+                tagShootingTarget,
+                targetGoal.shootingHeight
+            ) + flywheelSpeedOffset
         }
     }
 
     private fun handleFlywheel() {
         flywheelToggle.toggle(gamepad.dpad_right)
+
         if (flywheelToggle.state) {
+            // Shooting mode - set target velocity
             bot.flywheel?.velocity = flywheelSpeed
+            bot.flywheel?.state = Flywheel.FlywheelState.SHOOTING
         } else {
-            bot.flywheel?.velocity = 0.0
+            // NEW: Handle different operating modes when toggle is OFF
+            when (Constants.Flywheel.OPERATING_MODE) {
+                FlywheelOperatingMode.ALWAYS_IDLE -> {
+                    bot.flywheel?.state = Flywheel.FlywheelState.IDLE
+                }
+                FlywheelOperatingMode.SMART_IDLE -> {
+                    // Smart mode handles itself - will go to OFF after timeout
+                    bot.flywheel?.state = Flywheel.FlywheelState.IDLE
+                }
+                FlywheelOperatingMode.CONSERVATIVE_IDLE -> {
+                    // Conservative mode - run at lower idle speed
+                    bot.flywheel?.state = Flywheel.FlywheelState.IDLE
+                }
+            }
         }
     }
 
@@ -146,6 +183,9 @@ class TeleopDriver2(
 
                 // Wait for launcher to reset
                 if (bot.launcher?.isReset == true) {
+                    // NEW: Log shot completion
+                    flywheelLogger?.logShotComplete(currentShotNumber)
+
                     // Pop the artifact we just shot
                     bot.spindexer?.popCurrentArtifact(false)
 
@@ -183,7 +223,12 @@ class TeleopDriver2(
                     // Fire next shot
                     bot.launcher?.triggerLaunch()
                     multiShotCount++
+                    currentShotNumber++
                     shootingArtifact = true
+
+                    // NEW: Log shot start
+                    flywheelLogger?.logShot(currentShotNumber)
+
                     multiShotState = MultiShotState.WAITING_FOR_LAUNCHER
                 }
             }
@@ -200,6 +245,7 @@ class TeleopDriver2(
         if (!flywheelToggle.state) {
             flywheelToggle.state = true
             bot.flywheel?.velocity = flywheelSpeed
+            bot.flywheel?.state = Flywheel.FlywheelState.SHOOTING
         }
 
         // Check how many artifacts we have
@@ -223,7 +269,12 @@ class TeleopDriver2(
             // Already positioned, fire first shot immediately
             bot.launcher?.triggerLaunch()
             multiShotCount++
+            currentShotNumber++
             shootingArtifact = true
+
+            // NEW: Log shot start
+            flywheelLogger?.logShot(currentShotNumber)
+
             multiShotState = MultiShotState.WAITING_FOR_LAUNCHER
         }
 
@@ -235,7 +286,7 @@ class TeleopDriver2(
         multiShotStatus = "Multi-shot complete! ($multiShotCount shots)"
 
         // Rumble gamepad to indicate completion
-        gamepad.rumble(200)  // 200ms rumble
+        gamepad.rumble(200)
     }
 
     private fun processShooting() {
@@ -244,6 +295,9 @@ class TeleopDriver2(
             // Only pop if we're NOT in a multi-shot sequence
             // (multi-shot handles its own popping)
             if (multiShotState == MultiShotState.IDLE) {
+                // NEW: Log single shot completion
+                flywheelLogger?.logShotComplete(currentShotNumber)
+
                 bot.spindexer?.popCurrentArtifact(false)
             }
         }
@@ -254,30 +308,33 @@ class TeleopDriver2(
             bot.spindexer?.isOuttakePosition == true
         ) {
             bot.launcher?.triggerLaunch()
+            currentShotNumber++
             shootingArtifact = true
+
+            // NEW: Log single shot start
+            flywheelLogger?.logShot(currentShotNumber)
         } else if (launchToggle.justChanged && launchPressedTimer.seconds() < 0.5) {
             bot.launcher?.triggerLaunch()
+            currentShotNumber++
             shootingArtifact = true
+
+            // NEW: Log single shot start
+            flywheelLogger?.logShot(currentShotNumber)
         }
         if (launchToggle.justChanged) launchPressedTimer.reset()
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {
-        // Can't shoot when flywheel isn't moving
-        // Start artifact launch sequence
-        val moved =
-            if (artifact != null) {
-                bot.spindexer?.moveToNextOuttake(artifact)
-            } else {
-                bot.spindexer?.moveToNextOuttake()
-            }
+        val moved = if (artifact != null) {
+            bot.spindexer?.moveToNextOuttake(artifact)
+        } else {
+            bot.spindexer?.moveToNextOuttake()
+        }
     }
 
     private fun handleManualTrack() {
         if (abs(gamepad.right_stick_x) > 0.02) {
-//            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * chrono.dt/1000.0
             turretAngle -= gamepad.right_stick_x.toDouble().pow(3) / 10.0
-
         }
 
         if (gamepad.right_stick_button) {

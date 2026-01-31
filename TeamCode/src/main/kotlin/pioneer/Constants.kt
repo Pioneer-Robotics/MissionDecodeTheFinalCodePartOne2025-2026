@@ -10,6 +10,13 @@ import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode.Verbose
 import kotlin.math.PI
 
+// Flywheel operating modes
+enum class FlywheelOperatingMode {
+    ALWAYS_IDLE,        // Mode A: Always runs at 40% idle speed when not shooting
+    SMART_IDLE,         // Mode B: Idles for 10s after last shot, then turns off
+    CONSERVATIVE_IDLE   // Mode C: Always runs at 20% idle speed (lowest heat/power)
+}
+
 object Constants {
     object HardwareNames {
         // Drive motors
@@ -68,13 +75,6 @@ object Constants {
         const val DEFAULT_POWER = 0.7
 
         // Feedforward gains using Pose(x,y,theta)
-//        @JvmField var kVX = 0.0
-//        @JvmField var kVY = 0.0
-//        @JvmField var kVT = 0.0
-//        @JvmField var kAX = 0.0
-//        @JvmField var kAY = 0.0
-//        @JvmField var kAT = 0.0
-
         val kV = Pose(x = 0.0063, y = 0.0055, theta = -0.147)
         val kA = Pose(x = 0.00125, y = 0.001, theta = 0.0)
         val kS = Pose(x = 0.11, y = 0.06, theta = 0.0)
@@ -113,17 +113,11 @@ object Constants {
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 110.0
 
-        /**
-         * The maximum drive acceleration in cm per second squared.
-         * UPDATED: Reduced from 50.0 to 35.0 to prevent wheel slip
-         */
-        const val MAX_DRIVE_ACCELERATION = 35.0  // Was 50.0
+        /** The maximum drive acceleration in cm per second squared. */
+        const val MAX_DRIVE_ACCELERATION = 50.0
 
-        /**
-         * The maximum centripetal acceleration that the robot can handle in cm/s^2.
-         * UPDATED: Reduced from 196.0 to 60.0 to prevent lateral sliding in turns
-         */
-        const val MAX_CENTRIPETAL_ACCELERATION = 60.0  // Was (70.0 * 70.0) / 25.0 = 196.0
+        /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
+        const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
 
         /** The maximum angular velocity in rad per second. */
         const val MAX_ANGULAR_VELOCITY = 1.0
@@ -133,20 +127,17 @@ object Constants {
 
         // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        // UPDATED: Increased from 5.0 to 10.0 for more aggressive error correction
-        @JvmField var X_KP = 10.0  // Was 5.0 (was 7.0 before that)
+        @JvmField var X_KP = 5.0
         @JvmField var X_KI = 0.0
         @JvmField var X_KD = 0.0
 
         // Y-axis PID coefficients for the trajectory follower
-        // UPDATED: Increased from 5.0 to 10.0 for more aggressive error correction
-        @JvmField var Y_KP = 10.0  // Was 5.0 (was 7.0 before that)
+        @JvmField var Y_KP = 5.0
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        // UPDATED: Increased from 3.0 to 6.0 for better heading control
-        @JvmField var THETA_KP = 6.0  // Was 3.0 (was 5.0 before that)
+        @JvmField var THETA_KP = 3.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 
@@ -162,7 +153,6 @@ object Constants {
         @JvmField var POS_THETA_KP = 0.0
         @JvmField var POS_THETA_KI = 0.0
         @JvmField var POS_THETA_KD = 0.0
-
     }
 
     object Camera {
@@ -173,95 +163,37 @@ object Constants {
         // Camera orientation constants (degrees)
         val RPY_UNITS = AngleUnit.DEGREES
         val RPY_OFFSET: List<Double> = listOf(0.0, -90.0, 0.0) // Pitch=-90 to face forward
-
-        // //Lens Intrinsics
-        // const val fx = 955.23
-        // const val fy = 962.92
-        // const val cx = 330.05
-        // const val cy = 186.05
-
-        // val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
     }
-
-// ===================================================================
-// TUNED SPINDEXER CONSTANTS - Replace in Constants.kt
-// ===================================================================
-//
-// CRITICAL FIXES:
-// 1. PID gains scaled up 100x-1000x for 8192 tpr encoder
-// 2. Tolerances made coherent (tighter stopping than "reached")
-// 3. Velocity tolerance lowered for faster settling
-// 4. Added two-stage control (PID far away, gentle close in)
-//
-// TUNING METHODOLOGY:
-// - Start with KP only, increase until slight oscillation
-// - Add KD to dampen oscillation (about 10-20x KP)
-// - Add small KI if steady-state error remains
-// - Tune tolerances from tightest to loosest
-//
-// ===================================================================
 
     @Config
     object Spindexer {
-        // ============== PID GAINS (MAIN FIX) ==============
-        // These are tuned for 8192 ticks/rev encoder
-        // Start with these, then tune on robot if needed
+        // External Encoder
+        @JvmField var KP = 0.000175
+        @JvmField var KI = 0.00001
+        @JvmField var KD = 0.00045
 
-        @JvmField var KP = 0.015      // Was 0.000175 (86x increase)
-        @JvmField var KI = 0.0001     // Was 0.00001 (10x increase)
-        @JvmField var KD = 0.25       // Was 0.00045 (556x increase)
+        @JvmField var KS_START = 0.03
+        @JvmField var KS_STEP = 0.0
 
-        // Static friction compensation
-        @JvmField var KS_START = 0.05  // Was 0.03 (slightly higher)
-        @JvmField var KS_STEP = 0.0    // Keep at 0
-
-        // Power ramping (not currently used, keep as is)
         @JvmField var MAX_POWER_RATE = 100.0
 
-        // ============== TOLERANCES (CRITICAL FIX) ==============
-        // These MUST be coherent: MOTOR < SHOOTING < DETECTION
-        // Rule: Motor stops when closest, "reached" is tighter, "close enough" is loosest
+        @JvmField var MOTOR_TOLERANCE_TICKS = 75
+        @JvmField var PID_TOLERANCE_TICKS = 100
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 40      // Was 75 - stop motor when very close
-        @JvmField var SHOOTING_TOLERANCE_TICKS = 60   // Was 100 - "reached target" threshold
-        @JvmField var DETECTION_TOLERANCE_TICKS = 100 // Was 150 - "close enough to detect"
+        // constant power within PID_TOLERANCE_TICKS in output position
+        @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
 
-        // For two-stage control (see improved controller)
-        @JvmField var PID_TOLERANCE_TICKS = 150       // Was 100 - switch to gentle mode
+        const val SHOOTING_TOLERANCE_TICKS = 100
+        const val DETECTION_TOLERANCE_TICKS = 150
+        const val VELOCITY_TOLERANCE_TPS = 750
+        const val TICKS_PER_REV = 8192
 
-        // Final gentle power when very close (outtake positions with magnets)
-        @JvmField var FINAL_ADJUSTMENT_POWER = 0.08   // Was 0.085
+        // Time required to confirm an artifact has been intaken (ms)
+        const val CONFIRM_INTAKE_MS = 67.0
 
-        // ============== VELOCITY SETTLING ==============
-        // Lower threshold for faster response
-        const val VELOCITY_TOLERANCE_TPS = 300  // Was 750 (lower = settles faster)
-        const val VELOCITY_SETTLE_TIME_MS = 200 // Was 300 (faster settling)
-
-        // ============== HARDWARE CONSTANTS ==============
-        const val TICKS_PER_REV = 8192  // Keep as is
-
-        // ============== INTAKE CONFIRMATION ==============
-        const val CONFIRM_INTAKE_MS = 67.0   // Keep as is
-        const val CONFIRM_LOSS_MS = 10       // Keep as is
+        // Max time the artifact can disappear without resetting confirmation (ms)
+        const val CONFIRM_LOSS_MS = 10
     }
-
-    // ===================================================================
-// RECOMMENDED TUNING PROCEDURE ON ROBOT:
-// ===================================================================
-//
-// 1. Start with these values
-// 2. Test one position transition (e.g., INTAKE_1 -> OUTTAKE_1)
-// 3. Observe behavior:
-//    - Overshoots/oscillates? -> Lower KP by 20%, increase KD by 20%
-//    - Too slow to reach? -> Increase KP by 20%
-//    - Settles but with offset? -> Increase KI slightly
-//    - Jerky motion? -> Increase KD
-// 4. Once smooth, test all 6 positions
-// 5. Fine-tune MOTOR_TOLERANCE_TICKS:
-//    - Too tight (never stops)? -> Increase by 10
-//    - Too loose (stops far away)? -> Decrease by 10
-//
-// ===================================================================
 
     object Turret {
         const val TICKS_PER_REV = 384.5 * 3
@@ -273,12 +205,7 @@ object Constants {
     }
 
     object ServoPositions {
-//        const val LAUNCHER_REST = 0.235
-//        //Was 0.3
-//        const val LAUNCHER_TRIGGERED = 0.75
-
         const val LAUNCHER_REST = 0.47
-        //Was 0.3
         const val LAUNCHER_TRIGGERED = 0.235
     }
 
@@ -298,10 +225,86 @@ object Constants {
 
     @Config
     object Flywheel {
+        // PID Constants
         @JvmField var KP = 0.0075
         @JvmField var KI = 0.0
         @JvmField var KD = 0.0
         @JvmField var KF = 0.000415
+
+        // ========================================
+        // FLYWHEEL OPTIMIZATION SETTINGS
+        // ========================================
+
+        /**
+         * OPERATING MODE - Change this to test different strategies!
+         *
+         * ALWAYS_IDLE (Mode A) - RECOMMENDED:
+         *   - Flywheel runs at 40% speed continuously during teleop
+         *   - Fastest spin-up time (~0.5-1s)
+         *   - Moderate heat generation
+         *   - Best for: Frequent shooting, aggressive play
+         *
+         * SMART_IDLE (Mode B):
+         *   - Runs at 40% after shooting
+         *   - Turns off after 10 seconds of no shooting
+         *   - Balances speed vs heat
+         *   - Best for: Balanced play style
+         *
+         * CONSERVATIVE_IDLE (Mode C):
+         *   - Flywheel runs at 20% speed continuously
+         *   - Slower spin-up (~1-1.5s) but lowest heat/battery usage
+         *   - Best for: Long matches, thermal concerns, battery conservation
+         */
+        var OPERATING_MODE = FlywheelOperatingMode.ALWAYS_IDLE
+
+        /**
+         * Idle velocity in ticks per second
+         * - ALWAYS_IDLE & SMART_IDLE: 40% of typical shooting speed (815 * 0.4 = 326 tps)
+         * - CONSERVATIVE_IDLE: 20% of typical shooting speed (815 * 0.2 = 163 tps)
+         *
+         * These are automatically applied based on OPERATING_MODE
+         */
+        @JvmField var IDLE_VELOCITY = 326.0         // Used by ALWAYS_IDLE and SMART_IDLE
+        @JvmField var CONSERVATIVE_VELOCITY = 163.0 // Used by CONSERVATIVE_IDLE
+
+        /**
+         * Speed tolerance for considering flywheel "at target"
+         * Default: 20 tps (about 2.5% of 815 tps)
+         */
+        @JvmField var SPEED_TOLERANCE_TPS = 20.0
+
+        // ========================================
+        // THERMAL PROTECTION SETTINGS
+        // ========================================
+
+        /**
+         * Current threshold for overheating detection (milliamps)
+         * This is based on rolling average of last 20 samples
+         * Adjust based on your motor specifications
+         */
+        @JvmField var OVERHEAT_CURRENT_MA = 4000.0
+
+        /**
+         * Time threshold before activating thermal throttle (seconds)
+         * If current stays above threshold for this long, throttle to idle
+         */
+        @JvmField var OVERHEAT_TIME_THRESHOLD_S = 3.0
+
+        // ========================================
+        // AUTONOMOUS SETTINGS
+        // ========================================
+
+        /**
+         * Start autonomous with flywheel at idle speed
+         * This saves ~0.5s on first shot
+         */
+        const val AUTO_START_AT_IDLE = true
+
+        /**
+         * Keep flywheel running throughout autonomous
+         * If false, turns off during collection (slower)
+         */
+        const val AUTO_KEEP_RUNNING = true
     }
 
     object Misc {
