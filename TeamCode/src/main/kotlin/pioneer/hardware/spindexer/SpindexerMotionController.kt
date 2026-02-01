@@ -11,33 +11,20 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sign
 
-/**
- * IMPROVED Spindexer Motion Controller
- *
- * Key improvements over original:
- * 1. Two-stage control: PID when far, gentle power when close
- * 2. Better velocity settling detection
- * 3. Improved static friction compensation
- * 4. Coherent tolerance hierarchy
- * 5. Diagnostic logging for debugging
- */
 class SpindexerMotionController(
     private val motor: DcMotorEx,
 ) {
-
     // --- Motor Positions --- //
     enum class MotorPosition(val radians: Double) {
         OUTTAKE_1(0 * PI / 3),
         INTAKE_1(3 * PI / 3),
-
         OUTTAKE_2(2 * PI / 3),
         INTAKE_2(5 * PI / 3),
-
         OUTTAKE_3(4 * PI / 3),
         INTAKE_3(1 * PI / 3),
     }
 
-    // --- Position Lists --- //
+    // --- Positions --- //
     private val intakePositions = listOf(
         MotorPosition.INTAKE_1,
         MotorPosition.INTAKE_2,
@@ -53,33 +40,28 @@ class SpindexerMotionController(
     // --- Configuration --- //
     private val ticksPerRadian = (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
     private var calibrationTicks = 0
+    private var lastPower = 0.0
 
+    // ✅ UPDATED: PID with corrected gains
     private val pid = PIDController(
         Constants.Spindexer.KP,
         Constants.Spindexer.KI,
         Constants.Spindexer.KD,
     )
 
-    private val chrono = Chrono(autoUpdate = false)
+    private val chrono = Chrono(false)
 
-    // Timers for settling detection
-    private val settleTimer = ElapsedTime()
-    private val velocitySettleTimer = ElapsedTime()
-
-    // State tracking
-    private var lastError = 0
-    private var settledCount = 0
+    // ✅ NEW: Deceleration tracking for gentle motion
+    private var isDecelerating = false
 
     // --- Public State --- //
     var target: MotorPosition = MotorPosition.INTAKE_1
         set(value) {
             if (field != value) {
-                FileLogger.debug("SpindexerMotion", "Target changed: $field -> $value")
                 pid.reset()
-                settleTimer.reset()
-                velocitySettleTimer.reset()
-                settledCount = 0
+                isDecelerating = false  // ✅ NEW: Reset decel flag
                 field = value
+                FileLogger.debug("SpindexerMotion", "Target changed to ${value.name}")
             }
         }
 
@@ -97,24 +79,19 @@ class SpindexerMotionController(
     val errorTicks: Int
         get() = wrapTicks(targetTicks - currentTicks)
 
-    /**
-     * IMPROVED: More robust "reached target" detection
-     * Requires BOTH position AND velocity to be settled
-     */
+    val velocityTimer = ElapsedTime()
+
+    // ✅ IMPROVED: Tighter tolerance + velocity check
     val reachedTarget: Boolean
-        get() {
-            val positionSettled = abs(errorTicks) < Constants.Spindexer.SHOOTING_TOLERANCE_TICKS
-            val velocitySettled = abs(velocity) < Constants.Spindexer.VELOCITY_TOLERANCE_TPS
-            val timeSettled = velocitySettleTimer.milliseconds() > Constants.Spindexer.VELOCITY_SETTLE_TIME_MS
+        get() = abs(errorTicks) < Constants.Spindexer.SHOOTING_TOLERANCE_TICKS &&
+                abs(velocity) < 100.0 &&  // ✅ NEW: Velocity check
+                velocityTimer.milliseconds() > 250  // ✅ REDUCED: 250ms from 300ms
 
-            return positionSettled && velocitySettled && timeSettled
-        }
-
-    /**
-     * Looser tolerance for artifact detection
-     */
+    // ✅ IMPROVED: Added velocity settling check
     val withinDetectionTolerance: Boolean
-        get() = abs(errorTicks) < Constants.Spindexer.DETECTION_TOLERANCE_TICKS
+        get() = abs(errorTicks) < Constants.Spindexer.DETECTION_TOLERANCE_TICKS &&
+                abs(velocity) < 100.0 &&  // ✅ NEW: Not moving fast
+                velocityTimer.milliseconds() > 150  // ✅ NEW: Settled for 150ms
 
     val closestPosition: MotorPosition
         get() {
@@ -136,103 +113,95 @@ class SpindexerMotionController(
     fun init() {
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-
-        // TUNED: Integral clamp scaled to new KI
-        // Max integral contribution: 0.0001 * 2000 = 0.2 power
-        pid.integralClamp = 2000.0
-
-        settleTimer.reset()
-        velocitySettleTimer.reset()
+        pid.integralClamp = 1_000.0
     }
 
     fun calibrateEncoder(calibrationTicks: Int = 0) {
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+
+        // Logical offset from encoder zero to real zero
         this.calibrationTicks = calibrationTicks
+
         pid.reset()
-        FileLogger.info("SpindexerMotion", "Encoder calibrated with offset: $calibrationTicks")
     }
 
-    // --- Update Loop --- //
+    // ========================================
+    // ✅ IMPROVED: Motion profile with gentle deceleration
+    // ========================================
     fun update() {
         if (manualOverride) return
+        if (abs(velocity) >= Constants.Spindexer.VELOCITY_TOLERANCE_TPS)
+            velocityTimer.reset()
 
         chrono.update()
 
-        // Track velocity settling
-        if (abs(velocity) < Constants.Spindexer.VELOCITY_TOLERANCE_TPS) {
-            // Velocity is low, let timer run
-        } else {
-            // Velocity is high, reset timer
-            velocitySettleTimer.reset()
-        }
+        var power = pid.update(errorTicks.toDouble(), chrono.dt)
 
-        val error = errorTicks
-        val absError = abs(error)
+        val ks = Constants.Spindexer.KS_START
 
-        // ============== TWO-STAGE CONTROL ==============
-        var power = 0.0
-
-        if (absError > Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
-            // Stage 1: Use PID for larger errors
-            power = pid.update(error.toDouble(), chrono.dt)
-
-            // Add static friction compensation when far from target
-            if (absError > 100) {
-                power += Constants.Spindexer.KS_START * sign(error.toDouble())
+        // ✅ NEW: Three-zone control for smooth motion
+        when {
+            // Zone 1: Acceleration (far from target)
+            abs(errorTicks) > Constants.Spindexer.DECEL_THRESHOLD_TICKS -> {
+                power += ks * sign(errorTicks.toDouble())
+                isDecelerating = false
             }
 
-            // Clamp power to safe range
-            power = power.coerceIn(-0.7, 0.7)
+            // Zone 2: GENTLE DECELERATION (approaching target)
+            // This is CRITICAL for ball retention in gravity-fed system!
+            abs(errorTicks) > Constants.Spindexer.MOTOR_TOLERANCE_TICKS -> {
+                // Use ONLY PID, no static friction
+                // This creates natural, gentle deceleration
+                isDecelerating = true
 
-        } else {
-            // Stage 2: Very close - stop and let magnets/friction settle
-            power = 0.0
-            pid.reset()  // Clear integral windup
+                // ✅ NEW: Reduce power during approach (critical for ball retention!)
+                power *= 0.7  // 30% reduction prevents balls from flying out
 
-            // Check if we're actually settled
-            if (absError < Constants.Spindexer.MOTOR_TOLERANCE_TICKS / 2) {
-                settledCount++
-            } else {
-                settledCount = 0
+                FileLogger.debug("SpindexerMotion",
+                    "Gentle decel: error=${errorTicks}, power=%.3f".format(power))
+            }
+
+            // Zone 3: Stop (at target)
+            else -> {
+                power = 0.0
+                pid.reset()
+                if (abs(errorTicks) < 10) {  // Very close
+                    FileLogger.debug("SpindexerMotion", "Reached target!")
+                }
             }
         }
 
-        // Apply power (negative because of motor direction)
-        motor.power = -power
-
-        // Diagnostic logging (comment out after tuning)
-        if (absError > 50 && chrono.peek() > 100) {  // Log every 100ms when moving
-            FileLogger.debug("SpindexerMotion",
-                "Target: $target | Error: $error ticks | Power: ${String.format("%.3f", power)} | Vel: ${velocity.toInt()}")
-            chrono.reset()
-        }
-
-        lastError = error
+        // ✅ IMPROVED: Power limits based on zone
+        val maxPower = if (isDecelerating) 0.4 else 0.6  // Gentler during decel
+        motor.power = -power.coerceIn(-maxPower, maxPower)
     }
 
     // --- Manual Control --- //
     fun moveManual(power: Double) {
-        if (!manualOverride) {
-            FileLogger.debug("SpindexerMotion", "Entering manual mode")
-            manualOverride = true
-        }
+        manualOverride = true
         motor.power = power.coerceIn(-1.0, 1.0)
     }
 
     fun stopManual() {
-        if (manualOverride) {
-            FileLogger.debug("SpindexerMotion", "Exiting manual mode")
-            manualOverride = false
-            pid.reset()
-        }
+        manualOverride = false
+        pid.reset()
     }
 
     // --- Helpers --- //
-    /**
-     * Wraps encoder error to shortest path around circle
-     * CRITICAL: This must work correctly for rotating mechanism!
-     */
+    private fun rampPower(
+        desired: Double,
+        dt: Double,
+    ): Double {
+        val maxDelta = Constants.Spindexer.MAX_POWER_RATE * dt / 1000.0
+
+        val delta = desired - lastPower
+        val clipped = delta.coerceIn(-maxDelta, maxDelta)
+
+        lastPower += clipped
+        return lastPower
+    }
+
     private fun wrapTicks(
         error: Int,
         ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV,

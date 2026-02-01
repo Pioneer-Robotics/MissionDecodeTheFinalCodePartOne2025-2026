@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
+import pioneer.FlywheelOperatingMode  // ✅ ADDED: Import for operating mode enum
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
@@ -212,14 +213,14 @@ class Flywheel(
         isOverheating = avgCurrent > Constants.Flywheel.OVERHEAT_CURRENT_MA
 
         if (isOverheating && !wasOverheating) {
-            FileLogger.warning("Flywheel", "OVERHEATING DETECTED! Current: %.0f mA".format(avgCurrent))
+            FileLogger.info("Flywheel", "⚠️ OVERHEATING DETECTED! Current: %.0f mA".format(avgCurrent))
         }
 
         // Apply thermal throttling if overheating for too long
         if (isOverheating && thermalTimer.seconds() > Constants.Flywheel.OVERHEAT_TIME_THRESHOLD_S) {
             if (!thermalThrottleActive) {
                 thermalThrottleActive = true
-                FileLogger.warning("Flywheel", "THERMAL THROTTLE ACTIVATED - Reducing to idle speed")
+                FileLogger.info("Flywheel", "⚠️ THERMAL THROTTLE ACTIVATED - Reducing to idle speed")
             }
         } else if (!isOverheating) {
             // Reset thermal state when cooled down
@@ -286,12 +287,24 @@ class Flywheel(
         currentSamples.clear()
     }
 
-    // https://www.desmos.com/calculator/uofqeqqyn1
-    // 12/22: https://www.desmos.com/calculator/1kj8xzklqp
+    // ========================================
+    // ✅ SHOOTING ACCURACY IMPROVEMENTS
+    // ========================================
+
+    /**
+     * Calculate required flywheel velocity for a shot
+     *
+     * ✅ UPDATED with shooting accuracy improvements:
+     * - Speed reduction factor (tunable via Constants)
+     * - Battery voltage compensation
+     * - Safety limits (min/max speed)
+     * - Shot quality assessment
+     */
     fun estimateVelocity(
         pose: Pose,
         target: Pose,
-        targetHeight: Double
+        targetHeight: Double,
+        batteryVoltage: Double = 12.0  // ✅ NEW: Battery compensation
     ): Double {
         val shootPose = pose +
                 Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
@@ -300,16 +313,64 @@ class Flywheel(
         val heightDiff = targetHeight - Constants.Turret.HEIGHT
         val groundDistance = shootPose distanceTo target
 
+        // ✅ DISTANCE VALIDATION
+        if (groundDistance < Constants.Flywheel.MIN_SHOT_DISTANCE_CM ||
+            groundDistance > Constants.Flywheel.MAX_SHOT_DISTANCE_CM) {
+            FileLogger.info("Flywheel", "⚠️ Shot distance %.1f cm out of range!".format(groundDistance))
+        }
+
         // Real world v0 of the ball
         val v0 = (groundDistance) / (
                 cos(Constants.Turret.THETA) *
                         sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * groundDistance)) / (-980))
                 )
 
-        // Regression to convert real world velocity to flywheel speed
-        val flywheelVelocity = 1.583 * v0 - 9.86811 // From 12/22 testing
+        // ✅ UPDATED: Regression with tunable parameters
+        var flywheelVelocity = Constants.Flywheel.REGRESSION_SLOPE * v0 +
+                Constants.Flywheel.REGRESSION_INTERCEPT
+
+        // ✅ NEW: Speed reduction factor (PRIMARY TUNING KNOB)
+        flywheelVelocity *= Constants.Flywheel.SPEED_REDUCTION_FACTOR
+
+        // ✅ NEW: Battery voltage compensation
+        if (Constants.Flywheel.USE_BATTERY_COMPENSATION) {
+            val voltageCompensation = 12.0 / batteryVoltage.coerceIn(10.0, 13.5)
+            flywheelVelocity *= voltageCompensation.coerceIn(
+                Constants.Flywheel.MIN_VOLTAGE_COMPENSATION,
+                Constants.Flywheel.MAX_VOLTAGE_COMPENSATION
+            )
+        }
+
+        // ✅ NEW: Safety limits
+        flywheelVelocity = flywheelVelocity.coerceIn(
+            Constants.Flywheel.MIN_FLYWHEEL_SPEED,
+            Constants.Flywheel.MAX_FLYWHEEL_SPEED
+        )
 
         return flywheelVelocity
+    }
+
+    // ✅ NEW: Assess shot quality based on distance
+    fun assessShotQuality(distance: Double): ShotQuality {
+        return when {
+            distance < 30.0 -> ShotQuality.OUT_OF_RANGE
+            distance in 30.0..50.0 -> ShotQuality.RISKY
+            distance in 50.0..60.0 -> ShotQuality.ACCEPTABLE
+            distance in 60.0..80.0 -> ShotQuality.GOOD
+            distance in 80.0..150.0 -> ShotQuality.EXCELLENT
+            distance in 150.0..180.0 -> ShotQuality.GOOD
+            distance in 180.0..210.0 -> ShotQuality.ACCEPTABLE
+            distance in 210.0..240.0 -> ShotQuality.RISKY
+            else -> ShotQuality.OUT_OF_RANGE
+        }
+    }
+
+    enum class ShotQuality {
+        EXCELLENT,      // 80-150cm - sweet spot
+        GOOD,           // 60-80cm or 150-180cm
+        ACCEPTABLE,     // 50-60cm or 180-210cm
+        RISKY,          // 30-50cm or 210-240cm
+        OUT_OF_RANGE    // <30cm or >240cm
     }
 }
 

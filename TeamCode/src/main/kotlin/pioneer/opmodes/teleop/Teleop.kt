@@ -24,7 +24,7 @@ class Teleop : BaseOpMode() {
     private val allianceToggle = Toggle(false)
     private var changedAllianceColor = false
 
-    // NEW: AprilTag drift correction settings
+    // AprilTag drift correction settings
     private var enableAprilTagCorrection = true
     private var lastCorrectionTime = 0L
     private val CORRECTION_INTERVAL_MS = 500L
@@ -36,7 +36,7 @@ class Teleop : BaseOpMode() {
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
 
         driver2 = TeleopDriver2(gamepad2, bot)
-        driver1 = TeleopDriver1(gamepad1, bot, driver2)  // NEW: Pass driver2 reference
+        driver1 = TeleopDriver1(gamepad1, bot, driver2)
     }
 
     override fun init_loop() {
@@ -51,11 +51,10 @@ class Teleop : BaseOpMode() {
                     AllianceColor.NEUTRAL -> Color.PURPLE
                 }
             )
-            // NEW: Update field points when alliance changes
+            // Update field points when alliance changes
             driver1.updateFieldPoints()
         }
         telemetry.addData("Alliance Color", bot.allianceColor)
-        // NEW: Show drift correction status
         telemetry.addData("AprilTag Correction", if (enableAprilTagCorrection) "ENABLED" else "DISABLED")
         telemetry.update()
     }
@@ -63,7 +62,6 @@ class Teleop : BaseOpMode() {
     override fun onStart() {
         if (!changedAllianceColor) bot.allianceColor = Constants.TransferData.allianceColor
         driver2.onStart()
-        // NEW: Initialize field points
         driver1.updateFieldPoints()
     }
 
@@ -72,12 +70,12 @@ class Teleop : BaseOpMode() {
         driver1.update()
         driver2.update()
 
-        // NEW: Automatic AprilTag drift correction
+        // Automatic AprilTag drift correction
         if (enableAprilTagCorrection) {
             correctOdometryWithAprilTags()
         }
 
-        // NEW: Toggle drift correction with gamepad1.left_stick_button
+        // Toggle drift correction with gamepad1.left_stick_button
         if (gamepad1.left_stick_button) {
             enableAprilTagCorrection = !enableAprilTagCorrection
             gamepad1.rumble(200)
@@ -87,7 +85,7 @@ class Teleop : BaseOpMode() {
         addTelemetryData()
     }
 
-    // NEW: Automatic drift correction using AprilTags
+    // Automatic drift correction using AprilTags
     private fun correctOdometryWithAprilTags() {
         val currentTime = System.currentTimeMillis()
 
@@ -146,7 +144,7 @@ class Teleop : BaseOpMode() {
         lastCorrectionTime = currentTime
     }
 
-    // NEW: Blend two angles with proper wrapping
+    // Blend two angles with proper wrapping
     private fun blendAngles(angle1: Double, angle2: Double, blendFactor: Double): Double {
         val x1 = cos(angle1)
         val y1 = sin(angle1)
@@ -160,9 +158,6 @@ class Teleop : BaseOpMode() {
     }
 
     private fun addTelemetryData() {
-//        telemetry.addData("Transfer Data", Constants.TransferData.turretPositionTicks)
-//        telemetry.addData("Turret Offset Ticks", bot.turret?.offsetTicks)
-//        telemetry.addData("Turret Angle", bot.turret?.currentAngle)
         addTelemetryData("Alliance Color", bot.allianceColor, Verbose.INFO)
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.INFO)
         addTelemetryData("Pose", bot.pinpoint!!.pose, Verbose.DEBUG)
@@ -174,8 +169,6 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Flywheel Target Speed", driver2.flywheelSpeed, Verbose.DEBUG)
         addTelemetryData("Flywheel TPS", bot.flywheel?.velocity, Verbose.DEBUG)
         addTelemetryData("Turret Angle", driver2.turretAngle, Verbose.DEBUG)
-//        addTelemetryData("Turret Target Ticks", bot.turret?.targetTicks, Verbose.DEBUG)
-//        addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
 
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.DEBUG)
         addTelemetryData("Spindexer State", bot.spindexer?.motorState, Verbose.INFO)
@@ -200,10 +193,19 @@ class Teleop : BaseOpMode() {
         telemetryPacket.put("Turret Target Ticks", bot.turret?.targetTicks)
         telemetryPacket.put("Turret Current Ticks", bot.turret?.currentTicks)
 
-        // NEW: Drift correction telemetry
+        // Drift correction telemetry
         addTelemetryData("AprilTag Correction", if (enableAprilTagCorrection) "ON" else "OFF", Verbose.INFO)
         val visibleGoalTags = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
             ?.count { GoalTagProcessor.isValidGoalTag(it.id) } ?: 0
         addTelemetryData("Visible Goal Tags", visibleGoalTags, Verbose.INFO)
+
+        // ✅ NEW: Flywheel status telemetry
+        addTelemetryData("Flywheel State", bot.flywheel?.state?.name, Verbose.INFO)
+        addTelemetryData("Thermal Status", bot.flywheel?.getThermalStatus(), Verbose.INFO)
+
+        // ✅ NEW: Multi-shot status
+        if (driver2.multiShotStatus.isNotEmpty()) {
+            addTelemetryData("Multi-Shot", driver2.multiShotStatus, Verbose.INFO)
+        }
     }
 }

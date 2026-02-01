@@ -44,9 +44,9 @@ class FlywheelTesting : BaseOpMode() {
         }
 
         if (flywheelToggle.state){
-            bot.flywheel?.velocity = flywheelSpeed
+            bot.flywheel?.targetVelocity = flywheelSpeed
         } else {
-            bot.flywheel?.velocity = 0.0
+            bot.flywheel?.targetVelocity = 0.0
         }
 
         if (gamepad1.square){

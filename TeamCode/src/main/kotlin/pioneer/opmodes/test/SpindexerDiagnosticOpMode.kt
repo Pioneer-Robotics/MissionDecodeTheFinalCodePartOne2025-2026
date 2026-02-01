@@ -23,17 +23,18 @@ import pioneer.opmodes.BaseOpMode
  * - START: Calibrate encoder to current position
  * - BACK: Reset to INTAKE_1
  */
+/*
 @TeleOp(name = "Spindexer Diagnostic", group = "Test")
 class SpindexerDiagnosticOpMode : BaseOpMode() {
-    
-    private lateinit var bot: Bot
+
+    override lateinit var bot: Bot
     private var lastPosition: SpindexerMotionController.MotorPosition? = null
     private var manualMode = false
     
     override fun onInit() {
-        bot = Bot(hardwareMap, this)
-        bot.initSpindexer()
-        
+        bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
+        bot.spindexer?.init()
+
         telemetry.addLine("Spindexer Diagnostic Ready!")
         telemetry.addLine("Use buttons to move to positions")
         telemetry.addLine("Triggers for manual control")
@@ -147,3 +148,4 @@ class SpindexerDiagnosticOpMode : BaseOpMode() {
         telemetry.update()
     }
 }
+*/

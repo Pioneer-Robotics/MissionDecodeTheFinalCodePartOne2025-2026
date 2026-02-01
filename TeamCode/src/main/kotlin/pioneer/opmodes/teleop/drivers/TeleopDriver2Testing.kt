@@ -138,9 +138,9 @@ class TeleopDriver2Testing(
     private fun handleFlywheel() {
         flywheelToggle.toggle(gamepad.dpad_left)
         if (flywheelToggle.state) {
-            bot.flywheel?.velocity = flywheelSpeed
+            bot.flywheel?.targetVelocity = flywheelSpeed
         } else {
-            bot.flywheel?.velocity = 0.0
+            bot.flywheel?.targetVelocity = 0.0
         }
     }
 
@@ -211,7 +211,7 @@ class TeleopDriver2Testing(
     }
 
     private fun updateIndicatorLED() {
-        bot.flywheel?.velocity?.let {
+        bot.flywheel?.targetVelocity?.let {
             if (it >= flywheelSpeed-10 && it <=flywheelSpeed+20) {
                 gamepad.setLedColor(0.0, 1.0, 0.0, -1)
             } else if (it <flywheelSpeed-10){
