@@ -1,6 +1,7 @@
 package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import org.firstinspires.ftc.robotcore.external.Const
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
@@ -164,6 +165,7 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Artifacts", bot.spindexer?.artifacts.contentDeepToString(), Verbose.INFO)
 
         addTelemetryData("Turret Mode", bot.turret?.mode, Verbose.INFO)
+        addTelemetryData("Flywheel Operating Mode", Constants.Flywheel.OPERATING_MODE, Verbose.INFO)
         addTelemetryData("Use Auto Track Offset", driver2.useAutoTrackOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Speed Offset", driver2.flywheelSpeedOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Target Speed", driver2.flywheelSpeed, Verbose.DEBUG)

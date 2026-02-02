@@ -14,7 +14,8 @@ import kotlin.math.PI
 enum class FlywheelOperatingMode {
     ALWAYS_IDLE,        // Mode A: Always runs at 40% idle speed when not shooting
     SMART_IDLE,         // Mode B: Idles for 10s after last shot, then turns off
-    CONSERVATIVE_IDLE   // Mode C: Always runs at 20% idle speed (lowest heat/power)
+    CONSERVATIVE_IDLE,   // Mode C: Always runs at 20% idle speed (lowest heat/power)
+    FULL_OFF
 }
 
 object Constants {
@@ -170,9 +171,9 @@ object Constants {
         // ========================================
         // ✅ UPDATED PID GAINS - Fixed from 100-1000x too small!
         // ========================================
-        @JvmField var KP = 0.020      // Was 0.000175 (114x increase)
-        @JvmField var KI = 0.0        // Was 0.00001 (keeping at 0)
-        @JvmField var KD = 0.002      // Was 0.00045 (4.4x increase)
+        @JvmField var KP = 0.000175      // Was 0.000175 (114x increase)
+        @JvmField var KI = 0.00001      // Was 0.00001 (keeping at 0)
+        @JvmField var KD = 0.00045      // Was 0.00045 (4.4x increase)
 
         @JvmField var KS_START = 0.03
         @JvmField var KS_STEP = 0.0
@@ -187,7 +188,7 @@ object Constants {
         @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
 
         const val SHOOTING_TOLERANCE_TICKS = 75    // Was 100 (tighter for shooting)
-        const val DETECTION_TOLERANCE_TICKS = 150
+        const val DETECTION_TOLERANCE_TICKS = 175
         const val VELOCITY_TOLERANCE_TPS = 750
         const val TICKS_PER_REV = 8192
 

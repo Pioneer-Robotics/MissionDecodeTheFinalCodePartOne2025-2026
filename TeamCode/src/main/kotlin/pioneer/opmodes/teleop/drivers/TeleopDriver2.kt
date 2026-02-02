@@ -15,6 +15,7 @@ import pioneer.helpers.Chrono
 import pioneer.helpers.Pose
 import pioneer.helpers.TestMatrixLogger
 import pioneer.helpers.Toggle
+import pioneer.helpers.next
 import kotlin.math.*
 
 class TeleopDriver2(
@@ -27,6 +28,7 @@ class TeleopDriver2(
     private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
+    private val flywheelOperateModeToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose()
     private var offsetShootingTarget = Pose()
@@ -63,6 +65,7 @@ class TeleopDriver2(
         private set
 
     fun update() {
+        handleFlywheelOperateMode()
         updateFlywheelSpeed()
         handleFlywheel()
         handleTurret()
@@ -84,6 +87,7 @@ class TeleopDriver2(
             FlywheelOperatingMode.ALWAYS_IDLE -> Flywheel.FlywheelState.IDLE
             FlywheelOperatingMode.SMART_IDLE -> Flywheel.FlywheelState.IDLE
             FlywheelOperatingMode.CONSERVATIVE_IDLE -> Flywheel.FlywheelState.IDLE
+            FlywheelOperatingMode.FULL_OFF -> Flywheel.FlywheelState.OFF
         }
     }
 
@@ -99,6 +103,15 @@ class TeleopDriver2(
             (totalShotsHit.toDouble() / totalShotsFired * 100.0)
         } else {
             0.0
+        }
+    }
+
+    //Handle flywheel operating mode
+    private fun handleFlywheelOperateMode(){
+        flywheelOperateModeToggle.toggle(gamepad.triangle)
+        if (flywheelOperateModeToggle.justChanged){
+            Constants.Flywheel.OPERATING_MODE.next()
+            //FIXME KInd of sketchy since changing constants
         }
     }
 
@@ -154,6 +167,10 @@ class TeleopDriver2(
                     // Conservative mode - run at lower idle speed
                     bot.flywheel?.state = Flywheel.FlywheelState.IDLE
                 }
+
+                FlywheelOperatingMode.FULL_OFF -> {
+                    bot.flywheel?.state = Flywheel.FlywheelState.OFF
+                }
             }
         }
     }
@@ -168,7 +185,7 @@ class TeleopDriver2(
         when {
             gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
             gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
-            gamepad.triangle -> shootArtifact()
+
         }
     }
 

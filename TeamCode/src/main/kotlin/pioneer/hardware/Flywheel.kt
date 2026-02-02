@@ -94,14 +94,18 @@ class Flywheel(
         get() = flywheel.getCurrent(CurrentUnit.MILLIAMPS)
 
     // Idle velocity based on operating mode
-    private val idleVelocity: Double
+    private var idleVelocity: Double = 0.0
         get() = when (Constants.Flywheel.OPERATING_MODE) {
             FlywheelOperatingMode.ALWAYS_IDLE -> Constants.Flywheel.IDLE_VELOCITY
             FlywheelOperatingMode.SMART_IDLE -> {
                 if (smartIdleActive) Constants.Flywheel.IDLE_VELOCITY else 0.0
             }
             FlywheelOperatingMode.CONSERVATIVE_IDLE -> Constants.Flywheel.CONSERVATIVE_VELOCITY
+            FlywheelOperatingMode.FULL_OFF -> 0.0
         }
+
+//    private var idleVelocity = 0.0
+
 
     // Thermal monitoring
     private var maxCurrentSeen = 0.0
@@ -156,14 +160,14 @@ class Flywheel(
         if (Constants.Flywheel.OPERATING_MODE == FlywheelOperatingMode.SMART_IDLE) {
             updateSmartIdle(currentTime)
         }
-
-        // Apply thermal throttling if needed
-        val effectiveTargetVelocity = if (thermalThrottleActive) {
-            idleVelocity // Throttle down to idle if overheating
-        } else {
-            targetVelocity
-        }
-
+        //Causing some issues
+//        // Apply thermal throttling if needed
+//        val effectiveTargetVelocity = if (thermalThrottleActive) {
+//            idleVelocity // Throttle down to idle if overheating
+//        } else {
+//            targetVelocity
+//        }
+        val effectiveTargetVelocity = targetVelocity
         // Motor control
         if (effectiveTargetVelocity == 0.0) {
             flywheel.power = 0.0
@@ -187,6 +191,17 @@ class Flywheel(
             timeAtTargetSpeed += dt
         }
     }
+
+//    private fun updateOperateMode(flywheelOperatingMode: FlywheelOperatingMode){
+//        when (flywheelOperatingMode) {
+//            FlywheelOperatingMode.ALWAYS_IDLE -> Constants.Flywheel.IDLE_VELOCITY
+//            FlywheelOperatingMode.SMART_IDLE -> {
+//                if (smartIdleActive) Constants.Flywheel.IDLE_VELOCITY else 0.0
+//            }
+//            FlywheelOperatingMode.CONSERVATIVE_IDLE -> Constants.Flywheel.CONSERVATIVE_VELOCITY
+//            FlywheelOperatingMode.FULL_OFF -> 0.0
+//        }
+//    }
 
     private fun updateThermalMonitoring() {
         val currentCurrent = current
@@ -330,16 +345,18 @@ class Flywheel(
                 Constants.Flywheel.REGRESSION_INTERCEPT
 
         // ✅ NEW: Speed reduction factor (PRIMARY TUNING KNOB)
-        flywheelVelocity *= Constants.Flywheel.SPEED_REDUCTION_FACTOR
+        //TODO ADD back when other stuff is fixed
+//        flywheelVelocity *= Constants.Flywheel.SPEED_REDUCTION_FACTOR
 
         // ✅ NEW: Battery voltage compensation
-        if (Constants.Flywheel.USE_BATTERY_COMPENSATION) {
-            val voltageCompensation = 12.0 / batteryVoltage.coerceIn(10.0, 13.5)
-            flywheelVelocity *= voltageCompensation.coerceIn(
-                Constants.Flywheel.MIN_VOLTAGE_COMPENSATION,
-                Constants.Flywheel.MAX_VOLTAGE_COMPENSATION
-            )
-        }
+        //TODO: Test if necessary, otherwise might be causing issues
+//        if (Constants.Flywheel.USE_BATTERY_COMPENSATION) {
+//            val voltageCompensation = 12.0 / batteryVoltage.coerceIn(10.0, 13.5)
+//            flywheelVelocity *= voltageCompensation.coerceIn(
+//                Constants.Flywheel.MIN_VOLTAGE_COMPENSATION,
+//                Constants.Flywheel.MAX_VOLTAGE_COMPENSATION
+//            )
+//        }
 
         // ✅ NEW: Safety limits
         flywheelVelocity = flywheelVelocity.coerceIn(
