@@ -43,7 +43,7 @@ class AprilTag(
             .Builder()
             .setTagLibrary(library)
             .setCameraPose(position, orientation)
-            // .setLensIntrinsics(CameraConstants.fx, CameraConstants.fy, CameraConstants.cx, CameraConstants.cy) // Intrinsics are set in XML
+            .setLensIntrinsics(Constants.Camera.FX, Constants.Camera.FY, Constants.Camera.CX, Constants.Camera.CY)
             .setOutputUnits(distanceUnit, angleUnit)
             .setDrawTagID(draw)
             .setDrawTagOutline(draw)
