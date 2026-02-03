@@ -2,6 +2,7 @@ package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.Constants
@@ -13,6 +14,7 @@ import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.opmodes.teleop.drivers.TeleopDriver1
 import pioneer.opmodes.teleop.drivers.TeleopDriver2
+import kotlin.math.hypot
 
 @TeleOp(name = "Teleop")
 class Teleop : BaseOpMode() {
@@ -60,6 +62,9 @@ class Teleop : BaseOpMode() {
     }
 
     private fun addTelemetryData() {
+        val detection = bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.firstOrNull()?.ftcPose
+        addTelemetryData("April Tag Relative Position", "x: ${detection?.x} y: ${detection?.y} bearing: ${detection?.bearing}", Verbose.FATAL)
+        addTelemetryData("Shooting Distance", hypot(detection?.x ?: 0.0, detection?.y ?: 0.0), Verbose.FATAL)
 //        telemetry.addData("Transfer Data", Constants.TransferData.turretPositionTicks)
 //        telemetry.addData("Turret Offset Ticks", bot.turret?.offsetTicks)
 //        telemetry.addData("Turret Angle", bot.turret?.currentAngle)

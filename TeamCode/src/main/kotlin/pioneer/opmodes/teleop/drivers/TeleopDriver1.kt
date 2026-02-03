@@ -6,7 +6,6 @@ import pioneer.Bot
 import pioneer.Constants
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
-import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import kotlin.math.PI

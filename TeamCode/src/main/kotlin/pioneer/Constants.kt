@@ -165,11 +165,11 @@ object Constants {
         val RPY_UNITS = AngleUnit.DEGREES
         val RPY_OFFSET: List<Double> = listOf(0.0, -90.0, 0.0) // Pitch=-90 to face forward
 
-        // //Lens Intrinsics
-        // const val fx = 955.23
-        // const val fy = 962.92
-        // const val cx = 330.05
-        // const val cy = 186.05
+         //Lens Intrinsics
+         const val FX = 915.97454765
+         const val FY = 915.69375972
+         const val CX = 634.56292469
+         const val CY = 370.77742622
 
         // val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
     }
@@ -204,6 +204,7 @@ object Constants {
         const val CONFIRM_LOSS_MS = 10
     }
 
+    @Config
     object Turret {
         const val TICKS_PER_REV = 384.5 * 3
         const val HEIGHT = 30.48
@@ -211,11 +212,16 @@ object Constants {
         const val ANGLE_TOLERANCE_RADIANS = 0.075
         const val LAUNCH_TIME = 0.125
         const val OFFSET = -10.0
+
+        @JvmField var KP = 0.0075
+        @JvmField var KI = 0.0001
+        @JvmField var KD = 1.0
+        @JvmField var KS = 0.125
     }
 
     object ServoPositions {
 //        const val LAUNCHER_REST = 0.235
-//        //Was 0.3
+//        Was 0.3
 //        const val LAUNCHER_TRIGGERED = 0.75
 
         const val LAUNCHER_REST = 0.47

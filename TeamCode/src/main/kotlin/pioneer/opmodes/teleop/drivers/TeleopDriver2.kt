@@ -2,6 +2,7 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
@@ -17,7 +18,6 @@ class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
-    private val chrono = Chrono(autoUpdate = false)
     private val isAutoTracking = Toggle(false)
     private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
@@ -152,9 +152,10 @@ class TeleopDriver2(
 
     private fun handleAutoTrack() {
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
-            bot.turret?.autoTrack(
-                bot.pinpoint?.pose ?: Pose(),
-                finalShootingTarget,
+            val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
+            val errorDegrees = tagDetections?.firstOrNull()?.ftcPose?.bearing?.times(-1.0)
+            bot.turret?.tagTrack(
+                errorDegrees,
             )
         }
         if (abs(gamepad.right_stick_x) > 0.02) {

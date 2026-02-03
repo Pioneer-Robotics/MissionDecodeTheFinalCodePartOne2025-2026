@@ -4,13 +4,15 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import org.firstinspires.ftc.robotcore.external.Const
 import pioneer.Constants
+import pioneer.helpers.Chrono
 import pioneer.helpers.MathUtils
+import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.sign
 import kotlin.math.sin
 
 class Turret(
@@ -19,6 +21,13 @@ class Turret(
     private val motorRange: Pair<Double, Double> = -3 * PI / 2 to PI / 2,
 ) : HardwareComponent {
     private lateinit var turret: DcMotorEx
+
+    private val tagTrackPID = PIDController(
+        Constants.Turret.KP,
+        Constants.Turret.KI,
+        Constants.Turret.KD,
+    )
+    private val chrono = Chrono()
 
     private val ticksPerRadian: Double = Constants.Turret.TICKS_PER_REV / (2 * PI)
 
@@ -58,6 +67,7 @@ class Turret(
         turret =
             hardwareMap.get(DcMotorEx::class.java, motorName).apply {
                 mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+                mode = DcMotor.RunMode.RUN_USING_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 direction = DcMotorSimple.Direction.FORWARD
             }
@@ -88,14 +98,13 @@ class Turret(
 
         var desiredAngle: Double
 
-        if (overrideRange){
+        if (overrideRange) {
             desiredAngle = angle
         } else {
             desiredAngle = MathUtils.normalizeRadians(angle, motorRange)
         }
 
         // Logical ticks uses offset
-        val logicalCurrentTicks = currentTicks
         val logicalTargetTicks =
             (desiredAngle * ticksPerRadian).toInt()
         val rawTargetTicks = logicalTargetTicks - offsetTicks
@@ -111,7 +120,10 @@ class Turret(
         pose: Pose,
         target: Pose,
     ) {
-        val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
+        val shootPose = pose + Pose(
+            x = Constants.Turret.OFFSET * sin(-pose.theta),
+            y = Constants.Turret.OFFSET * cos(-pose.theta)
+        ) +
                 Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
         // General Angle (From robot 0 to target):
         val targetTheta = (shootPose angleTo target)
@@ -119,8 +131,23 @@ class Turret(
         gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.85)
     }
 
-    fun setCustomTarget(pose: Pose, distance: Double): Pose{
-        val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
+    fun tagTrack(errorDegrees: Double?) {
+        if (errorDegrees == null) {
+            turret.power = 0.0
+            return
+        }
+        val thetaError = Math.toRadians(errorDegrees)
+        val power = tagTrackPID.update(thetaError, chrono.dt)
+        val static = if (abs(power) > 0.001) Constants.Turret.KS * sign(power) else 0.0
+        turret.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        turret.power = power + static
+    }
+
+    fun setCustomTarget(pose: Pose, distance: Double): Pose {
+        val shootPose = pose + Pose(
+            x = Constants.Turret.OFFSET * sin(-pose.theta),
+            y = Constants.Turret.OFFSET * cos(-pose.theta)
+        ) +
                 Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
         val theta = shootPose.theta + currentAngle
         val targetPose = shootPose + Pose(x = distance * sin(theta), y = distance * -cos(theta))

@@ -30,7 +30,7 @@ class ManualSpindexerControl : OpMode() {
 
         motor.power = power
 
-        telemetry.addData("Motor Power", gamepad1.right_trigger)
+        telemetry.addData("Motor Power", power)
         telemetry.addData("Motor Position", motor.currentPosition)
         telemetry.addData("Motor Velocity", motor.velocity)
         telemetry.update()
