@@ -14,8 +14,7 @@ import kotlin.math.PI
 enum class FlywheelOperatingMode {
     ALWAYS_IDLE,        // Mode A: Always runs at 40% idle speed when not shooting
     SMART_IDLE,         // Mode B: Idles for 10s after last shot, then turns off
-    CONSERVATIVE_IDLE,   // Mode C: Always runs at 20% idle speed (lowest heat/power)
-    FULL_OFF
+    CONSERVATIVE_IDLE   // Mode C: Always runs at 20% idle speed (lowest heat/power)
 }
 
 object Constants {
@@ -168,41 +167,32 @@ object Constants {
 
     @Config
     object Spindexer {
-        // ========================================
-        // ✅ UPDATED PID GAINS - Fixed from 100-1000x too small!
-        // ========================================
-        @JvmField var KP = 0.000175      // Was 0.000175 (114x increase)
-        @JvmField var KI = 0.00001      // Was 0.00001 (keeping at 0)
-        @JvmField var KD = 0.00045      // Was 0.00045 (4.4x increase)
+        // External Encoder
+        @JvmField var KP = 0.000175
+        @JvmField var KI = 0.00001
+        @JvmField var KD = 0.00045
 
         @JvmField var KS_START = 0.03
         @JvmField var KS_STEP = 0.0
 
         @JvmField var MAX_POWER_RATE = 100.0
 
-        // ✅ TIGHTER TOLERANCES with better PID
-        @JvmField var MOTOR_TOLERANCE_TICKS = 50   // Was 75 (tighter stop zone)
+        @JvmField var MOTOR_TOLERANCE_TICKS = 75
         @JvmField var PID_TOLERANCE_TICKS = 100
 
         // constant power within PID_TOLERANCE_TICKS in output position
         @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
 
-        const val SHOOTING_TOLERANCE_TICKS = 75    // Was 100 (tighter for shooting)
-        const val DETECTION_TOLERANCE_TICKS = 175
+        const val SHOOTING_TOLERANCE_TICKS = 100
+        const val DETECTION_TOLERANCE_TICKS = 150
         const val VELOCITY_TOLERANCE_TPS = 750
         const val TICKS_PER_REV = 8192
 
-        // ========================================
-        // ✅ UPDATED INTAKE TIMING - Increased for gravity settling
-        // ========================================
-        const val CONFIRM_INTAKE_MS = 150.0        // Was 67.0 (2.2x increase)
-        const val CONFIRM_LOSS_MS = 50             // Was 10 (5x increase)
+        // Time required to confirm an artifact has been intaken (ms)
+        const val CONFIRM_INTAKE_MS = 67.0
 
-        // ✅ NEW: Ball settling time after confirmation
-        const val BALL_SETTLING_TIME_MS = 300L     // NEW: Wait for gravity settling
-
-        // ✅ NEW: Gentle deceleration zone
-        const val DECEL_THRESHOLD_TICKS = 300      // NEW: Start gentle approach
+        // Max time the artifact can disappear without resetting confirmation (ms)
+        const val CONFIRM_LOSS_MS = 10
     }
 
     object Turret {
@@ -265,7 +255,7 @@ object Constants {
          *   - Slower spin-up (~1-1.5s) but lowest heat/battery usage
          *   - Best for: Long matches, thermal concerns, battery conservation
          */
-        var OPERATING_MODE = FlywheelOperatingMode.SMART_IDLE
+        var OPERATING_MODE = FlywheelOperatingMode.ALWAYS_IDLE
 
         /**
          * Idle velocity in ticks per second
@@ -299,57 +289,6 @@ object Constants {
          * If current stays above threshold for this long, throttle to idle
          */
         @JvmField var OVERHEAT_TIME_THRESHOLD_S = 3.0
-
-        // ========================================
-        // ✅ SHOOTING ACCURACY IMPROVEMENTS
-        // ========================================
-
-        /**
-         * SPEED REDUCTION FACTOR - PRIMARY TUNING KNOB!
-         *
-         * Current: 1.0 (no reduction) - OVERSHOOTING
-         *
-         * If still overshooting after testing:
-         * - Try 0.95 (5% reduction)
-         * - Try 0.92 (8% reduction)
-         * - Try 0.90 (10% reduction)
-         *
-         * If undershooting:
-         * - Try 1.02 (2% increase)
-         * - Try 1.05 (5% increase)
-         *
-         * Tune this FIRST before changing anything else!
-         */
-        @JvmField var SPEED_REDUCTION_FACTOR = 0.95  // ✅ START HERE: 5% reduction
-
-        /**
-         * Regression coefficients from 12/22 testing
-         * Can tune these for advanced optimization
-         */
-        @JvmField var REGRESSION_SLOPE = 1.583       // Original from testing
-        @JvmField var REGRESSION_INTERCEPT = -9.86811
-
-        /**
-         * Safety limits for flywheel speed
-         * Prevents unrealistic calculations
-         */
-        @JvmField var MIN_FLYWHEEL_SPEED = 500.0     // Minimum speed (tps)
-        @JvmField var MAX_FLYWHEEL_SPEED = 1100.0    // Maximum speed (tps)
-
-        /**
-         * Shot distance limits (cm)
-         * Warn if shot is outside optimal range
-         */
-        const val MIN_SHOT_DISTANCE_CM = 30.0        // Too close - very steep
-        const val MAX_SHOT_DISTANCE_CM = 250.0       // Too far - needs extreme speed
-
-        /**
-         * Battery voltage compensation
-         * Auto-adjusts speed for voltage drop
-         */
-        @JvmField var USE_BATTERY_COMPENSATION = true
-        @JvmField var MIN_VOLTAGE_COMPENSATION = 0.90  // Max 10% reduction
-        @JvmField var MAX_VOLTAGE_COMPENSATION = 1.15  // Max 15% increase
 
         // ========================================
         // AUTONOMOUS SETTINGS

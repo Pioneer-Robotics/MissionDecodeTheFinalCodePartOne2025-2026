@@ -146,7 +146,7 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun state_goto_shoot() {
-        bot.flywheel?.targetVelocity = targetVelocity
+        bot.flywheel?.velocity = targetVelocity
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
             val endPose = if (lookForTag == null) P.SHOOT_GOAL_CLOSE.copy(theta=0.0) else P.SHOOT_GOAL_CLOSE
@@ -253,13 +253,13 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun flywheelAtSpeed(): Boolean {
-        return (bot.flywheel?.targetVelocity ?: 0.0) > (targetVelocity - 10) &&
-                (bot.flywheel?.targetVelocity ?: 0.0) < (targetVelocity + 10)
+        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 10) &&
+                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
     }
 
     private fun state_collect() {
         bot.intake?.forward()
-        bot.flywheel?.targetVelocity = 0.0
+        bot.flywheel?.velocity = 0.0
         if (!bot.follower.isFollowing) { // Starting path
             when (collectState) {
                 CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 5.0)
@@ -277,7 +277,7 @@ class GoalSideAuto : BaseOpMode() {
                     bot.intake?.stop()
                 }
             }, 1000)
-            bot.flywheel?.targetVelocity = targetVelocity
+            bot.flywheel?.velocity = targetVelocity
             when (collectState) {
                 CollectState.GOAL -> collectState = CollectState.MID
                 CollectState.MID -> collectState = CollectState.AUDIENCE
@@ -289,7 +289,7 @@ class GoalSideAuto : BaseOpMode() {
 
     private fun state_leave() {
         if (startLeave) {
-            bot.flywheel?.targetVelocity = 0.0
+            bot.flywheel?.velocity = 0.0
             bot.intake?.stop()
             bot.follower.followPath(LinearPath(bot.pinpoint?.pose ?: Pose(), P.LEAVE_POSITION))
             startLeave = false

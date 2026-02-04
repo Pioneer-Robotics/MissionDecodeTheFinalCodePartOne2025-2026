@@ -12,24 +12,21 @@ import pioneer.hardware.Flywheel
 import pioneer.hardware.Turret
 import pioneer.hardware.prism.Color
 import pioneer.helpers.Chrono
-import pioneer.helpers.MathUtils
+import pioneer.helpers.FlywheelLogger
 import pioneer.helpers.Pose
-import pioneer.helpers.TestMatrixLogger
 import pioneer.helpers.Toggle
-import pioneer.helpers.next
 import kotlin.math.*
 
 class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
-    private var testLogger: TestMatrixLogger? = null  // ✅ Optional test logger
+    private var flywheelLogger: FlywheelLogger? = null  // NEW: Optional logger
 ) {
     private val chrono = Chrono(autoUpdate = false)
     private val isAutoTracking = Toggle(false)
     private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
-    private val flywheelOperateModeToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose()
     private var offsetShootingTarget = Pose()
@@ -56,17 +53,14 @@ class TeleopDriver2(
     private var multiShotUseFastMode = false
     private val multiShotTimer = ElapsedTime()
 
-    // ✅ NEW: Shot tracking for statistics
+    // NEW: Shot tracking for logger
     private var currentShotNumber = 0
-    private var totalShotsFired = 0
-    private var totalShotsHit = 0  // Would need vision/sensor feedback to track
 
     // Telemetry info
     var multiShotStatus = ""
         private set
 
     fun update() {
-        handleFlywheelOperateMode()
         updateFlywheelSpeed()
         handleFlywheel()
         handleTurret()
@@ -74,6 +68,9 @@ class TeleopDriver2(
         handleMultiShot()
         processShooting()
         updateIndicatorLED()
+
+        // NEW: Log flywheel data
+        flywheelLogger?.log()
     }
 
     fun onStart() {
@@ -83,12 +80,11 @@ class TeleopDriver2(
         tagShootingTarget = targetGoal.shootingPose
         offsetShootingTarget = tagShootingTarget
 
-        // Set flywheel to idle state at start
+        // NEW: Set flywheel to idle state at start
         bot.flywheel?.state = when (Constants.Flywheel.OPERATING_MODE) {
             FlywheelOperatingMode.ALWAYS_IDLE -> Flywheel.FlywheelState.IDLE
             FlywheelOperatingMode.SMART_IDLE -> Flywheel.FlywheelState.IDLE
             FlywheelOperatingMode.CONSERVATIVE_IDLE -> Flywheel.FlywheelState.IDLE
-            FlywheelOperatingMode.FULL_OFF -> Flywheel.FlywheelState.OFF
         }
     }
 
@@ -96,25 +92,6 @@ class TeleopDriver2(
         flywheelSpeedOffset = 0.0
         useAutoTrackOffset = false
         offsetShootingTarget = tagShootingTarget
-    }
-
-    // ✅ NEW: Get shot accuracy for test reporting
-    fun getShotAccuracy(): Double {
-        return if (totalShotsFired > 0) {
-            (totalShotsHit.toDouble() / totalShotsFired * 100.0)
-        } else {
-            0.0
-        }
-    }
-
-    //Handle flywheel operating mode
-    private fun handleFlywheelOperateMode(){
-        flywheelOperateModeToggle.toggle(gamepad.triangle)
-        if (flywheelOperateModeToggle.justChanged){
-            Constants.Flywheel.OPERATING_MODE.next()
-            //FIXME KInd of sketchy since changing constants
-            //FIXME Doesnt even work
-        }
     }
 
     private fun updateFlywheelSpeed() {
@@ -138,12 +115,10 @@ class TeleopDriver2(
                 flywheelSpeedOffset = 0.0
             }
 
-            // ✅ UPDATED: estimateVelocity now includes battery compensation
             flywheelSpeed = bot.flywheel!!.estimateVelocity(
                 bot.pinpoint?.pose ?: Pose(),
                 tagShootingTarget,
-                targetGoal.shootingHeight,
-                bot.batteryMonitor?.voltage ?: 12.0  // ✅ NEW: Pass battery voltage
+                targetGoal.shootingHeight
             ) + flywheelSpeedOffset
         }
     }
@@ -153,10 +128,10 @@ class TeleopDriver2(
 
         if (flywheelToggle.state) {
             // Shooting mode - set target velocity
-            bot.flywheel?.targetVelocity = flywheelSpeed
+            bot.flywheel?.velocity = flywheelSpeed
             bot.flywheel?.state = Flywheel.FlywheelState.SHOOTING
         } else {
-            // Handle different operating modes when toggle is OFF
+            // NEW: Handle different operating modes when toggle is OFF
             when (Constants.Flywheel.OPERATING_MODE) {
                 FlywheelOperatingMode.ALWAYS_IDLE -> {
                     bot.flywheel?.state = Flywheel.FlywheelState.IDLE
@@ -168,10 +143,6 @@ class TeleopDriver2(
                 FlywheelOperatingMode.CONSERVATIVE_IDLE -> {
                     // Conservative mode - run at lower idle speed
                     bot.flywheel?.state = Flywheel.FlywheelState.IDLE
-                }
-
-                FlywheelOperatingMode.FULL_OFF -> {
-                    bot.flywheel?.state = Flywheel.FlywheelState.OFF
                 }
             }
         }
@@ -187,7 +158,7 @@ class TeleopDriver2(
         when {
             gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
             gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
-
+            gamepad.triangle -> shootArtifact()
         }
     }
 
@@ -212,8 +183,8 @@ class TeleopDriver2(
 
                 // Wait for launcher to reset
                 if (bot.launcher?.isReset == true) {
-                    // ✅ NEW: Log shot completion
-                    logShotComplete()
+                    // NEW: Log shot completion
+                    flywheelLogger?.logShotComplete(currentShotNumber)
 
                     // Pop the artifact we just shot
                     bot.spindexer?.popCurrentArtifact(false)
@@ -255,8 +226,8 @@ class TeleopDriver2(
                     currentShotNumber++
                     shootingArtifact = true
 
-                    // ✅ NEW: Log shot start
-                    logShotStart()
+                    // NEW: Log shot start
+                    flywheelLogger?.logShot(currentShotNumber)
 
                     multiShotState = MultiShotState.WAITING_FOR_LAUNCHER
                 }
@@ -273,7 +244,7 @@ class TeleopDriver2(
         // Make sure flywheel is running
         if (!flywheelToggle.state) {
             flywheelToggle.state = true
-            bot.flywheel?.targetVelocity = flywheelSpeed
+            bot.flywheel?.velocity = flywheelSpeed
             bot.flywheel?.state = Flywheel.FlywheelState.SHOOTING
         }
 
@@ -301,8 +272,8 @@ class TeleopDriver2(
             currentShotNumber++
             shootingArtifact = true
 
-            // ✅ NEW: Log shot start
-            logShotStart()
+            // NEW: Log shot start
+            flywheelLogger?.logShot(currentShotNumber)
 
             multiShotState = MultiShotState.WAITING_FOR_LAUNCHER
         }
@@ -324,8 +295,8 @@ class TeleopDriver2(
             // Only pop if we're NOT in a multi-shot sequence
             // (multi-shot handles its own popping)
             if (multiShotState == MultiShotState.IDLE) {
-                // ✅ NEW: Log single shot completion
-                logShotComplete()
+                // NEW: Log single shot completion
+                flywheelLogger?.logShotComplete(currentShotNumber)
 
                 bot.spindexer?.popCurrentArtifact(false)
             }
@@ -340,15 +311,15 @@ class TeleopDriver2(
             currentShotNumber++
             shootingArtifact = true
 
-            // ✅ NEW: Log single shot start
-            logShotStart()
+            // NEW: Log single shot start
+            flywheelLogger?.logShot(currentShotNumber)
         } else if (launchToggle.justChanged && launchPressedTimer.seconds() < 0.5) {
             bot.launcher?.triggerLaunch()
             currentShotNumber++
             shootingArtifact = true
 
-            // ✅ NEW: Log single shot start
-            logShotStart()
+            // NEW: Log single shot start
+            flywheelLogger?.logShot(currentShotNumber)
         }
         if (launchToggle.justChanged) launchPressedTimer.reset()
     }
@@ -407,46 +378,6 @@ class TeleopDriver2(
                 bot.led?.setColor(Color.RED)
                 gamepad.setLedColor(1.0, 0.0, 0.0, -1)
             }
-        }
-    }
-
-    // ========================================
-    // ✅ NEW: Test matrix logging helpers
-    // ========================================
-
-    private fun logShotStart() {
-        totalShotsFired++
-
-        testLogger?.let { logger ->
-            val distance = bot.pinpoint?.pose?.distanceTo(targetGoal.shootingPose) ?: 0.0
-
-            logger.logShot(
-                shotNumber = currentShotNumber,
-                distance = distance,
-                targetX = targetGoal.shootingPose.x,
-                targetY = targetGoal.shootingPose.y,
-                hit = false  // Will update on completion if we add hit detection
-            )
-
-            // Log flywheel metrics
-            logger.logMetric("flywheel_target_speed", flywheelSpeed, "tps", "PLCS")
-            logger.logMetric("flywheel_actual_speed", bot.flywheel?.velocity ?: 0.0, "tps", "PLCS")
-            logger.logMetric("shot_distance", distance, "cm", "PLCS")
-
-            // Log shot quality
-            val quality = bot.flywheel?.assessShotQuality(distance)
-            logger.logEvent("SHOT_QUALITY", mapOf(
-                "distance" to "%.1f".format(distance),
-                "quality" to quality.toString()
-            ))
-        }
-    }
-
-    private fun logShotComplete() {
-        testLogger?.let { logger ->
-            logger.logEvent("SHOT_COMPLETE", mapOf(
-                "shot_number" to currentShotNumber.toString()
-            ))
         }
     }
 }
