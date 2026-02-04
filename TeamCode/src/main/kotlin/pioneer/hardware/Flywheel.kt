@@ -94,7 +94,7 @@ class Flywheel(
         get() = flywheel.getCurrent(CurrentUnit.MILLIAMPS)
 
     // Idle velocity based on operating mode
-    private var idleVelocity: Double = 0.0
+    private val idleVelocity: Double
         get() = when (Constants.Flywheel.OPERATING_MODE) {
             FlywheelOperatingMode.ALWAYS_IDLE -> Constants.Flywheel.IDLE_VELOCITY
             FlywheelOperatingMode.SMART_IDLE -> {
@@ -328,7 +328,7 @@ class Flywheel(
         val heightDiff = targetHeight - Constants.Turret.HEIGHT
         val groundDistance = shootPose distanceTo target
 
-        // ✅ DISTANCE VALIDATION
+        // DISTANCE VALIDATION
         if (groundDistance < Constants.Flywheel.MIN_SHOT_DISTANCE_CM ||
             groundDistance > Constants.Flywheel.MAX_SHOT_DISTANCE_CM) {
             FileLogger.info("Flywheel", "⚠️ Shot distance %.1f cm out of range!".format(groundDistance))
@@ -340,15 +340,15 @@ class Flywheel(
                         sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * groundDistance)) / (-980))
                 )
 
-        // ✅ UPDATED: Regression with tunable parameters
+        // Regression for real world velocity to flywheel speed
         var flywheelVelocity = Constants.Flywheel.REGRESSION_SLOPE * v0 +
                 Constants.Flywheel.REGRESSION_INTERCEPT
 
-        // ✅ NEW: Speed reduction factor (PRIMARY TUNING KNOB)
+        // Speed reduction factor (PRIMARY TUNING KNOB)
         //TODO ADD back when other stuff is fixed
 //        flywheelVelocity *= Constants.Flywheel.SPEED_REDUCTION_FACTOR
 
-        // ✅ NEW: Battery voltage compensation
+        // Battery voltage compensation
         //TODO: Test if necessary, otherwise might be causing issues
 //        if (Constants.Flywheel.USE_BATTERY_COMPENSATION) {
 //            val voltageCompensation = 12.0 / batteryVoltage.coerceIn(10.0, 13.5)
@@ -358,7 +358,7 @@ class Flywheel(
 //            )
 //        }
 
-        // ✅ NEW: Safety limits
+        // Safety limits
         flywheelVelocity = flywheelVelocity.coerceIn(
             Constants.Flywheel.MIN_FLYWHEEL_SPEED,
             Constants.Flywheel.MAX_FLYWHEEL_SPEED

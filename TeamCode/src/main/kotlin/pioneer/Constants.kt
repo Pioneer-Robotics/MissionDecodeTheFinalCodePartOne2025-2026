@@ -265,7 +265,7 @@ object Constants {
          *   - Slower spin-up (~1-1.5s) but lowest heat/battery usage
          *   - Best for: Long matches, thermal concerns, battery conservation
          */
-        var OPERATING_MODE = FlywheelOperatingMode.ALWAYS_IDLE
+        var OPERATING_MODE = FlywheelOperatingMode.SMART_IDLE
 
         /**
          * Idle velocity in ticks per second
