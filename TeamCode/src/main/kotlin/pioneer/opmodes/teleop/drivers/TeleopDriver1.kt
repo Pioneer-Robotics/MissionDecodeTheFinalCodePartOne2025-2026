@@ -1,138 +1,116 @@
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import pioneer.Bot
-import pioneer.Constants
-import pioneer.decode.Points
-import pioneer.general.AllianceColor
-import pioneer.helpers.Pose
-import pioneer.helpers.Toggle
-import kotlin.math.PI
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
+import pioneer.opmodes.teleop.commands.CommandContext
+import pioneer.opmodes.teleop.input.Driver1InputMapper
+import pioneer.opmodes.teleop.input.InputState
+import pioneer.helpers.FileLogger
 
+/**
+ * Refactored TeleopDriver1 using SOLID principles.
+ *
+ * DESIGN PRINCIPLES APPLIED:
+ *
+ * 1. Single Responsibility:
+ *    - This class ONLY coordinates input reading and command execution
+ *    - Input mapping logic is in Driver1InputMapper
+ *    - Action logic is in individual Command classes
+ *
+ * 2. Open/Closed:
+ *    - Easy to add new commands without modifying this class
+ *    - Easy to remap buttons by changing the InputMapper
+ *
+ * 3. Liskov Substitution:
+ *    - Could swap different input mappers for different control schemes
+ *
+ * 4. Interface Segregation:
+ *    - InputState, InputMapper, Command are separate interfaces
+ *
+ * 5. Dependency Inversion:
+ *    - Depends on Bot abstraction, not concrete hardware classes
+ *
+ * BENEFITS OF THIS REFACTOR:
+ * - No more button timing issues (input captured once per frame)
+ * - Easy to debug (can log which commands are executing)
+ * - Easy to test (can test commands independently)
+ * - Easy to remap buttons (just change the mapper)
+ * - Clear separation of concerns
+ */
 class TeleopDriver1(
-    var gamepad: Gamepad,
-    val bot: Bot,
+    private val gamepad: Gamepad,
+    private val bot: Bot,
 ) {
-    var drivePower = Constants.Drive.DEFAULT_POWER
-    val fieldCentric: Boolean
-        get() = fieldCentricToggle.state
+    // Input mapper handles button-to-command mapping
+    private val inputMapper = Driver1InputMapper(gamepad)
 
-    // Toggles
-    private var incDrivePower: Toggle = Toggle(false)
-    private var decDrivePower: Toggle = Toggle(false)
-    private var fieldCentricToggle: Toggle = Toggle(false)
-    private var intakeToggle: Toggle = Toggle(false)
+    // Track previous input state for edge detection
+    private var previousInputState: InputState? = null
 
-    var detection: AprilTagDetection? = null
-    var robotPoseTag: Pose? = null
-    private lateinit var P: Points
-
+    /**
+     * Main update loop.
+     *
+     * This method follows a simple pattern:
+     * 1. Capture current input state (immutable snapshot)
+     * 2. Map inputs to commands
+     * 3. Execute all commands
+     *
+     * This pattern eliminates button timing issues because the input
+     * state is captured ONCE at the start of the frame.
+     */
     fun update() {
-        drive()
-        updateDrivePower()
-        updateFieldCentric()
-        updateIntake()
-        moveSpindexerManual()
-        handleSpindexerReset()
-        handleResetPose()
-    }
+        // Step 1: Capture input state
+        val currentInput = InputState.fromGamepad(gamepad, previousInputState)
 
-    private fun drive() {
-        var direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
-        if (fieldCentric) {
-            var angle = atan2(direction.y, direction.x) - bot.pinpoint?.pose!!.theta
-            angle += if (bot.allianceColor == AllianceColor.BLUE) PI / 2 else -PI / 2
-            val mag = direction.getLength()
-            direction = Pose(mag * cos(angle), mag * sin(angle))
-        }
-        bot.mecanumBase?.setDrivePower(
-            Pose(
-                vx = direction.x,
-                vy = direction.y,
-                omega = gamepad.right_stick_x.toDouble(),
-            ),
-            drivePower,
-            Constants.Drive.MAX_MOTOR_VELOCITY_TPS
-        )
-    }
+        // Step 2: Map inputs to commands
+        val commandsToExecute = inputMapper.mapInputsToCommands(currentInput, bot)
 
-    private fun updateDrivePower() {
-        incDrivePower.toggle(gamepad.right_bumper)
-        decDrivePower.toggle(gamepad.left_bumper)
-        if (incDrivePower.justChanged) {
-            drivePower += 0.1
-        }
-        if (decDrivePower.justChanged) {
-            drivePower -= 0.1
-        }
-        drivePower = drivePower.coerceIn(0.1, 1.0)
-    }
-
-    private fun updateFieldCentric() {
-        fieldCentricToggle.toggle(gamepad.touchpad)
-    }
-
-    private fun updateIntake() {
-        intakeToggle.toggle(gamepad.circle)
-        if (gamepad.dpad_down) {
-            bot.intake?.reverse()
-        } else {
-            if (intakeToggle.state) {
-                bot.intake?.forward()
-            } else {
-                bot.intake?.stop()
-            }
-        }
-        if (intakeToggle.justChanged && intakeToggle.state) {
-            bot.spindexer?.moveToNextOpenIntake()
-        }
-    }
-
-    private fun moveSpindexerManual() {
-//        FileLogger.debug("Teleop Driver 1", "Manual override = ${bot.spindexer?.manualOverride}")
-        if (gamepad.right_trigger > 0.1) {
-            bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
-        }
-        if (gamepad.left_trigger > 0.1) {
-            bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
-        } else if (bot.spindexer?.manualOverride == true) {
-            bot.spindexer?.moveManual(0.0)
-        }
-    }
-
-    private fun handleSpindexerReset() {
-        if (gamepad.share) {
-            bot.spindexer?.reset()
-        }
-    }
-
-    private fun handleResetPose() {
-        if (gamepad.options) {
-            if (bot.allianceColor == AllianceColor.RED) {
-                bot.pinpoint?.reset(Pose(-86.7, -99.0, theta = 0.0))
-            } else {
-                bot.pinpoint?.reset(Pose(86.7, -99.0, theta = 0.0))
+        // Step 3: Execute all commands
+        for ((command, context) in commandsToExecute) {
+            try {
+                command.execute(bot, context)
+            } catch (e: Exception) {
+                // Log error but continue executing other commands
+                // This prevents one broken command from breaking everything
+                FileLogger.error(
+                    "TeleopDriver1",
+                    "Error executing command ${command.description()}: ${e.message}"
+                )
             }
         }
 
-//        detection = bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.firstOrNull()
-//
-//        val robotTheta = bot.pinpoint?.pose?.theta ?: return
-//        if (detection != null) {
-//            val tagDistance = hypot(detection!!.ftcPose.x, detection!!.ftcPose.y)
-//            val fieldOffset = Pose(cos(PI/2 + robotTheta), sin(PI/2 + robotTheta)) * tagDistance
-//            val tagPosition = when (detection!!.id) {
-//                20 -> GoalTag.BLUE.pose
-//                24 -> GoalTag.RED.pose
-//                else -> return
-//            }
-//            robotPoseTag = tagPosition - fieldOffset
-//        }
-//
-//        if (gamepad.options && robotPoseTag != null) bot.pinpoint?.reset(robotPoseTag!!.copy(theta=robotTheta))
+        // Update previous state for next frame
+        previousInputState = currentInput
     }
+
+    /**
+     * Get current drive power (for telemetry).
+     */
+    val drivePower: Double
+        get() = inputMapper.getDrivePower()
+
+    /**
+     * Get field-centric state (for telemetry).
+     */
+    val fieldCentric: Boolean
+        get() = inputMapper.isFieldCentric()
+
+    // ====================================================================
+    // LEGACY PROPERTIES (for compatibility with existing telemetry)
+    // These can be removed once telemetry is updated
+    // ====================================================================
+
+    @Deprecated("Use bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.firstOrNull() instead")
+    var detection: org.firstinspires.ftc.vision.apriltag.AprilTagDetection? = null
+        get() {
+            return bot.camera?.getProcessor<org.firstinspires.ftc.vision.apriltag.AprilTagProcessor>()
+                ?.detections?.firstOrNull()
+        }
+
+    @Deprecated("Calculate from detection if needed")
+    var robotPoseTag: pioneer.helpers.Pose? = null
+        get() {
+            // This was commented out in original code anyway
+            return null
+        }
 }
