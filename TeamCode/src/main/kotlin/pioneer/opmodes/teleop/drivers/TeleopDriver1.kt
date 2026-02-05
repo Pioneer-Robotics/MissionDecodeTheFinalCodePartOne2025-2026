@@ -45,7 +45,11 @@ class TeleopDriver1(
         var direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
         if (fieldCentric) {
             var angle = atan2(direction.y, direction.x) - bot.pinpoint?.pose!!.theta
-            angle += if (bot.allianceColor == AllianceColor.BLUE) PI / 2 else -PI / 2
+            angle += when (bot.allianceColor) {
+                AllianceColor.BLUE -> PI/2
+                AllianceColor.RED -> -PI/2
+                AllianceColor.NEUTRAL -> 0.0
+            }
             val mag = direction.getLength()
             direction = Pose(mag * cos(angle), mag * sin(angle))
         }

@@ -36,6 +36,7 @@ class Flywheel(
     var velocity
         get() = flywheel.velocity
         set(value) {
+            FileLogger.debug("Flywheel", "Set target velocity: $targetVelocity")
             targetVelocity = value
         }
 
@@ -63,29 +64,33 @@ class Flywheel(
 
     // https://www.desmos.com/calculator/uofqeqqyn1
     //12/22: https://www.desmos.com/calculator/1kj8xzklqp
+    //4/2: https://www.desmos.com/calculator/uyk9a9vs5s
     fun estimateVelocity(
         pose: Pose,
         target: Pose,
         targetHeight: Double
     ): Double {
-
         val shootPose = pose +
                 Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) +
                 Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
 
-        val heightDiff = targetHeight - Constants.Turret.HEIGHT
         //TODO Double check AprilTag height
         val groundDistance = shootPose distanceTo target
+        return estimateVelocity(groundDistance, targetHeight)
+    }
+
+    fun estimateVelocity(targetDistance: Double, targetHeight: Double) : Double {
+        val heightDiff = targetHeight - Constants.Turret.HEIGHT
         //Real world v0 of the ball
         val v0 =
-            (groundDistance) / (
-                cos(
-                    Constants.Turret.THETA,
-                ) * sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * (groundDistance))) / (-980))
-            )
+            (targetDistance) / (
+                    cos(
+                        Constants.Turret.THETA,
+                    ) * sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * (targetDistance))) / (-980))
+                )
         //Regression to convert real world velocity to flywheel speed
-        val flywheelVelocity = 1.583 * v0 - 9.86811 //From 12/22 testing
-
+//        val flywheelVelocity = 1.583 * v0 - 9.86811 // From 12/22 testing
+        val flywheelVelocity = 1.64545 * v0 - 51.56276
         //Adjust for velocity of the bot when moving
 //        val thetaToTarget = -(shootPose angleTo target)
 //        val newTargetVelocityX = sin(thetaToTarget) * flywheelVelocity - pose.vx

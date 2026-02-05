@@ -10,8 +10,10 @@ import pioneer.general.AllianceColor
 import pioneer.hardware.Turret
 import pioneer.hardware.prism.Color
 import pioneer.helpers.Chrono
+import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
+import pioneer.vision.AprilTag
 import kotlin.math.*
 
 class TeleopDriver2(
@@ -33,6 +35,7 @@ class TeleopDriver2(
     var flywheelSpeed = 0.0
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
+    var errorDegrees = 0.0
 
     fun update() {
         updateFlywheelSpeed()
@@ -79,12 +82,22 @@ class TeleopDriver2(
                 flywheelSpeedOffset = 0.0
             }
 
-            flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), tagShootingTarget, targetGoal.shootingHeight) + flywheelSpeedOffset
+            //flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), tagShootingTarget, targetGoal.shootingHeight) + flywheelSpeedOffset
+            val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
+            val ftcPose = tagDetections?.firstOrNull()?.ftcPose
+            if (ftcPose != null) {
+                flywheelSpeed = bot.flywheel!!.estimateVelocity(
+                    hypot(ftcPose.x, ftcPose.y),
+                    targetGoal.shootingHeight
+                ) + flywheelSpeedOffset
+            }
         }
     }
 
     private fun handleFlywheel() {
         flywheelToggle.toggle(gamepad.dpad_right)
+        FileLogger.debug("Teleop Driver 2", flywheelToggle.state.toString())
+        FileLogger.debug("Flywheel Speed", flywheelSpeed.toString())
         if (flywheelToggle.state) {
             bot.flywheel?.velocity = flywheelSpeed
         } else {
@@ -153,24 +166,45 @@ class TeleopDriver2(
     private fun handleAutoTrack() {
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
             val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
-            val errorDegrees = tagDetections?.firstOrNull()?.ftcPose?.bearing?.times(-1.0)
+
+            // FIXME: Might not work
+            tagDetections?.filter{
+                it.equals(
+                    when (bot.allianceColor) {
+                        AllianceColor.RED -> GoalTag.RED.id
+                        AllianceColor.BLUE -> GoalTag.BLUE.id
+                        AllianceColor.NEUTRAL -> GoalTag.RED.id
+                    }
+                )
+            }
+
+            // FIXME: Doesn't work
+            val tagErrorDegrees = tagDetections?.firstOrNull()?.ftcPose?.bearing?.times(-1.0)
+            if (tagErrorDegrees != null) {
+                errorDegrees = tagErrorDegrees
+            } else {
+                // Update with IMU based on last known error
+                val dTheta = (bot.pinpoint?.prevPose?.theta ?: 0.0) - (bot.pinpoint?.pose?.theta ?: 0.0)
+                errorDegrees -= dTheta
+            }
+
             bot.turret?.tagTrack(
                 errorDegrees,
             )
         }
-        if (abs(gamepad.right_stick_x) > 0.02) {
-            useAutoTrackOffset = true
-            offsetShootingTarget = offsetShootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 17.5)
-        }
-        if (gamepad.right_stick_button){
-            useAutoTrackOffset = false
-            offsetShootingTarget = tagShootingTarget
-        }
-        if (useAutoTrackOffset){
-            finalShootingTarget = offsetShootingTarget
-        } else {
-            finalShootingTarget = tagShootingTarget
-        }
+//        if (abs(gamepad.right_stick_x) > 0.02) {
+//            useAutoTrackOffset = true
+//            offsetShootingTarget = offsetShootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 17.5)
+//        }
+//        if (gamepad.right_stick_button){
+//            useAutoTrackOffset = false
+//            offsetShootingTarget = tagShootingTarget
+//        }
+//        if (useAutoTrackOffset){
+//            finalShootingTarget = offsetShootingTarget
+//        } else {
+//            finalShootingTarget = tagShootingTarget
+//        }
     }
 
     private fun updateIndicatorLED() {

@@ -136,9 +136,15 @@ class Turret(
             turret.power = 0.0
             return
         }
-        val thetaError = Math.toRadians(errorDegrees)
-        val power = tagTrackPID.update(thetaError, chrono.dt)
+
+        val desiredDelta = Math.toRadians(errorDegrees)
+        val rawTarget = currentAngle + desiredDelta
+        val legalTarget = MathUtils.normalizeRadians(rawTarget, motorRange)
+        val legalError = legalTarget - currentAngle
+
+        val power = tagTrackPID.update(legalError, chrono.dt)
         val static = if (abs(power) > 0.001) Constants.Turret.KS * sign(power) else 0.0
+
         turret.mode = DcMotor.RunMode.RUN_USING_ENCODER
         turret.power = power + static
     }

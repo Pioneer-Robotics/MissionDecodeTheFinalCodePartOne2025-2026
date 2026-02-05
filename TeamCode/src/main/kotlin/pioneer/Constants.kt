@@ -213,10 +213,10 @@ object Constants {
         const val LAUNCH_TIME = 0.125
         const val OFFSET = -10.0
 
-        @JvmField var KP = 0.0075
-        @JvmField var KI = 0.0001
-        @JvmField var KD = 1.0
-        @JvmField var KS = 0.125
+        @JvmField var KP = 0.0065
+        @JvmField var KI = 0.00015
+        @JvmField var KD = 1.1
+        @JvmField var KS = 0.175
     }
 
     object ServoPositions {
