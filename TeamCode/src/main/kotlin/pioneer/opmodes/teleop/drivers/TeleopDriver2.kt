@@ -35,7 +35,7 @@ class TeleopDriver2(
     var flywheelSpeed = 0.0
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
-    var errorDegrees = 0.0
+    var turretTargetAngle = 0.0
 
     fun update() {
         updateFlywheelSpeed()
@@ -167,30 +167,27 @@ class TeleopDriver2(
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
             val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
 
-            // FIXME: Might not work
+            // Only look at goal tag for the current alliance
             tagDetections?.filter{
-                it.equals(
-                    when (bot.allianceColor) {
-                        AllianceColor.RED -> GoalTag.RED.id
-                        AllianceColor.BLUE -> GoalTag.BLUE.id
-                        AllianceColor.NEUTRAL -> GoalTag.RED.id
-                    }
+                it.id == when (bot.allianceColor) {
+                    AllianceColor.RED -> GoalTag.RED.id
+                    AllianceColor.BLUE -> GoalTag.BLUE.id
+                    AllianceColor.NEUTRAL -> GoalTag.RED.id
+                }
+            }
+
+            val errorDegrees = tagDetections?.firstOrNull()?.ftcPose?.bearing?.times(-1.0)
+            val currentRobotAngle = bot.pinpoint?.pose?.theta ?: 0.0
+            if (errorDegrees != null) {
+                turretTargetAngle = currentRobotAngle + errorDegrees
+                bot.turret?.tagTrack(
+                    errorDegrees,
                 )
-            }
-
-            // FIXME: Doesn't work
-            val tagErrorDegrees = tagDetections?.firstOrNull()?.ftcPose?.bearing?.times(-1.0)
-            if (tagErrorDegrees != null) {
-                errorDegrees = tagErrorDegrees
             } else {
-                // Update with IMU based on last known error
-                val dTheta = (bot.pinpoint?.prevPose?.theta ?: 0.0) - (bot.pinpoint?.pose?.theta ?: 0.0)
-                errorDegrees -= dTheta
+                // No tag detected, use last known target
+                // TODO: Test tag loss logic
+                bot.turret?.gotoAngle(turretTargetAngle-currentRobotAngle)
             }
-
-            bot.turret?.tagTrack(
-                errorDegrees,
-            )
         }
 //        if (abs(gamepad.right_stick_x) > 0.02) {
 //            useAutoTrackOffset = true
