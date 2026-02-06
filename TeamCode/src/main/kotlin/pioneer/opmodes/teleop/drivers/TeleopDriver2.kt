@@ -2,8 +2,10 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
+import org.firstinspires.ftc.robotcore.external.Const
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
+import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.general.AllianceColor
@@ -14,6 +16,7 @@ import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.vision.AprilTag
+import pioneer.helpers.next
 import kotlin.math.*
 
 class TeleopDriver2(
@@ -24,21 +27,27 @@ class TeleopDriver2(
     private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
+    private val switchOperatingModeToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose() //Shooting target from goal tag class
     private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
     private var finalShootingTarget = Pose() //Final target that the turret tracks
+    private var turretPose = Pose()
     private var shootingArtifact = false
     var useAutoTrackOffset = false
     var targetGoal = GoalTag.RED
     var turretAngle = 0.0
-    var flywheelSpeed = 0.0
+    var estimatedFlywheelSpeed = 0.0
+    var finalFlywheelSpeed = 0.0
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
     var errorDegrees = 0.0
+    var flywheelShouldFloat = true
 
     fun update() {
+        updateFlywheelOperatingMode()
         updateFlywheelSpeed()
+        updateTurretPose()
         handleFlywheel()
         handleTurret()
         handleShootInput()
@@ -61,6 +70,14 @@ class TeleopDriver2(
         //TODO Sync with driver 1 reset pose
     }
 
+    private fun updateFlywheelOperatingMode(){
+        switchOperatingModeToggle.toggle(gamepad.triangle)
+        if (switchOperatingModeToggle.justChanged){
+            bot.flywheel?.operatingMode = bot.flywheel?.operatingMode?.next()!!
+
+        }
+    }
+
     private fun updateFlywheelSpeed() {
         isEstimatingSpeed.toggle(gamepad.dpad_left)
         if (!isEstimatingSpeed.state){
@@ -70,7 +87,7 @@ class TeleopDriver2(
             if (gamepad.dpad_down){
                 manualFlywheelSpeed -= 50.0
             }
-            flywheelSpeed = manualFlywheelSpeed
+            estimatedFlywheelSpeed = manualFlywheelSpeed
         } else {
             if (gamepad.dpad_up){
                 flywheelSpeedOffset += 10.0
@@ -86,24 +103,61 @@ class TeleopDriver2(
             val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
             val ftcPose = tagDetections?.firstOrNull()?.ftcPose
             if (ftcPose != null) {
-                flywheelSpeed = bot.flywheel!!.estimateVelocity(
+                estimatedFlywheelSpeed = bot.flywheel!!.estimateVelocity(
                     hypot(ftcPose.x, ftcPose.y),
                     targetGoal.shootingHeight
                 ) + flywheelSpeedOffset
+            } else {
+                estimatedFlywheelSpeed = bot.flywheel!!.estimateVelocity(turretPose, finalShootingTarget, targetGoal.shootingHeight)
+
             }
         }
+    }
+
+    private fun updateTurretPose(){
+        turretPose = bot.pinpoint?.pose !!+ (Pose(Constants.Turret.OFFSET * sin(bot.pinpoint?.pose!!.theta), Constants.Turret.OFFSET * cos(bot.pinpoint?.pose!!.theta)))
     }
 
     private fun handleFlywheel() {
         flywheelToggle.toggle(gamepad.dpad_right)
         FileLogger.debug("Teleop Driver 2", flywheelToggle.state.toString())
-        FileLogger.debug("Flywheel Speed", flywheelSpeed.toString())
+        FileLogger.debug("Flywheel Speed", finalFlywheelSpeed.toString())
         if (flywheelToggle.state) {
-            bot.flywheel?.velocity = flywheelSpeed
+            finalFlywheelSpeed = estimatedFlywheelSpeed
         } else {
-            bot.flywheel?.velocity = 0.0
-        }
+                if (flywheelToggle.justChanged){
+                    flywheelShouldFloat = true
+//                    finalFlywheelSpeed = 0.0
+                }
+
+                if (flywheelShouldFloat && bot.flywheel?.velocity!! < bot.flywheel!!.idleVelocity){
+                    flywheelShouldFloat = false
+//                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
+                }
+
+//                if (!flywheelShouldFloat){
+//                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
+//                } else {
+//                    finalFlywheelSpeed = 0.0
+//                }
+
+                if (flywheelShouldFloat){
+                    finalFlywheelSpeed = 0.0
+                } else {
+                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
+                }
+
+//                if (it < bot.flywheel!!.idleVelocity)
+//                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
+//                else {
+//                    finalFlywheelSpeed = 0.0
+//                }
+            }
+
+            bot.flywheel?.velocity = finalFlywheelSpeed
     }
+
+
 
     private fun handleTurret() {
         isAutoTracking.toggle(gamepad.cross)
@@ -115,14 +169,14 @@ class TeleopDriver2(
         when {
             gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
             gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
-            gamepad.triangle -> shootArtifact()
+//            gamepad.triangle -> shootArtifact()
         }
     }
 
     private fun processShooting() {
         if (shootingArtifact && bot.launcher?.isReset == true ) {
             shootingArtifact = false
-            bot.spindexer?.popCurrentArtifact()
+            bot.spindexer?.popCurrentArtifact(false)
         }
         if (!flywheelToggle.state) return
         launchToggle.toggle(gamepad.square)
@@ -188,9 +242,16 @@ class TeleopDriver2(
                 errorDegrees -= dTheta
             }
 
-            bot.turret?.tagTrack(
-                errorDegrees,
-            )
+            if (tagDetections !== null){
+                bot.turret?.tagTrack(
+                    errorDegrees,
+                )
+            } else {
+                bot.turret?.autoTrack(
+                    turretPose,
+                    finalShootingTarget,
+                )
+            }
         }
 //        if (abs(gamepad.right_stick_x) > 0.02) {
 //            useAutoTrackOffset = true
@@ -209,10 +270,10 @@ class TeleopDriver2(
 
     private fun updateIndicatorLED() {
         bot.flywheel?.velocity?.let {
-            if (abs(flywheelSpeed - it) < 20.0) {
+            if (abs(estimatedFlywheelSpeed - it) < 20.0) {
                 bot.led?.setColor(Color.GREEN)
                 gamepad.setLedColor(0.0, 1.0, 0.0, -1)
-            } else if (it < flywheelSpeed - 20.0){
+            } else if (it < estimatedFlywheelSpeed - 20.0){
                 bot.led?.setColor(Color.YELLOW)
                 gamepad.setLedColor(255.0,165.0,0.0, -1)
             }

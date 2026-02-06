@@ -40,8 +40,20 @@ class Flywheel(
             targetVelocity = value
         }
 
+    var idleVelocity: Double = 0.0
+        get() = when (operatingMode){
+            Constants.Flywheel.FlywheelOperatingMode.ALWAYS_IDLE -> Constants.Flywheel.idleVelocity
+            Constants.Flywheel.FlywheelOperatingMode.FULL_OFF -> 0.0
+//            Constants.Flywheel.FlywheelOperatingMode.TIMED_IDLE -> {
+//                if (idleTrue) Constants.Flywheel.idleVelocity else 0.0
+//            }
+    }
+
     val current
         get() = flywheel.getCurrent(CurrentUnit.MILLIAMPS)
+
+
+    var operatingMode = Constants.Flywheel.FlywheelOperatingMode.ALWAYS_IDLE
 
     override fun init() {
         flywheel =

@@ -36,6 +36,8 @@ object Constants {
         const val LAUNCH_SERVO = "launchServo"
         const val LAUNCH_SERVO_L = "launchServoL"
         const val LAUNCH_SERVO_R = "launchServoR"
+        const val PTO_SERVO_L = "leftPTO"
+        const val PTO_SERVO_R = "rightPTO"
 
         // Other
         const val WEBCAM = "Webcam 1"
@@ -211,7 +213,7 @@ object Constants {
         const val THETA = 0.93
         const val ANGLE_TOLERANCE_RADIANS = 0.075
         const val LAUNCH_TIME = 0.125
-        const val OFFSET = -10.0
+        const val OFFSET = -10.5
 
         @JvmField var KP = 0.0065
         @JvmField var KI = 0.00015
@@ -249,6 +251,16 @@ object Constants {
         @JvmField var KI = 0.0
         @JvmField var KD = 0.0
         @JvmField var KF = 0.000415
+
+        val idleVelocity = 300.0
+
+        enum class FlywheelOperatingMode{
+            ALWAYS_IDLE,
+            FULL_OFF,
+//            TIMED_IDLE
+        }
+
+        var operatingMode = FlywheelOperatingMode.FULL_OFF
     }
 
     object Misc {

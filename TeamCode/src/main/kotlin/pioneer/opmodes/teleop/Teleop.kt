@@ -74,9 +74,10 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Artifacts", bot.spindexer?.artifacts.contentDeepToString(), Verbose.INFO)
 
         addTelemetryData("Turret Mode", bot.turret?.mode, Verbose.INFO)
+        addTelemetryData("Flywheel Operating", bot.flywheel?.operatingMode, Verbose.INFO)
         addTelemetryData("Use Auto Track Offset", driver2.useAutoTrackOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Speed Offset", driver2.flywheelSpeedOffset, Verbose.DEBUG)
-        addTelemetryData("Flywheel Target Speed", driver2.flywheelSpeed, Verbose.DEBUG)
+        addTelemetryData("Flywheel Target Speed", driver2.estimatedFlywheelSpeed, Verbose.DEBUG)
         addTelemetryData("Flywheel TPS", bot.flywheel?.velocity, Verbose.DEBUG)
         addTelemetryData("Turret Angle", driver2.turretAngle, Verbose.DEBUG)
 //        addTelemetryData("Turret Target Ticks", bot.turret?.targetTicks, Verbose.DEBUG)
@@ -90,6 +91,7 @@ class Teleop : BaseOpMode() {
 
         addTelemetryData("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks, Verbose.DEBUG)
         addTelemetryData("Spindexer Ticks", bot.spindexer?.currentMotorTicks, Verbose.DEBUG)
+
         telemetryPacket.put("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks)
         telemetryPacket.put("Spindexer Ticks", bot.spindexer?.currentMotorTicks)
         telemetryPacket.put("Spindexer Velocity", bot.spindexer?.currentMotorVelocity)
@@ -97,10 +99,12 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Field Centric", driver1.fieldCentric, Verbose.INFO)
         addTelemetryData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy), Verbose.DEBUG)
         addTelemetryData("Voltage", bot.batteryMonitor?.voltage, Verbose.INFO)
+
         addTelemetryData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS), Verbose.DEBUG)
         telemetryPacket.put("Flywheel TPS", (bot.flywheel?.velocity ?: 0.0))
-        telemetryPacket.put("Target Flywheel TPS", (driver2.flywheelSpeed))
+        telemetryPacket.put("Target Flywheel TPS", (driver2.finalFlywheelSpeed))
         telemetryPacket.addLine("Flywheel TPS" + (bot.flywheel?.velocity ?: 0.0))
+
 
         telemetryPacket.put("Turret Target Ticks", bot.turret?.targetTicks)
         telemetryPacket.put("Turret Current Ticks", bot.turret?.currentTicks)
