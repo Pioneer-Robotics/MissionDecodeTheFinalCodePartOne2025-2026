@@ -36,7 +36,6 @@ class Flywheel(
     var velocity
         get() = flywheel.velocity
         set(value) {
-            FileLogger.debug("Flywheel", "Set target velocity: $targetVelocity")
             targetVelocity = value
         }
 

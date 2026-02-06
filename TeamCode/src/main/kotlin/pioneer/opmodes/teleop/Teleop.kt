@@ -63,6 +63,7 @@ class Teleop : BaseOpMode() {
 
     private fun addTelemetryData() {
         val detection = bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.firstOrNull()?.ftcPose
+        addTelemetryData("Multishot state", driver2.multishotState, Verbose.DEBUG)
         addTelemetryData("April Tag Relative Position", "x: ${detection?.x} y: ${detection?.y} bearing: ${detection?.bearing}", Verbose.FATAL)
         addTelemetryData("Shooting Distance", hypot(detection?.x ?: 0.0, detection?.y ?: 0.0), Verbose.FATAL)
 //        telemetry.addData("Transfer Data", Constants.TransferData.turretPositionTicks)
