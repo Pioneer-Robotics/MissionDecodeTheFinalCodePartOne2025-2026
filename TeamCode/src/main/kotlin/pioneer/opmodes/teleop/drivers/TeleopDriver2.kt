@@ -24,6 +24,7 @@ class TeleopDriver2(
     private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
+    private val multiShotToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose() //Shooting target from goal tag class
     private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
@@ -36,12 +37,24 @@ class TeleopDriver2(
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
     var turretTargetAngle = 0.0
+    var errorDegrees = 0.0
+    var shootCommanded = false
+    var triggerMultishot = false
+
+    var multishotState = MultishotState.IDLE
+
+    enum class MultishotState {
+        IDLE,
+        MOVING,
+        SHOOTING
+    }
 
     fun update() {
         updateFlywheelSpeed()
         handleFlywheel()
         handleTurret()
         handleShootInput()
+        handleMultiShot()
         processShooting()
         updateIndicatorLED()
     }
@@ -96,8 +109,6 @@ class TeleopDriver2(
 
     private fun handleFlywheel() {
         flywheelToggle.toggle(gamepad.dpad_right)
-        FileLogger.debug("Teleop Driver 2", flywheelToggle.state.toString())
-        FileLogger.debug("Flywheel Speed", flywheelSpeed.toString())
         if (flywheelToggle.state) {
             bot.flywheel?.velocity = flywheelSpeed
         } else {
@@ -119,24 +130,72 @@ class TeleopDriver2(
         }
     }
 
+    private fun handleMultiShot() {
+        multiShotToggle.toggle(gamepad.touchpad)
+
+        when(multishotState) {
+            MultishotState.IDLE -> {
+                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                    multishotState = MultishotState.MOVING
+                    FileLogger.debug("Teleop Driver 2", "Should have changed to MOVING")
+                }
+            }
+            MultishotState.MOVING -> {
+                shootArtifact()
+                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                    FileLogger.debug("Teleop Driver 2", "Changed back to IDLE")
+                    multishotState = MultishotState.IDLE
+                }
+
+                val atSpeed = bot.flywheel?.velocity?.let {
+                    if (abs(flywheelSpeed - it) < 20.0) { true }
+                    else { false }
+                }
+
+                if (bot.spindexer?.reachedTarget == true && atSpeed == true) {
+                    multishotState = MultishotState.SHOOTING
+                    triggerMultishot = true
+                }
+            }
+            MultishotState.SHOOTING -> {
+                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                    multishotState = MultishotState.IDLE
+                }
+                if (shootingArtifact) {
+                    triggerMultishot = false
+                }
+                if (!shootingArtifact && !triggerMultishot) {
+                    multishotState = MultishotState.MOVING
+                }
+            }
+        }
+
+        if (bot.spindexer?.isEmpty == true) {
+            multishotState = MultishotState.IDLE
+        }
+    }
+
     private fun processShooting() {
         if (shootingArtifact && bot.launcher?.isReset == true ) {
             shootingArtifact = false
             bot.spindexer?.popCurrentArtifact()
         }
         if (!flywheelToggle.state) return
+
         launchToggle.toggle(gamepad.square)
-        if (launchToggle.justChanged &&
+        shootCommanded = launchToggle.justChanged || triggerMultishot
+
+        if (shootCommanded &&
             bot.spindexer?.withinDetectionTolerance == true &&
             bot.spindexer?.isOuttakePosition == true
         ) {
             bot.launcher?.triggerLaunch()
             shootingArtifact = true
-        } else if (launchToggle.justChanged && launchPressedTimer.seconds() < 0.5) {
+        } else if (shootCommanded && launchPressedTimer.seconds() < 0.5) {
             bot.launcher?.triggerLaunch()
             shootingArtifact = true
         }
-        if (launchToggle.justChanged) launchPressedTimer.reset()
+        if (shootCommanded) launchPressedTimer.reset()
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {
