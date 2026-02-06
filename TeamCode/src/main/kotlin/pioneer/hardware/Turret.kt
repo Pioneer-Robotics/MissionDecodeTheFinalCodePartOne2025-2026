@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.Constants
 import pioneer.helpers.Chrono
 import pioneer.helpers.MathUtils
@@ -62,6 +63,7 @@ class Turret(
         require(motorRange.first < motorRange.second) {
             "Motor range must be valid: ${motorRange.first} to ${motorRange.second}"
         }
+        tagTrackPID.integralClamp = 1.0
     }
 
     override fun init() {
@@ -71,6 +73,10 @@ class Turret(
                 mode = DcMotor.RunMode.RUN_USING_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 direction = DcMotorSimple.Direction.FORWARD
+//                setPIDFCoefficients(
+//                    DcMotor.RunMode.RUN_USING_ENCODER,
+//                    PIDFCoefficients(1.0, 0.0, 0.0, 0.0)
+//                )
             }
     }
 

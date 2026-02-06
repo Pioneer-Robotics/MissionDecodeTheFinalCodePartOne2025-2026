@@ -62,13 +62,6 @@ class Teleop : BaseOpMode() {
     }
 
     private fun addTelemetryData() {
-        val detection = bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.firstOrNull()?.ftcPose
-        addTelemetryData("Multishot state", driver2.multishotState, Verbose.DEBUG)
-        addTelemetryData("April Tag Relative Position", "x: ${detection?.x} y: ${detection?.y} bearing: ${detection?.bearing}", Verbose.FATAL)
-        addTelemetryData("Shooting Distance", hypot(detection?.x ?: 0.0, detection?.y ?: 0.0), Verbose.FATAL)
-//        telemetry.addData("Transfer Data", Constants.TransferData.turretPositionTicks)
-//        telemetry.addData("Turret Offset Ticks", bot.turret?.offsetTicks)
-//        telemetry.addData("Turret Angle", bot.turret?.currentAngle)
         addTelemetryData("Alliance Color", bot.allianceColor, Verbose.INFO)
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.INFO)
         addTelemetryData("Pose", bot.pinpoint!!.pose, Verbose.DEBUG)
@@ -86,8 +79,7 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.DEBUG)
         addTelemetryData("Spindexer State", bot.spindexer?.motorState, Verbose.INFO)
 
-        addTelemetryData("Relative Tag Pose", Pose(driver1.detection?.ftcPose?.x ?: 0.0, driver1.detection?.ftcPose?.y ?: 0.0), Verbose.FATAL)
-        addTelemetryData("Robot Pose Tag", driver1.robotPoseTag, Verbose.FATAL)
+        addTelemetryData("April Tag Relative Error", driver2.errorDegrees, Verbose.INFO)
 
         addTelemetryData("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks, Verbose.DEBUG)
         addTelemetryData("Spindexer Ticks", bot.spindexer?.currentMotorTicks, Verbose.DEBUG)

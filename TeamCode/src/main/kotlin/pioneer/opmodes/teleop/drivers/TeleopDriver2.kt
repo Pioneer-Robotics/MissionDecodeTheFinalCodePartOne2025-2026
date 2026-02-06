@@ -3,6 +3,7 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import org.openftc.apriltag.AprilTagDetection
 import pioneer.Bot
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
@@ -15,6 +16,7 @@ import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.vision.AprilTag
 import kotlin.math.*
+import kotlin.run
 
 class TeleopDriver2(
     private val gamepad: Gamepad,
@@ -36,8 +38,7 @@ class TeleopDriver2(
     var flywheelSpeed = 0.0
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
-    var turretTargetAngle = 0.0
-    var errorDegrees = 0.0
+    var errorDegrees: Double? = 0.0
     var shootCommanded = false
     var triggerMultishot = false
 
@@ -226,8 +227,10 @@ class TeleopDriver2(
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
             val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
 
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${tagDetections?.map { it.id }?.joinToString { ", " }}")
+
             // Only look at goal tag for the current alliance
-            tagDetections?.filter{
+            val filteredDetections = tagDetections?.filter{
                 it.id == when (bot.allianceColor) {
                     AllianceColor.RED -> GoalTag.RED.id
                     AllianceColor.BLUE -> GoalTag.BLUE.id
@@ -235,17 +238,20 @@ class TeleopDriver2(
                 }
             }
 
-            val errorDegrees = tagDetections?.firstOrNull()?.ftcPose?.bearing?.times(-1.0)
-            val currentRobotAngle = bot.pinpoint?.pose?.theta ?: 0.0
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${filteredDetections?.map { it.id }?.joinToString { ", " }}")
+
+            errorDegrees = filteredDetections?.firstOrNull()?.ftcPose?.bearing
             if (errorDegrees != null) {
-                turretTargetAngle = currentRobotAngle + errorDegrees
                 bot.turret?.tagTrack(
-                    errorDegrees,
+                    errorDegrees!!.times(-1.0),
                 )
             } else {
                 // No tag detected, use last known target
-                // TODO: Test tag loss logic
-                bot.turret?.gotoAngle(turretTargetAngle-currentRobotAngle)
+                // TODO: fix tag loss logic
+                bot.turret?.autoTrack(
+                    bot.pinpoint?.pose ?: Pose(),
+                    targetGoal.shootingPose
+                )
             }
         }
 //        if (abs(gamepad.right_stick_x) > 0.02) {
