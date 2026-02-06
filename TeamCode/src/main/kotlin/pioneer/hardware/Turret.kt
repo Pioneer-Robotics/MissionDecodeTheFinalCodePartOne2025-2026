@@ -1,9 +1,11 @@
 package pioneer.hardware
 
+import android.R
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.Constants
 import pioneer.helpers.Chrono
 import pioneer.helpers.MathUtils
@@ -61,6 +63,7 @@ class Turret(
         require(motorRange.first < motorRange.second) {
             "Motor range must be valid: ${motorRange.first} to ${motorRange.second}"
         }
+        tagTrackPID.integralClamp = 1.0
     }
 
     override fun init() {
@@ -70,6 +73,10 @@ class Turret(
                 mode = DcMotor.RunMode.RUN_USING_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 direction = DcMotorSimple.Direction.FORWARD
+//                setPIDFCoefficients(
+//                    DcMotor.RunMode.RUN_USING_ENCODER,
+//                    PIDFCoefficients(1.0, 0.0, 0.0, 0.0)
+//                )
             }
     }
 
@@ -96,12 +103,10 @@ class Turret(
         require(power in -1.0..1.0)
         check(::turret.isInitialized)
 
-        var desiredAngle: Double
-
-        if (overrideRange) {
-            desiredAngle = angle
+        val desiredAngle: Double = if (overrideRange) {
+            angle
         } else {
-            desiredAngle = MathUtils.normalizeRadians(angle, motorRange)
+            MathUtils.normalizeRadians(angle, motorRange)
         }
 
         // Logical ticks uses offset
@@ -139,7 +144,13 @@ class Turret(
 
         val desiredDelta = Math.toRadians(errorDegrees)
         val rawTarget = currentAngle + desiredDelta
-        val legalTarget = MathUtils.normalizeRadians(rawTarget, motorRange)
+        // FIXME: For now the turret can't go past the motor range and it can't wrap
+//        val legalTarget = MathUtils.normalizeRadians(rawTarget, motorRange)
+        // TODO: Test turret wrapping
+//        if (rawTarget !in motorRange.first..motorRange.second) {
+//            gotoAngle(rawTarget) // Use goToAngle to wrap
+//        }
+        val legalTarget = rawTarget.coerceIn(motorRange.first, motorRange.second)
         val legalError = legalTarget - currentAngle
 
         val power = tagTrackPID.update(legalError, chrono.dt)

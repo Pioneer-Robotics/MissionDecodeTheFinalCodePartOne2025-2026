@@ -2,8 +2,8 @@ package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.firstinspires.ftc.robotcore.external.Const
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import org.openftc.apriltag.AprilTagDetection
 import pioneer.Bot
 import pioneer.Constants
 import pioneer.decode.Artifact
@@ -18,6 +18,7 @@ import pioneer.helpers.Toggle
 import pioneer.vision.AprilTag
 import pioneer.helpers.next
 import kotlin.math.*
+import kotlin.run
 
 class TeleopDriver2(
     private val gamepad: Gamepad,
@@ -27,6 +28,7 @@ class TeleopDriver2(
     private val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
+    private val multiShotToggle = Toggle(false)
     private val switchOperatingModeToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose() //Shooting target from goal tag class
@@ -41,7 +43,17 @@ class TeleopDriver2(
     var finalFlywheelSpeed = 0.0
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
-    var errorDegrees = 0.0
+    var errorDegrees: Double? = 0.0
+    var shootCommanded = false
+    var triggerMultishot = false
+
+    var multishotState = MultishotState.IDLE
+
+    enum class MultishotState {
+        IDLE,
+        MOVING,
+        SHOOTING
+    }
     var flywheelShouldFloat = true
 
     fun update() {
@@ -51,6 +63,7 @@ class TeleopDriver2(
         handleFlywheel()
         handleTurret()
         handleShootInput()
+        handleMultiShot()
         processShooting()
         updateIndicatorLED()
     }
@@ -107,9 +120,6 @@ class TeleopDriver2(
                     hypot(ftcPose.x, ftcPose.y),
                     targetGoal.shootingHeight
                 ) + flywheelSpeedOffset
-            } else {
-                estimatedFlywheelSpeed = bot.flywheel!!.estimateVelocity(turretPose, finalShootingTarget, targetGoal.shootingHeight)
-
             }
         }
     }
@@ -158,7 +168,6 @@ class TeleopDriver2(
     }
 
 
-
     private fun handleTurret() {
         isAutoTracking.toggle(gamepad.cross)
         bot.turret?.mode = if (isAutoTracking.state) Turret.Mode.AUTO_TRACK else Turret.Mode.MANUAL
@@ -173,24 +182,72 @@ class TeleopDriver2(
         }
     }
 
+    private fun handleMultiShot() {
+        multiShotToggle.toggle(gamepad.touchpad)
+
+        when(multishotState) {
+            MultishotState.IDLE -> {
+                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                    multishotState = MultishotState.MOVING
+                    FileLogger.debug("Teleop Driver 2", "Should have changed to MOVING")
+                }
+            }
+            MultishotState.MOVING -> {
+                shootArtifact()
+                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                    FileLogger.debug("Teleop Driver 2", "Changed back to IDLE")
+                    multishotState = MultishotState.IDLE
+                }
+
+                val atSpeed = bot.flywheel?.velocity?.let {
+                    if (abs(finalFlywheelSpeed - it) < 20.0) { true }
+                    else { false }
+                }
+
+                if (bot.spindexer?.reachedTarget == true && atSpeed == true) {
+                    multishotState = MultishotState.SHOOTING
+                    triggerMultishot = true
+                }
+            }
+            MultishotState.SHOOTING -> {
+                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                    multishotState = MultishotState.IDLE
+                }
+                if (shootingArtifact) {
+                    triggerMultishot = false
+                }
+                if (!shootingArtifact && !triggerMultishot) {
+                    multishotState = MultishotState.MOVING
+                }
+            }
+        }
+
+        if (bot.spindexer?.isEmpty == true) {
+            multishotState = MultishotState.IDLE
+        }
+    }
+
     private fun processShooting() {
         if (shootingArtifact && bot.launcher?.isReset == true ) {
             shootingArtifact = false
             bot.spindexer?.popCurrentArtifact(false)
         }
         if (!flywheelToggle.state) return
+
         launchToggle.toggle(gamepad.square)
-        if (launchToggle.justChanged &&
+        shootCommanded = launchToggle.justChanged || triggerMultishot
+
+        if (shootCommanded &&
             bot.spindexer?.withinDetectionTolerance == true &&
             bot.spindexer?.isOuttakePosition == true
         ) {
             bot.launcher?.triggerLaunch()
             shootingArtifact = true
-        } else if (launchToggle.justChanged && launchPressedTimer.seconds() < 0.5) {
+        } else if (shootCommanded && launchPressedTimer.seconds() < 0.5) {
             bot.launcher?.triggerLaunch()
             shootingArtifact = true
         }
-        if (launchToggle.justChanged) launchPressedTimer.reset()
+        if (shootCommanded) launchPressedTimer.reset()
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {
@@ -221,35 +278,30 @@ class TeleopDriver2(
         if (bot.turret?.mode == Turret.Mode.AUTO_TRACK) {
             val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
 
-            // FIXME: Might not work
-            tagDetections?.filter{
-                it.equals(
-                    when (bot.allianceColor) {
-                        AllianceColor.RED -> GoalTag.RED.id
-                        AllianceColor.BLUE -> GoalTag.BLUE.id
-                        AllianceColor.NEUTRAL -> GoalTag.RED.id
-                    }
-                )
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${tagDetections?.map { it.id }?.joinToString { ", " }}")
+
+            // Only look at goal tag for the current alliance
+            val filteredDetections = tagDetections?.filter{
+                it.id == when (bot.allianceColor) {
+                    AllianceColor.RED -> GoalTag.RED.id
+                    AllianceColor.BLUE -> GoalTag.BLUE.id
+                    AllianceColor.NEUTRAL -> GoalTag.RED.id
+                }
             }
 
-            // FIXME: Doesn't work
-            val tagErrorDegrees = tagDetections?.firstOrNull()?.ftcPose?.bearing?.times(-1.0)
-            if (tagErrorDegrees != null) {
-                errorDegrees = tagErrorDegrees
-            } else {
-                // Update with IMU based on last known error
-                val dTheta = (bot.pinpoint?.prevPose?.theta ?: 0.0) - (bot.pinpoint?.pose?.theta ?: 0.0)
-                errorDegrees -= dTheta
-            }
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${filteredDetections?.map { it.id }?.joinToString { ", " }}")
 
-            if (tagDetections !== null){
+            errorDegrees = filteredDetections?.firstOrNull()?.ftcPose?.bearing
+            if (errorDegrees != null) {
                 bot.turret?.tagTrack(
-                    errorDegrees,
+                    errorDegrees!!.times(-1.0),
                 )
             } else {
+                // No tag detected, use last known target
+                // TODO: fix tag loss logic
                 bot.turret?.autoTrack(
-                    turretPose,
-                    finalShootingTarget,
+                    bot.pinpoint?.pose ?: Pose(),
+                    targetGoal.shootingPose
                 )
             }
         }
