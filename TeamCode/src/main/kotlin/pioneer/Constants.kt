@@ -179,25 +179,20 @@ object Constants {
     @Config
     object Spindexer {
         // External Encoder
-        @JvmField var KP = 0.000175
-        @JvmField var KI = 0.00001
-        @JvmField var KD = 0.00045 // was 0.00025
+        @JvmField var KP = 0.0045 // was 0.000175
+        @JvmField var KI = 0.0 // was 0.00001
+        @JvmField var KD = 0.01 // was 0.00045
 
-        @JvmField var KS_START = 0.03
-        @JvmField var KS_STEP = 0.0
+        @JvmField var KS_START = 0.04
 
-        @JvmField var MAX_POWER_RATE = 100.0
+        @JvmField var MAX_POWER_RATE = 100.0 // was 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 75 // stops moving within tolerance (in outtake for magnets)
-        @JvmField var PID_TOLERANCE_TICKS = 100 // stops using pid within tolerance
+        @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
 
-        // constant power within PID_TOLERANCE_TICKS in output position
-        @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
-
-        const val SHOOTING_TOLERANCE_TICKS = 100
-        const val DETECTION_TOLERANCE_TICKS = 150
-        const val VELOCITY_TOLERANCE_TPS = 750
-        const val TICKS_PER_REV = 8192
+        const val SHOOTING_TOLERANCE_TICKS = 5
+        const val DETECTION_TOLERANCE_TICKS = 10
+        const val VELOCITY_TOLERANCE_TPS = 30
+        const val TICKS_PER_REV = 538 // 8192
 
         // Time required to confirm an artifact has been intaken (ms)
         const val CONFIRM_INTAKE_MS = 67.0
@@ -226,9 +221,9 @@ object Constants {
 //        Was 0.3
 //        const val LAUNCHER_TRIGGERED = 0.75
 
-        const val LAUNCHER_REST = 0.47
+        const val LAUNCHER_REST = 0.545
         //Was 0.3
-        const val LAUNCHER_TRIGGERED = 0.235
+        const val LAUNCHER_TRIGGERED = 0.23
     }
 
     object TransferData {

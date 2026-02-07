@@ -21,12 +21,12 @@ class ColorSensorGain : OpMode() {
             when {
                 // Purple 165-240
                 // Green 150-163
-                sensor.distance > 20.0 -> null
+                sensor.distance > 8.0 -> null
 //                sensor.hue < 175 && sensor.hue > 150 -> Artifact.GREEN
 //                sensor.hue < 240 && sensor.hue > 175 -> Artifact.PURPLE
 //                sensor.distance > 8.0 -> null
-                sensor.hue < 170 && sensor.hue > 130 -> Artifact.GREEN
-                sensor.hue < 250 && sensor.hue > 170 -> Artifact.PURPLE
+                sensor.hue < 170 && sensor.hue > 150 -> Artifact.GREEN
+                sensor.hue < 240 && sensor.hue > 220 -> Artifact.PURPLE
                 else -> null
             }
 

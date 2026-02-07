@@ -141,8 +141,8 @@ class SpindexerMotionController(
 
         val ks = Constants.Spindexer.KS_START
 
-        if (abs(errorTicks) > 100) {
-            power += ks * sign(errorTicks.toDouble())
+        if (abs(power) > 0.01) {
+            power += ks * sign(power)
         }
 
 //        if (abs(errorTicks) < Constants.Spindexer.PID_TOLERANCE_TICKS && target in outtakePositions) {
@@ -151,13 +151,14 @@ class SpindexerMotionController(
 
         if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
             power = 0.0
-            pid.reset()
+//            pid.reset()
         }
 
-        motor.power = -power.coerceIn(-0.6, 0.6)
+        motor.power = power.coerceIn(-0.5, 0.5)
     }
 
     // --- Manual Control --- //
+
     fun moveManual(power: Double) {
         manualOverride = true
         motor.power = power.coerceIn(-1.0, 1.0)
@@ -169,7 +170,6 @@ class SpindexerMotionController(
     }
 
     // --- Helpers --- //
-
     private fun rampPower(
         desired: Double,
         dt: Double,
