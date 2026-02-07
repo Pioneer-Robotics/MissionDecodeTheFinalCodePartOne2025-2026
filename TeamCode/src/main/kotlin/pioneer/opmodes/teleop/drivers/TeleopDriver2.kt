@@ -187,14 +187,14 @@ class TeleopDriver2(
 
         when(multishotState) {
             MultishotState.IDLE -> {
-                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                if (multiShotToggle.justChanged && gamepad.touchpad) {
                     multishotState = MultishotState.MOVING
                     FileLogger.debug("Teleop Driver 2", "Should have changed to MOVING")
                 }
             }
             MultishotState.MOVING -> {
                 shootArtifact()
-                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                if (multiShotToggle.justChanged && gamepad.touchpad) {
                     FileLogger.debug("Teleop Driver 2", "Changed back to IDLE")
                     multishotState = MultishotState.IDLE
                 }
@@ -210,7 +210,7 @@ class TeleopDriver2(
                 }
             }
             MultishotState.SHOOTING -> {
-                if (multiShotToggle.justChanged && multiShotToggle.state) {
+                if (multiShotToggle.justChanged && gamepad.touchpad) {
                     multishotState = MultishotState.IDLE
                 }
                 if (shootingArtifact) {

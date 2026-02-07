@@ -68,6 +68,7 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Artifacts", bot.spindexer?.artifacts.contentDeepToString(), Verbose.INFO)
 
         addTelemetryData("Turret Mode", bot.turret?.mode, Verbose.INFO)
+        addTelemetryData("Multishot Mode", driver2.multishotState, Verbose.INFO)
         addTelemetryData("Flywheel Operating", bot.flywheel?.operatingMode, Verbose.INFO)
         addTelemetryData("Use Auto Track Offset", driver2.useAutoTrackOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Speed Offset", driver2.flywheelSpeedOffset, Verbose.DEBUG)
