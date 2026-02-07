@@ -7,7 +7,6 @@ import pioneer.Constants
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
-import pioneer.helpers.Toggle
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -18,14 +17,14 @@ class TeleopDriver1(
     val bot: Bot,
 ) {
     var drivePower = Constants.Drive.DEFAULT_POWER
-    val fieldCentric: Boolean
-        get() = fieldCentricToggle.state
+    var fieldCentric = false
+    private var prevTouchpad = false
 
-    // Toggles
-    private var incDrivePower: Toggle = Toggle(false)
-    private var decDrivePower: Toggle = Toggle(false)
-    private var fieldCentricToggle: Toggle = Toggle(false)
-    private var intakeToggle: Toggle = Toggle(false)
+    private var prevRightBumper = false
+    private var prevLeftBumper = false
+
+    private var intakeEnabled = false
+    private var prevCircle = false
 
     var detection: AprilTagDetection? = null
     var robotPoseTag: Pose? = null
@@ -65,34 +64,44 @@ class TeleopDriver1(
     }
 
     private fun updateDrivePower() {
-        incDrivePower.toggle(gamepad.right_bumper)
-        decDrivePower.toggle(gamepad.left_bumper)
-        if (incDrivePower.justChanged) {
+        val rightBumperPressed = gamepad.right_bumper && !prevRightBumper
+        prevRightBumper = gamepad.right_bumper
+        val leftBumperPressed = gamepad.left_bumper && !prevLeftBumper
+        prevLeftBumper = gamepad.left_bumper
+        if (rightBumperPressed) {
             drivePower += 0.1
         }
-        if (decDrivePower.justChanged) {
+        if (leftBumperPressed) {
             drivePower -= 0.1
         }
         drivePower = drivePower.coerceIn(0.1, 1.0)
     }
 
     private fun updateFieldCentric() {
-        fieldCentricToggle.toggle(gamepad.touchpad)
+        val touchpadPressed = gamepad.touchpad && !prevTouchpad
+        prevTouchpad = gamepad.touchpad
+        if (touchpadPressed) {
+            fieldCentric = !fieldCentric
+        }
     }
 
     private fun updateIntake() {
-        intakeToggle.toggle(gamepad.circle)
+        val circlePressed = gamepad.circle && !prevCircle
+        prevCircle = gamepad.circle
+        if (circlePressed) {
+            intakeEnabled = !intakeEnabled
+            if (intakeEnabled) {
+                bot.spindexer?.moveToNextOpenIntake()
+            }
+        }
         if (gamepad.dpad_down) {
             bot.intake?.reverse()
         } else {
-            if (intakeToggle.state) {
+            if (intakeEnabled) {
                 bot.intake?.forward()
             } else {
                 bot.intake?.stop()
             }
-        }
-        if (intakeToggle.justChanged && intakeToggle.state) {
-            bot.spindexer?.moveToNextOpenIntake()
         }
     }
 

@@ -14,7 +14,6 @@ import pioneer.hardware.prism.Color
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
-import pioneer.helpers.Toggle
 import pioneer.vision.AprilTag
 import pioneer.helpers.next
 import kotlin.math.*
@@ -24,12 +23,15 @@ class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
 ) {
-    private val isAutoTracking = Toggle(false)
-    private val isEstimatingSpeed = Toggle(true)
-    private val flywheelToggle = Toggle(false)
-    private val launchToggle = Toggle(false)
-    private val multiShotToggle = Toggle(false)
-    private val switchOperatingModeToggle = Toggle(false)
+    private var isAutoTracking = false
+    private var prevCross = false
+    private var isEstimatingSpeed = true
+    private var prevDpadLeft = false
+    private var flywheelEnabled = false
+    private var prevDpadRight = false
+    private var prevSquare = false
+    private var prevTouchpad = false
+    private var prevTriangle = false
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose() //Shooting target from goal tag class
     private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
@@ -84,16 +86,21 @@ class TeleopDriver2(
     }
 
     private fun updateFlywheelOperatingMode(){
-        switchOperatingModeToggle.toggle(gamepad.triangle)
-        if (switchOperatingModeToggle.justChanged){
+        val trianglePressed = gamepad.triangle && !prevTriangle
+        prevTriangle = gamepad.triangle
+        if (trianglePressed){
             bot.flywheel?.operatingMode = bot.flywheel?.operatingMode?.next()!!
 
         }
     }
 
     private fun updateFlywheelSpeed() {
-        isEstimatingSpeed.toggle(gamepad.dpad_left)
-        if (!isEstimatingSpeed.state){
+        val dpadLeftPressed = gamepad.dpad_left && !prevDpadLeft
+        prevDpadLeft = gamepad.dpad_left
+        if (dpadLeftPressed) {
+            isEstimatingSpeed = !isEstimatingSpeed
+        }
+        if (!isEstimatingSpeed){
             if (gamepad.dpad_up){
                 manualFlywheelSpeed += 50.0
             }
@@ -129,21 +136,25 @@ class TeleopDriver2(
     }
 
     private fun handleFlywheel() {
-        flywheelToggle.toggle(gamepad.dpad_right)
-        FileLogger.debug("Teleop Driver 2", flywheelToggle.state.toString())
+        val dpadRightPressed = gamepad.dpad_right && !prevDpadRight
+        prevDpadRight = gamepad.dpad_right
+        if (dpadRightPressed) {
+            flywheelEnabled = !flywheelEnabled
+        }
+        FileLogger.debug("Teleop Driver 2", flywheelEnabled.toString())
         FileLogger.debug("Flywheel Speed", finalFlywheelSpeed.toString())
-        if (flywheelToggle.state) {
+        if (flywheelEnabled) {
             finalFlywheelSpeed = estimatedFlywheelSpeed
         } else {
-                if (flywheelToggle.justChanged){
-                    flywheelShouldFloat = true
+            if (dpadRightPressed){
+                flywheelShouldFloat = true
 //                    finalFlywheelSpeed = 0.0
-                }
+            }
 
-                if (flywheelShouldFloat && bot.flywheel?.velocity!! < bot.flywheel!!.idleVelocity){
-                    flywheelShouldFloat = false
+            if (flywheelShouldFloat && bot.flywheel?.velocity!! < bot.flywheel!!.idleVelocity){
+                flywheelShouldFloat = false
 //                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
-                }
+            }
 
 //                if (!flywheelShouldFloat){
 //                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
@@ -151,26 +162,30 @@ class TeleopDriver2(
 //                    finalFlywheelSpeed = 0.0
 //                }
 
-                if (flywheelShouldFloat){
-                    finalFlywheelSpeed = 0.0
-                } else {
-                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
-                }
+            if (flywheelShouldFloat){
+                finalFlywheelSpeed = 0.0
+            } else {
+                finalFlywheelSpeed = bot.flywheel!!.idleVelocity
+            }
 
 //                if (it < bot.flywheel!!.idleVelocity)
 //                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
 //                else {
 //                    finalFlywheelSpeed = 0.0
 //                }
-            }
+        }
 
-            bot.flywheel?.velocity = finalFlywheelSpeed
+        bot.flywheel?.velocity = finalFlywheelSpeed
     }
 
 
     private fun handleTurret() {
-        isAutoTracking.toggle(gamepad.cross)
-        bot.turret?.mode = if (isAutoTracking.state) Turret.Mode.AUTO_TRACK else Turret.Mode.MANUAL
+        val crossPressed = gamepad.cross && !prevCross
+        prevCross = gamepad.cross
+        if (crossPressed) {
+            isAutoTracking = !isAutoTracking
+        }
+        bot.turret?.mode = if (isAutoTracking) Turret.Mode.AUTO_TRACK else Turret.Mode.MANUAL
         if (bot.turret?.mode == Turret.Mode.MANUAL) handleManualTrack() else handleAutoTrack()
     }
 
@@ -183,18 +198,19 @@ class TeleopDriver2(
     }
 
     private fun handleMultiShot() {
-        multiShotToggle.toggle(gamepad.touchpad)
+        val touchpadPressed = gamepad.touchpad && !prevTouchpad
+        prevTouchpad = gamepad.touchpad
 
         when(multishotState) {
             MultishotState.IDLE -> {
-                if (multiShotToggle.justChanged && gamepad.touchpad) {
+                if (touchpadPressed) {
                     multishotState = MultishotState.MOVING
                     FileLogger.debug("Teleop Driver 2", "Should have changed to MOVING")
                 }
             }
             MultishotState.MOVING -> {
                 shootArtifact()
-                if (multiShotToggle.justChanged && gamepad.touchpad) {
+                if (touchpadPressed) {
                     FileLogger.debug("Teleop Driver 2", "Changed back to IDLE")
                     multishotState = MultishotState.IDLE
                 }
@@ -210,7 +226,7 @@ class TeleopDriver2(
                 }
             }
             MultishotState.SHOOTING -> {
-                if (multiShotToggle.justChanged && gamepad.touchpad) {
+                if (touchpadPressed) {
                     multishotState = MultishotState.IDLE
                 }
                 if (shootingArtifact) {
@@ -232,10 +248,11 @@ class TeleopDriver2(
             shootingArtifact = false
             bot.spindexer?.popCurrentArtifact(false)
         }
-        if (!flywheelToggle.state) return
+        if (!flywheelEnabled) return
 
-        launchToggle.toggle(gamepad.square)
-        shootCommanded = launchToggle.justChanged || triggerMultishot
+        val squarePressed = gamepad.square && !prevSquare
+        prevSquare = gamepad.square
+        shootCommanded = squarePressed || triggerMultishot
 
         if (shootCommanded &&
             bot.spindexer?.withinDetectionTolerance == true &&
