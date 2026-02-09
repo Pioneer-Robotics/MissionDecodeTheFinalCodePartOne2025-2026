@@ -52,7 +52,7 @@ class Flywheel(
         get() = flywheel.getCurrent(CurrentUnit.MILLIAMPS)
 
 
-    var operatingMode = Constants.Flywheel.FlywheelOperatingMode.ALWAYS_IDLE
+    var operatingMode = Constants.Flywheel.FlywheelOperatingMode.FULL_OFF
 
     override fun init() {
         flywheel =

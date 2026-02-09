@@ -1,6 +1,7 @@
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import pioneer.Bot
 import pioneer.Constants
@@ -26,9 +27,12 @@ class TeleopDriver1(
     private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
     private var intakeToggle: Toggle = Toggle(false)
+    var tiltToggle = Toggle(false)
+    var tiltTargetDistance = 0
 
     var detection: AprilTagDetection? = null
     var robotPoseTag: Pose? = null
+    var driveDisabled = false
     private lateinit var P: Points
 
     fun update() {
@@ -39,9 +43,11 @@ class TeleopDriver1(
         moveSpindexerManual()
         handleSpindexerReset()
         handleResetPose()
+        handleTilt()
     }
 
     private fun drive() {
+        if (driveDisabled) return
         var direction = Pose(gamepad.left_stick_x.toDouble(), -gamepad.left_stick_y.toDouble())
         if (fieldCentric) {
             var angle = atan2(direction.y, direction.x) - bot.pinpoint?.pose!!.theta
@@ -138,5 +144,29 @@ class TeleopDriver1(
 //        }
 //
 //        if (gamepad.options && robotPoseTag != null) bot.pinpoint?.reset(robotPoseTag!!.copy(theta=robotTheta))
+    }
+
+    private fun handleTilt(){
+        tiltToggle.toggle(gamepad.dpad_up && gamepad.square)
+
+        if (tiltToggle.justChanged) {
+            if (tiltToggle.state) {
+                bot.servosPTO?.dropServos()
+                driveDisabled = true
+                bot.mecanumBase?.stop()
+                tiltTargetDistance = (bot.mecanumBase?.getMotorPositions()[0] ?: 0) + 500
+            } else {
+                bot.servosPTO?.raiseServos()
+                driveDisabled = false
+            }
+        }
+
+        if (bot.servosPTO?.isReset == true &&
+            bot.mecanumBase?.getMotorPowers()?.let { it[0] < tiltTargetDistance } == true &&
+            tiltToggle.state) {
+            bot.mecanumBase?.setMotorPowers(listOf(0.2,0.0,0.0,0.2))
+        } else if (tiltToggle.state) {
+            bot.mecanumBase?.stop()
+        }
     }
 }

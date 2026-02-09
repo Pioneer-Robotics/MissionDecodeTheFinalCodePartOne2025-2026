@@ -224,6 +224,14 @@ object Constants {
         const val LAUNCHER_REST = 0.545
         //Was 0.3
         const val LAUNCHER_TRIGGERED = 0.23
+
+        const val L_PTO_UP = 0.0
+
+        const val R_PTO_UP = 0.0
+
+        const val L_PTO_DROP = 0.0
+
+        const val R_PTO_DROP = 0.0
     }
 
     object TransferData {

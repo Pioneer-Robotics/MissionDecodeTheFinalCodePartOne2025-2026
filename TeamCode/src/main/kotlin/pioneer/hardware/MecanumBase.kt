@@ -48,6 +48,31 @@ class MecanumBase(
         motors.values.forEach { it.zeroPowerBehavior = behavior }
     }
 
+    fun setMotorPowers(powers: List<Double>) {
+        leftFront.power = powers[0]
+        leftBack.power = powers[1]
+        rightFront.power = powers[2]
+        rightBack.power = powers[3]
+    }
+
+    fun getMotorPowers() : List<Double> {
+        return listOf(
+            leftFront.power,
+            leftBack.power,
+            rightFront.power,
+            rightBack.power,
+        )
+    }
+
+    fun getMotorPositions() : List<Int> {
+        return listOf(
+            leftFront.currentPosition,
+            leftBack.currentPosition,
+            rightFront.currentPosition,
+            rightBack.currentPosition,
+        )
+    }
+
     /**
      * Drive using robot-centric coordinates: x=strafe, y=forward, rotation=turn
      */
