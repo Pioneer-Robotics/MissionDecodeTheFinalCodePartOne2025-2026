@@ -133,6 +133,7 @@ class Spindexer(
     private fun checkForArtifact() {
         if (motion.target !in intakePositions) return
         if (!motion.withinDetectionTolerance) return
+        if (!motion.withinVelocityTolerance) return
 
         val index = intakePositions.indexOf(motion.target)
         val detected = detector.detect()

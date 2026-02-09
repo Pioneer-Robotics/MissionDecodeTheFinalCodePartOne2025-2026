@@ -1,6 +1,7 @@
 package pioneer.opmodes.auto
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.BotType
@@ -63,6 +64,9 @@ class AudienceSideAuto : BaseOpMode() {
     private var targetVelocity = 980.0
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
+    private var lookForTag = true
+    private val tagTimer = ElapsedTime()
+    private val tagTimeout = 3.0
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -104,6 +108,7 @@ class AudienceSideAuto : BaseOpMode() {
             follower.reset()
         }
         targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
+        tagTimer.reset()
     }
 
     override fun onLoop() {
@@ -119,7 +124,7 @@ class AudienceSideAuto : BaseOpMode() {
         checkForTimeUp()
 
 //        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
-        bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
+        handleTurret()
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
@@ -130,6 +135,20 @@ class AudienceSideAuto : BaseOpMode() {
         telemetry.addData("State", state)
         telemetry.addData("Collect State", collectState)
         telemetry.addData("Launch State", launchState)
+    }
+
+    private fun handleTurret() {
+        if (lookForTag && tagTimer.seconds() < tagTimeout) {
+            bot.turret?.autoTrack(bot.pinpoint!!.pose, Pose(0.0, 200.0))
+            bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
+                Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
+                    motifOrder = detectedMotif
+                    lookForTag = false // Detected the motif
+                }
+            }
+        } else {
+            bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
+        }
     }
 
     private fun checkForTimeUp() {

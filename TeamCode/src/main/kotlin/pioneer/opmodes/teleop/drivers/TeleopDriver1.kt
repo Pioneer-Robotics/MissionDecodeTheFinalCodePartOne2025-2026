@@ -1,10 +1,8 @@
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import pioneer.Bot
 import pioneer.Constants
-import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
@@ -26,10 +24,6 @@ class TeleopDriver1(
     private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
     private var intakeToggle: Toggle = Toggle(false)
-
-    var detection: AprilTagDetection? = null
-    var robotPoseTag: Pose? = null
-    private lateinit var P: Points
 
     fun update() {
         drive()
@@ -97,7 +91,6 @@ class TeleopDriver1(
     }
 
     private fun moveSpindexerManual() {
-//        FileLogger.debug("Teleop Driver 1", "Manual override = ${bot.spindexer?.manualOverride}")
         if (gamepad.right_trigger > 0.1) {
             bot.spindexer?.moveManual(gamepad.right_trigger.toDouble())
         }
@@ -122,21 +115,5 @@ class TeleopDriver1(
                 bot.pinpoint?.reset(Pose(86.7, -99.0, theta = 0.0))
             }
         }
-
-//        detection = bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.firstOrNull()
-//
-//        val robotTheta = bot.pinpoint?.pose?.theta ?: return
-//        if (detection != null) {
-//            val tagDistance = hypot(detection!!.ftcPose.x, detection!!.ftcPose.y)
-//            val fieldOffset = Pose(cos(PI/2 + robotTheta), sin(PI/2 + robotTheta)) * tagDistance
-//            val tagPosition = when (detection!!.id) {
-//                20 -> GoalTag.BLUE.pose
-//                24 -> GoalTag.RED.pose
-//                else -> return
-//            }
-//            robotPoseTag = tagPosition - fieldOffset
-//        }
-//
-//        if (gamepad.options && robotPoseTag != null) bot.pinpoint?.reset(robotPoseTag!!.copy(theta=robotTheta))
     }
 }

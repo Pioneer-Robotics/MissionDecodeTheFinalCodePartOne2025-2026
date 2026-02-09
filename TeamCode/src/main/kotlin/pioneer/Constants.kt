@@ -66,8 +66,7 @@ object Constants {
 
         // limits
         const val MAX_MOTOR_VELOCITY_TPS = 2500.0
-        const val MAX_DRIVE_VEL_CMPS = 150.0
-        const val DEFAULT_POWER = 0.7
+        const val DEFAULT_POWER = 1.0 // Updated from 0.7
 
         // Feedforward gains using Pose(x,y,theta)
 //        @JvmField var kVX = 0.0
@@ -179,9 +178,9 @@ object Constants {
     @Config
     object Spindexer {
         // External Encoder
-        @JvmField var KP = 0.0045 // was 0.000175
-        @JvmField var KI = 0.0 // was 0.00001
-        @JvmField var KD = 0.01 // was 0.00045
+        @JvmField var KP = 0.00475 // was 0.000175
+        @JvmField var KI = 0.00005 // was 0.00001
+        @JvmField var KD = 0.0125 // was 0.00045
 
         @JvmField var KS_START = 0.04
 
@@ -189,10 +188,10 @@ object Constants {
 
         @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
 
-        const val SHOOTING_TOLERANCE_TICKS = 5
-        const val DETECTION_TOLERANCE_TICKS = 10
-        const val VELOCITY_TOLERANCE_TPS = 30
-        const val TICKS_PER_REV = 538 // 8192
+        const val SHOOTING_TOLERANCE_TICKS = 4
+        const val DETECTION_TOLERANCE_TICKS = 18
+        const val VELOCITY_TOLERANCE_TPS = 50
+        const val TICKS_PER_REV = 537.7 // 8192
 
         // Time required to confirm an artifact has been intaken (ms)
         const val CONFIRM_INTAKE_MS = 67.0
@@ -203,7 +202,7 @@ object Constants {
 
     @Config
     object Turret {
-        const val TICKS_PER_REV = 384.5 * 3
+        const val TICKS_PER_REV = 537.7 * 3 // 384.5 * 3
         const val HEIGHT = 30.48
         const val THETA = 0.93
         const val ANGLE_TOLERANCE_RADIANS = 0.075
@@ -221,9 +220,9 @@ object Constants {
 //        Was 0.3
 //        const val LAUNCHER_TRIGGERED = 0.75
 
-        const val LAUNCHER_REST = 0.545
+        const val LAUNCHER_REST = 0.52
         //Was 0.3
-        const val LAUNCHER_TRIGGERED = 0.23
+        const val LAUNCHER_TRIGGERED = 0.26
     }
 
     object TransferData {
@@ -255,7 +254,6 @@ object Constants {
 //            TIMED_IDLE
         }
 
-        var operatingMode = FlywheelOperatingMode.FULL_OFF
     }
 
     object Misc {

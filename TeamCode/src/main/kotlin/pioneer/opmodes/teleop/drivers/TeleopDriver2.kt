@@ -175,6 +175,7 @@ class TeleopDriver2(
     }
 
     private fun handleShootInput() {
+        if (shootingArtifact) return
         when {
             gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
             gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
@@ -305,34 +306,29 @@ class TeleopDriver2(
                 )
             }
         }
-//        if (abs(gamepad.right_stick_x) > 0.02) {
-//            useAutoTrackOffset = true
-//            offsetShootingTarget = offsetShootingTarget.rotate(-gamepad.right_stick_x.toDouble().pow(3) / 17.5)
-//        }
-//        if (gamepad.right_stick_button){
-//            useAutoTrackOffset = false
-//            offsetShootingTarget = tagShootingTarget
-//        }
-//        if (useAutoTrackOffset){
-//            finalShootingTarget = offsetShootingTarget
-//        } else {
-//            finalShootingTarget = tagShootingTarget
-//        }
     }
 
     private fun updateIndicatorLED() {
-        bot.flywheel?.velocity?.let {
-            if (abs(estimatedFlywheelSpeed - it) < 20.0) {
-                bot.led?.setColor(Color.GREEN)
-                gamepad.setLedColor(0.0, 1.0, 0.0, -1)
-            } else if (it < estimatedFlywheelSpeed - 20.0){
-                bot.led?.setColor(Color.YELLOW)
-                gamepad.setLedColor(255.0,165.0,0.0, -1)
+
+        if (flywheelToggle.state){
+            bot.flywheel?.velocity?.let {
+                if (abs(estimatedFlywheelSpeed - it) < 20.0) {
+                    bot.led?.setColor(Color.GREEN)
+                    gamepad.setLedColor(0.0, 1.0, 0.0, -1)
+                } else if (it < estimatedFlywheelSpeed - 20.0){
+                    bot.led?.setColor(Color.YELLOW)
+                    gamepad.setLedColor(255.0,165.0,0.0, -1)
+                }
+                else {
+                    bot.led?.setColor(Color.RED)
+                    gamepad.setLedColor(1.0, 0.0, 0.0, -1)
+                }
             }
-            else {
-                bot.led?.setColor(Color.RED)
-                gamepad.setLedColor(1.0, 0.0, 0.0, -1)
-            }
+        } else {
+            gamepad.setLedColor(255.0,255.0,255.0, -1)
+            bot.led?.setColor(Color.WHITE)
         }
+
+
     }
 }

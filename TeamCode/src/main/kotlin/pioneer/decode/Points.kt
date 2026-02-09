@@ -55,8 +55,9 @@ class Points(
 
     val PREP_COLLECT_START_VELOCITY = Pose(0.0, -75.0).T(color)
     val PREP_COLLECT_END_VELOCITY = Pose(75.0, 0.0).T(color)
+    val GOTO_SHOOT_VELOCITY = Pose(-175.0, 0.0).T(color)
 
-    private val collectX = 117.5
+    private val collectX = 125.0
     val COLLECT_GOAL = Pose(collectX, collectY(0), theta=collectTheta).T(color)
     val COLLECT_MID = Pose(collectX, collectY(1), theta=collectTheta).T(color)
     val COLLECT_AUDIENCE = Pose(collectX, collectY(2), theta=collectTheta).T(color)

@@ -22,8 +22,8 @@ import pioneer.pathing.paths.LinearPath
 import java.util.Timer
 import java.util.TimerTask
 
-@Autonomous(name = "Goal Side Auto", group = "Autonomous")
-class GoalSideAuto : BaseOpMode() {
+@Autonomous(name = "Audience Side Auto Middle", group = "Autonomous")
+class AudienceSideAutoMiddle : BaseOpMode() {
     enum class AutoOptions {
         PRELOAD_ONLY,
         FIRST_ROW,
@@ -57,18 +57,18 @@ class GoalSideAuto : BaseOpMode() {
     private val allianceToggle = Toggle(false)
     private lateinit var P: Points
     private lateinit var targetGoal: GoalTag
+    private var startLeave = true
     private var autoType = AutoOptions.ALL
     private var state = State.GOTO_SHOOT
-    private var collectState = CollectState.GOAL
+    private var collectState = CollectState.MID
     private var launchState = LaunchState.READY
-    private var targetVelocity = 815.0
+    private var targetVelocity = 980.0
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
     private var lookForTag = true
-    private var startLeave = true
-    private var firstShoot = true
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
+    private var firstShot = true
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -88,13 +88,11 @@ class GoalSideAuto : BaseOpMode() {
             )
         }
 
-//        bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
-//            Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
-//                motifOrder = if(bot.allianceColor == AllianceColor.RED)
-//                    detectedMotif.prevMotif()!! else detectedMotif.nextMotif()!!
-//                lookForTag = false // Detected the motif
-//            }
-//        }
+        bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
+            Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
+                motifOrder = detectedMotif
+            }
+        }
 
         telemetry.apply {
             addData("Alliance Color", bot.allianceColor)
@@ -106,7 +104,7 @@ class GoalSideAuto : BaseOpMode() {
     override fun onStart() {
         P = Points(bot.allianceColor)
         bot.apply{
-            pinpoint?.reset(P.START_GOAL)
+            pinpoint?.reset(P.START_FAR)
             spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
             spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
             follower.reset()
@@ -128,22 +126,21 @@ class GoalSideAuto : BaseOpMode() {
         checkForTimeUp()
 
 //        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
-
         handleTurret()
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
+        telemetry.addData("Flywheel Speed", bot.flywheel?.velocity)
         telemetry.addData("Next Artifact", motifOrder.currentArtifact)
         telemetry.addData("Detected Motif", motifOrder.toString())
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
-        telemetry.addData("Looking for Motif", lookForTag)
         telemetry.addData("State", state)
         telemetry.addData("Collect State", collectState)
         telemetry.addData("Launch State", launchState)
     }
 
     private fun handleTurret() {
-        if (lookForTag && tagTimer.seconds() < tagTimeout && tagTimer.seconds() > 1.5) {
+        if (lookForTag && tagTimer.seconds() < tagTimeout) {
             bot.turret?.autoTrack(bot.pinpoint!!.pose, Pose(0.0, 200.0))
             bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
                 Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
@@ -166,8 +163,20 @@ class GoalSideAuto : BaseOpMode() {
         bot.flywheel?.velocity = targetVelocity
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
-            val endPose = if (firstShoot) P.SHOOT_GOAL_CLOSE.copy(theta=0.0) else P.SHOOT_GOAL_CLOSE
-            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, endPose))
+            if (firstShot) {
+                bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR), 150.0)
+                firstShot = false
+            } else {
+                bot.follower.followPath(
+                    HermitePath(
+                        bot.pinpoint!!.pose,
+                        P.SHOOT_GOAL_FAR,
+                        P.GOTO_SHOOT_VELOCITY,
+                        Pose(0.0,0.0)
+                    ),
+                    150.0
+                )
+            }
         }
         if (bot.follower.done) { // Ending path
             bot.follower.reset()
@@ -232,22 +241,18 @@ class GoalSideAuto : BaseOpMode() {
         }
     }
 
+    private fun flywheelAtSpeed(): Boolean {
+        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 10) &&
+                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
+    }
+
     private fun state_goto_collect() {
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer!!.moveToNextOpenIntake()
             when (collectState) {
-                CollectState.GOAL -> bot.follower.followPath(
-                    HermitePath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL,
-                        P.PREP_COLLECT_START_VELOCITY, P.PREP_COLLECT_END_VELOCITY)
-                )
-                CollectState.MID -> bot.follower.followPath(
-                    HermitePath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID,
-                        P.PREP_COLLECT_START_VELOCITY, P.PREP_COLLECT_END_VELOCITY)
-                )
-                CollectState.AUDIENCE -> bot.follower.followPath(
-                    HermitePath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE,
-                        P.PREP_COLLECT_START_VELOCITY, P.PREP_COLLECT_END_VELOCITY)
-                )
+                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL), 175.0)
+                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID), 175.0)
+                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE), 175.0)
                 CollectState.DONE -> state = State.STOP
             }
         }
@@ -258,19 +263,13 @@ class GoalSideAuto : BaseOpMode() {
         }
     }
 
-    private fun flywheelAtSpeed(): Boolean {
-        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 10) &&
-                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
-    }
-
     private fun state_collect() {
         bot.intake?.forward()
-        bot.flywheel?.velocity = 0.0
         if (!bot.follower.isFollowing) { // Starting path
             when (collectState) {
-                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 8.0)
-                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID), 8.0)
-                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE), 8.0)
+                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 10.0)
+                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID), 10.0)
+                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE), 10.0)
                 CollectState.DONE -> {}
             }
         }
@@ -284,12 +283,7 @@ class GoalSideAuto : BaseOpMode() {
                 }
             }, 1000)
             bot.flywheel?.velocity = targetVelocity
-            when (collectState) {
-                CollectState.GOAL -> collectState = CollectState.MID
-                CollectState.MID -> collectState = CollectState.AUDIENCE
-                CollectState.AUDIENCE -> collectState = CollectState.DONE
-                CollectState.DONE -> {}
-            }
+            collectState = CollectState.DONE
         }
     }
 

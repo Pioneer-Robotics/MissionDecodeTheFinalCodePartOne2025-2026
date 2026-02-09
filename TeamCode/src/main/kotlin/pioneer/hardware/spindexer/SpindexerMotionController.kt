@@ -91,6 +91,10 @@ class SpindexerMotionController(
         get() =
             abs(errorTicks) < Constants.Spindexer.DETECTION_TOLERANCE_TICKS
 
+    val withinVelocityTolerance: Boolean
+        get() =
+            abs(motor.velocity) < Constants.Spindexer.VELOCITY_TOLERANCE_TPS
+
     val closestPosition: MotorPosition
         get() {
             var closest = MotorPosition.INTAKE_1
@@ -129,7 +133,7 @@ class SpindexerMotionController(
 
     fun update() {
         if (manualOverride) return
-        if (abs(velocity) >= Constants.Spindexer.VELOCITY_TOLERANCE_TPS)
+        if (!withinVelocityTolerance)
             velocityTimer.reset()
 
         chrono.update()
@@ -154,7 +158,7 @@ class SpindexerMotionController(
 //            pid.reset()
         }
 
-        motor.power = power.coerceIn(-0.5, 0.5)
+        motor.power = power.coerceIn(-0.6, 0.6)
     }
 
     // --- Manual Control --- //
@@ -186,11 +190,11 @@ class SpindexerMotionController(
 
     private fun wrapTicks(
         error: Int,
-        ticksPerRev: Int = Constants.Spindexer.TICKS_PER_REV,
+        ticksPerRev: Double = Constants.Spindexer.TICKS_PER_REV,
     ): Int {
         var e = error % ticksPerRev
         if (e > ticksPerRev / 2) e -= ticksPerRev
         if (e < -ticksPerRev / 2) e += ticksPerRev
-        return e
+        return e.toInt()
     }
 }

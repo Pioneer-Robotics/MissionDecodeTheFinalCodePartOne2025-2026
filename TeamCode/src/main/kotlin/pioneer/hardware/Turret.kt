@@ -1,11 +1,9 @@
 package pioneer.hardware
 
-import android.R
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.Constants
 import pioneer.helpers.Chrono
 import pioneer.helpers.MathUtils
@@ -128,8 +126,7 @@ class Turret(
         val shootPose = pose + Pose(
             x = Constants.Turret.OFFSET * sin(-pose.theta),
             y = Constants.Turret.OFFSET * cos(-pose.theta)
-        ) +
-                Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
+        )
         // General Angle (From robot 0 to target):
         val targetTheta = (shootPose angleTo target)
         val turretTheta = (PI / 2 + targetTheta) - shootPose.theta
