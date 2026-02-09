@@ -162,7 +162,7 @@ class TeleopDriver1(
         }
 
         if (bot.servosPTO?.isReset == true &&
-            bot.mecanumBase?.getMotorPowers()?.let { it[0] < tiltTargetDistance } == true &&
+            bot.mecanumBase?.getMotorPositions()?.let { it[0] < tiltTargetDistance } == true &&
             tiltToggle.state) {
             bot.mecanumBase?.setMotorPowers(listOf(0.2,0.0,0.0,0.2))
         } else if (tiltToggle.state) {
