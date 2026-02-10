@@ -75,7 +75,8 @@ class Flywheel(
 
     // https://www.desmos.com/calculator/uofqeqqyn1
     //12/22: https://www.desmos.com/calculator/1kj8xzklqp
-    //4/2: https://www.desmos.com/calculator/uyk9a9vs5s
+    // 2/4: https://www.desmos.com/calculator/uyk9a9vs5s
+    // 2/9:
     fun estimateVelocity(
         pose: Pose,
         target: Pose,
@@ -101,7 +102,8 @@ class Flywheel(
                 )
         //Regression to convert real world velocity to flywheel speed
 //        val flywheelVelocity = 1.583 * v0 - 9.86811 // From 12/22 testing
-        val flywheelVelocity = 1.64545 * v0 - 51.56276
+//        val flywheelVelocity = 1.64545 * v0 - 51.56276 // From 2/4 testing
+        val flywheelVelocity = 2.05204 * v0 - 290.74829 // From 2/9 testing
         //Adjust for velocity of the bot when moving
 //        val thetaToTarget = -(shootPose angleTo target)
 //        val newTargetVelocityX = sin(thetaToTarget) * flywheelVelocity - pose.vx

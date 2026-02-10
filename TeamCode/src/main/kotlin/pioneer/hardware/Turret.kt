@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.Constants
 import pioneer.helpers.Chrono
 import pioneer.helpers.MathUtils
@@ -71,10 +72,10 @@ class Turret(
                 mode = DcMotor.RunMode.RUN_USING_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 direction = DcMotorSimple.Direction.FORWARD
-//                setPIDFCoefficients(
-//                    DcMotor.RunMode.RUN_USING_ENCODER,
-//                    PIDFCoefficients(1.0, 0.0, 0.0, 0.0)
-//                )
+                setPIDFCoefficients(
+                    DcMotor.RunMode.RUN_USING_ENCODER,
+                    PIDFCoefficients(Constants.Turret.KP_ODO, Constants.Turret.KI_ODO, Constants.Turret.KD_ODO, Constants.Turret.KS)
+                )
             }
     }
 
@@ -127,6 +128,7 @@ class Turret(
             x = Constants.Turret.OFFSET * sin(-pose.theta),
             y = Constants.Turret.OFFSET * cos(-pose.theta)
         )
+
         // General Angle (From robot 0 to target):
         val targetTheta = (shootPose angleTo target)
         val turretTheta = (PI / 2 + targetTheta) - shootPose.theta

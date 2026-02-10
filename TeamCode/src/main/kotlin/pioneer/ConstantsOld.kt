@@ -10,7 +10,10 @@ import pioneer.helpers.Pose
 import pioneer.opmodes.BaseOpMode.Verbose
 import kotlin.math.PI
 
-object Constants {
+// Constants used for the old bot
+// Rename to Constants when building for the second bot
+
+object ConstantsOld {
     object HardwareNames {
         // Drive motors
         const val DRIVE_LEFT_FRONT = "driveLF"
@@ -66,7 +69,8 @@ object Constants {
 
         // limits
         const val MAX_MOTOR_VELOCITY_TPS = 2500.0
-        const val DEFAULT_POWER = 1.0 // Updated from 0.7
+        const val MAX_DRIVE_VEL_CMPS = 150.0
+        const val DEFAULT_POWER = 1.0
 
         // Feedforward gains using Pose(x,y,theta)
 //        @JvmField var kVX = 0.0
@@ -166,11 +170,11 @@ object Constants {
         val RPY_UNITS = AngleUnit.DEGREES
         val RPY_OFFSET: List<Double> = listOf(0.0, -90.0, 0.0) // Pitch=-90 to face forward
 
-         //Lens Intrinsics
-         const val FX = 915.97454765
-         const val FY = 915.69375972
-         const val CX = 634.56292469
-         const val CY = 370.77742622
+        //Lens Intrinsics
+        const val FX = 915.97454765
+        const val FY = 915.69375972
+        const val CX = 634.56292469
+        const val CY = 370.77742622
 
         // val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
     }
@@ -178,20 +182,25 @@ object Constants {
     @Config
     object Spindexer {
         // External Encoder
-        @JvmField var KP = 0.00475
-        @JvmField var KI = 0.00005
-        @JvmField var KD = 0.0125
+        @JvmField var KP = 0.000175
+        @JvmField var KI = 0.00001
+        @JvmField var KD = 0.00045 // was 0.00025
 
-        @JvmField var KS_START = 0.04
+        @JvmField var KS_START = 0.03
+        @JvmField var KS_STEP = 0.0
 
         @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
+        @JvmField var MOTOR_TOLERANCE_TICKS = 75 // stops moving within tolerance (in outtake for magnets)
+        @JvmField var PID_TOLERANCE_TICKS = 100 // stops using pid within tolerance
 
-        const val SHOOTING_TOLERANCE_TICKS = 4
-        const val DETECTION_TOLERANCE_TICKS = 18
-        const val VELOCITY_TOLERANCE_TPS = 50
-        const val TICKS_PER_REV = 537.7
+        // constant power within PID_TOLERANCE_TICKS in output position
+        @JvmField var FINAL_ADJUSTMENT_POWER = 0.085
+
+        const val SHOOTING_TOLERANCE_TICKS = 100
+        const val DETECTION_TOLERANCE_TICKS = 150
+        const val VELOCITY_TOLERANCE_TPS = 750
+        const val TICKS_PER_REV = 8192
 
         // Time required to confirm an artifact has been intaken (ms)
         const val CONFIRM_INTAKE_MS = 67.0
@@ -202,7 +211,7 @@ object Constants {
 
     @Config
     object Turret {
-        const val TICKS_PER_REV = 537.7 * 3 // 384.5 * 3
+        const val TICKS_PER_REV = 384.5 * 3
         const val HEIGHT = 30.48
         const val THETA = 0.93
         const val ANGLE_TOLERANCE_RADIANS = 0.075
@@ -213,10 +222,6 @@ object Constants {
         @JvmField var KI = 0.00015
         @JvmField var KD = 1.1
         @JvmField var KS = 0.175
-
-        @JvmField var KP_ODO = 0.0
-        @JvmField var KI_ODO = 0.0
-        @JvmField var KD_ODO = 0.0
     }
 
     object ServoPositions {
@@ -224,9 +229,9 @@ object Constants {
 //        Was 0.3
 //        const val LAUNCHER_TRIGGERED = 0.75
 
-        const val LAUNCHER_REST = 0.52
+        const val LAUNCHER_REST = 0.47
         //Was 0.3
-        const val LAUNCHER_TRIGGERED = 0.26
+        const val LAUNCHER_TRIGGERED = 0.235
     }
 
     object TransferData {
@@ -258,6 +263,7 @@ object Constants {
 //            TIMED_IDLE
         }
 
+        var operatingMode = FlywheelOperatingMode.FULL_OFF
     }
 
     object Misc {
