@@ -20,7 +20,7 @@
  *   SOFTWARE.
  */
 
-package pioneer.hardware.prism;
+package org.firstinspires.ftc.teamcode.prism;
 
 import static com.qualcomm.robotcore.util.TypeConversion.byteArrayToInt;
 import static com.qualcomm.robotcore.util.TypeConversion.unsignedByteToInt;
@@ -48,7 +48,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
     private static final byte DEFAULT_ADDRESS = 0x38;
     private final int MAXIMUM_NUMBER_OF_ANIMATIONS = 10;
     private final int MAXIMUM_NUMBER_OF_ANIMATION_GROUPS = 8;
-    private PrismAnimations.AnimationBase[] animations = new PrismAnimations.AnimationBase[MAXIMUM_NUMBER_OF_ANIMATIONS];
+    private org.firstinspires.ftc.teamcode.prism.PrismAnimations.AnimationBase[] animations = new PrismAnimations.AnimationBase[MAXIMUM_NUMBER_OF_ANIMATIONS];
 
     //#region Public Types
     public enum LayerHeight

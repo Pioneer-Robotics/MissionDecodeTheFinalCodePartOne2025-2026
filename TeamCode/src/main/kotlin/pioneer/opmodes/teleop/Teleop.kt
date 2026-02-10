@@ -2,19 +2,17 @@ package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.Constants
 import pioneer.general.AllianceColor
-import pioneer.hardware.prism.Color
-import pioneer.helpers.Pose
+import org.firstinspires.ftc.teamcode.prism.Color
+import pioneer.decode.Artifact
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.opmodes.teleop.drivers.TeleopDriver1
 import pioneer.opmodes.teleop.drivers.TeleopDriver2
-import kotlin.math.hypot
 
 @TeleOp(name = "Teleop")
 class Teleop : BaseOpMode() {
@@ -40,7 +38,9 @@ class Teleop : BaseOpMode() {
                     AllianceColor.RED -> Color.RED
                     AllianceColor.BLUE -> Color.BLUE
                     AllianceColor.NEUTRAL -> Color.PURPLE
-                }
+                },
+                0,
+                23,
             )
         }
         telemetry.addData("Alliance Color", bot.allianceColor)
@@ -56,6 +56,9 @@ class Teleop : BaseOpMode() {
         // Update gamepad inputs
         driver1.update()
         driver2.update()
+
+        // Display artifacts with LED
+        bot.led?.displayArtifacts(listOf(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE))
 
         // Add telemetry data
         addTelemetryData()

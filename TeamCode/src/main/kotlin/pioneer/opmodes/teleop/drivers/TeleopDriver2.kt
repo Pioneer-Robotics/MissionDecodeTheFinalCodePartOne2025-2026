@@ -3,22 +3,18 @@ package pioneer.opmodes.teleop.drivers
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
-import org.openftc.apriltag.AprilTagDetection
 import pioneer.Bot
 import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.general.AllianceColor
 import pioneer.hardware.Turret
-import pioneer.hardware.prism.Color
-import pioneer.helpers.Chrono
+import org.firstinspires.ftc.teamcode.prism.Color
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
-import pioneer.vision.AprilTag
 import pioneer.helpers.next
 import kotlin.math.*
-import kotlin.run
 
 class TeleopDriver2(
     private val gamepad: Gamepad,

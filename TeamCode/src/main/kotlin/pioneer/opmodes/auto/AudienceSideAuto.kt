@@ -12,7 +12,7 @@ import pioneer.decode.Motif
 import pioneer.decode.Obelisk
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
-import pioneer.hardware.prism.Color
+import org.firstinspires.ftc.teamcode.prism.Color
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
