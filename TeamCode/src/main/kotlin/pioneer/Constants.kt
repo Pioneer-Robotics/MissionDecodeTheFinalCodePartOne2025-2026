@@ -248,6 +248,8 @@ object Constants {
 
         val idleVelocity = 300.0
 
+        @JvmField var VELOCITY_COMPENSATION_FACTOR = 1.0
+
         enum class FlywheelOperatingMode{
             ALWAYS_IDLE,
             FULL_OFF,
