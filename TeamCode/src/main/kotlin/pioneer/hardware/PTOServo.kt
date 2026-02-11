@@ -13,11 +13,6 @@ class PTOServo(
     private val servoRName: String = Constants.HardwareNames.PTO_SERVO_R,
 
     ) : HardwareComponent {
-    companion object {
-        private const val SERVO_CYCLE_TIME_MS = 400L
-        private const val RESET_THRESHOLD_MS = 0.0
-    }
-
     private lateinit var servoL: Servo
     private lateinit var servoR: Servo
 
