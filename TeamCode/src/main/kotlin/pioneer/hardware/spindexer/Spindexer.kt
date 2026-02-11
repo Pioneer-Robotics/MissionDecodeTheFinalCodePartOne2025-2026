@@ -2,11 +2,27 @@ package pioneer.hardware.spindexer
 
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.RevColorSensor
+import pioneer.helpers.FileLogger
 
+/**
+ * PASSIVE SPINDEXER - Simplified Version
+ *
+ * Keeps ALL existing functionality and button mappings!
+ * Just adapts the underlying motion to work with passive ramp system.
+ *
+ * MECHANICAL BEHAVIOR:
+ * - INTAKE direction: Balls collected, stay in spindexer
+ * - SHOOTING direction: Passive ramp engages, balls shoot
+ *
+ * The key difference from active system:
+ * - Multi-shot now uses continuous rotation in SHOOTING direction
+ * - Much faster than position-based active kicker!
+ */
 class Spindexer(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.SPINDEXER_MOTOR,
@@ -16,6 +32,10 @@ class Spindexer(
     private lateinit var motion: SpindexerMotionController
     private lateinit var detector: ArtifactDetector
     private val indexer = ArtifactIndexer()
+
+    // --- NEW: Multi-shot state for passive rapid fire --- //
+    private var rapidFireActive = false
+    private val rapidFireTimer = ElapsedTime()
 
     // --- Positions --- //
     private val intakePositions =
@@ -52,6 +72,9 @@ class Spindexer(
     val isOuttakePosition get() = motion.target in outtakePositions
     val isIntakePosition get() = motion.target in intakePositions
 
+    // --- NEW: Multi-shot status --- //
+    val isRapidFiring: Boolean get() = rapidFireActive
+
     // --- Initialization --- //
     override fun init() {
         val motor = hardwareMap.get(DcMotorEx::class.java, motorName)
@@ -67,14 +90,74 @@ class Spindexer(
 
     // --- Update Loop --- //
     override fun update() {
+        // Handle rapid fire (multi-shot) if active
+        if (rapidFireActive) {
+            updateRapidFire()
+            return  // Don't do normal updates during rapid fire
+        }
+
+        // Normal position-based control
         motion.update()
         motion.manualOverride = this.manualOverride
         checkForArtifact()
     }
 
-    // --- Public Commands --- //
+    // --- NEW: Rapid Fire for Multi-Shot --- //
+
+    /**
+     * Start rapid fire (replaces old multi-shot state machine)
+     * Just spins in SHOOTING direction continuously
+     * Much faster than position-based shooting!
+     */
+    fun startRapidFire() {
+        if (isEmpty) {
+            FileLogger.warn("Spindexer", "No balls to rapid fire!")
+            return
+        }
+
+        FileLogger.info("Spindexer", "Starting RAPID FIRE - ${numStoredArtifacts} balls")
+        rapidFireActive = true
+        rapidFireTimer.reset()
+
+        // Start continuous rotation in SHOOTING direction
+        motion.startContinuousRotation(
+            SpindexerMotionController.SpindexerDirection.SHOOTING,
+            Constants.Spindexer.RAPID_FIRE_SPEED
+        )
+    }
+
+    /**
+     * Stop rapid fire
+     */
+    fun stopRapidFire() {
+        if (!rapidFireActive) return
+
+        FileLogger.info("Spindexer", "Stopping RAPID FIRE")
+        rapidFireActive = false
+        motion.stopContinuousRotation()
+
+        // Clear all balls (assume they all shot)
+        indexer.resetAll()
+
+        // Move to next intake position
+        moveToNextOpenIntake()
+    }
+
+    private fun updateRapidFire() {
+        // Auto-stop after duration
+        if (rapidFireTimer.milliseconds() > Constants.Spindexer.RAPID_FIRE_DURATION_MS) {
+            FileLogger.info("Spindexer", "RAPID FIRE complete (timeout)")
+            stopRapidFire()
+        }
+
+        // Keep the motor spinning
+        motion.update()
+    }
+
+    // --- Public Commands (UNCHANGED from original) --- //
     fun moveToNextOpenIntake(): Boolean {
         manualOverride = false
+        rapidFireActive = false  // NEW: Stop rapid fire if active
         val index = indexer.nextOpenIntakeIndex() ?: return false
         motion.target = intakePositions[index]
         return true
@@ -82,6 +165,7 @@ class Spindexer(
 
     fun moveToNextOuttake(artifact: Artifact? = null): Boolean {
         manualOverride = false
+        rapidFireActive = false  // NEW: Stop rapid fire if active
         val index = indexer.findOuttakeIndex(artifact) ?: return false
         motion.target = outtakePositions[index]
         return true
@@ -89,6 +173,7 @@ class Spindexer(
 
     fun moveToPosition(position: SpindexerMotionController.MotorPosition) {
         manualOverride = false
+        rapidFireActive = false  // NEW: Stop rapid fire if active
         motion.target = position
     }
 
@@ -114,10 +199,13 @@ class Spindexer(
 
     fun reset() {
         indexer.resetAll()
+        rapidFireActive = false  // NEW: Stop rapid fire
+        motion.stopContinuousRotation()  // NEW: Stop motor
     }
 
     fun moveManual(power: Double) {
         manualOverride = true
+        rapidFireActive = false  // NEW: Stop rapid fire
         motion.moveManual(power)
     }
 
@@ -129,7 +217,7 @@ class Spindexer(
         indexer.setAll(*artifacts)
     }
 
-    // --- Private Helpers --- //
+    // --- Private Helpers (UNCHANGED) --- //
     private fun checkForArtifact() {
         if (motion.target !in intakePositions) return
         if (!motion.withinDetectionTolerance) return

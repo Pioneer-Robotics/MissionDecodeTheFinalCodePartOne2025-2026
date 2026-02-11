@@ -195,6 +195,52 @@ object Constants {
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10
+
+        // ========== NEW: PASSIVE SPINDEXER PARAMETERS ========== //
+
+        /**
+         * CRITICAL: Direction mapping for passive system
+         *
+         * Set this based on mechanical testing:
+         * - Spin motor POSITIVE → If balls STAY, set true. If balls SHOOT, set false.
+         * - true = INTAKE is positive rotation, SHOOTING is negative
+         * - false = INTAKE is negative rotation, SHOOTING is positive
+         *
+         * DEFAULT: true (GUESS - test and flip if wrong!)
+         */
+        @JvmField var INTAKE_IS_POSITIVE = true
+
+        /**
+         * Speed for different modes
+         * Start conservative and tune up
+         */
+        @JvmField var INTAKE_SPEED = 0.4          // Collection mode (gentle)
+        @JvmField var SHOOTING_SPEED = 0.6        // Single shot (moderate)
+        @JvmField var RAPID_FIRE_SPEED = 0.8      // Rapid fire (fast but safe)
+
+        /**
+         * Timing for modes
+         */
+        // Rapid fire: How long to spin for 3 balls
+        // Start at 1500ms (3 balls × 500ms each)
+        // Tune DOWN if too slow, UP if balls jam
+        const val RAPID_FIRE_DURATION_MS = 1500L
+
+        // Precision: Max time to find target color
+        const val COLOR_ALIGNMENT_TIMEOUT_MS = 2000L
+
+        // Precision: Duration for single shot rotation
+        // One ball = 120° rotation
+        // At 0.6 power, estimate ~500ms
+        // Tune based on actual speed
+        const val SHOOT_SINGLE_DURATION_MS = 500L
+
+        /**
+         * Ball settling after collection
+         * Give ball time to settle before moving again
+         */
+        const val BALL_SETTLING_TIME_MS = 300L
+
     }
 
     object Turret {

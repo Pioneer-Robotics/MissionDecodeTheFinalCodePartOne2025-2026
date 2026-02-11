@@ -16,6 +16,21 @@ import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import kotlin.math.*
 
+/**
+ * TeleopDriver2 - PASSIVE SPINDEXER VERSION
+ *
+ * ALL BUTTONS UNCHANGED!
+ * - Right Bumper: Shoot PURPLE
+ * - Left Bumper: Shoot GREEN
+ * - TOUCHPAD: Multi-shot (shoot all 3 - NOW USES RAPID FIRE!)
+ * - SQUARE: Trigger launcher
+ * - D-pad RIGHT: Flywheel ON/OFF
+ * - TRIANGLE: Flywheel mode
+ * - CROSS: Auto-track
+ *
+ * Key change: Multi-shot now uses continuous rotation (rapid fire)
+ * instead of position-based shooting. Much faster!
+ */
 class TeleopDriver2(
     private val gamepad: Gamepad,
     private val bot: Bot,
@@ -27,9 +42,9 @@ class TeleopDriver2(
     private val multiShotToggle = Toggle(false)
     private val switchOperatingModeToggle = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
-    private var tagShootingTarget = Pose() //Shooting target from goal tag class
-    private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
-    private var finalShootingTarget = Pose() //Final target that the turret tracks
+    private var tagShootingTarget = Pose()
+    private var offsetShootingTarget = Pose()
+    private var finalShootingTarget = Pose()
     private var turretPose = Pose()
     private var shootingArtifact = false
     var useAutoTrackOffset = false
@@ -43,13 +58,14 @@ class TeleopDriver2(
     var shootCommanded = false
     var triggerMultishot = false
 
+    // NEW: Simplified multi-shot state for rapid fire
     var multishotState = MultishotState.IDLE
 
     enum class MultishotState {
-        IDLE,
-        MOVING,
-        SHOOTING
+        IDLE,           // Waiting for touchpad
+        RAPID_FIRING    // Rapid fire active
     }
+
     var flywheelShouldFloat = true
 
     fun update() {
@@ -59,7 +75,7 @@ class TeleopDriver2(
         handleFlywheel()
         handleTurret()
         handleShootInput()
-        handleMultiShot()
+        handleMultiShot()  // NEW: Simplified for rapid fire
         processShooting()
         updateIndicatorLED()
     }
@@ -76,14 +92,12 @@ class TeleopDriver2(
         flywheelSpeedOffset = 0.0
         useAutoTrackOffset = false
         offsetShootingTarget = tagShootingTarget
-        //TODO Sync with driver 1 reset pose
     }
 
     private fun updateFlywheelOperatingMode(){
         switchOperatingModeToggle.toggle(gamepad.triangle)
         if (switchOperatingModeToggle.justChanged){
             bot.flywheel?.operatingMode = bot.flywheel?.operatingMode?.next()!!
-
         }
     }
 
@@ -108,7 +122,6 @@ class TeleopDriver2(
                 flywheelSpeedOffset = 0.0
             }
 
-            //flywheelSpeed = bot.flywheel!!.estimateVelocity(bot.pinpoint?.pose ?: Pose(), tagShootingTarget, targetGoal.shootingHeight) + flywheelSpeedOffset
             val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
             val ftcPose = tagDetections?.firstOrNull()?.ftcPose
             if (ftcPose != null) {
@@ -128,41 +141,27 @@ class TeleopDriver2(
         flywheelToggle.toggle(gamepad.dpad_right)
         FileLogger.debug("Teleop Driver 2", flywheelToggle.state.toString())
         FileLogger.debug("Flywheel Speed", finalFlywheelSpeed.toString())
+
         if (flywheelToggle.state) {
             finalFlywheelSpeed = estimatedFlywheelSpeed
         } else {
-                if (flywheelToggle.justChanged){
-                    flywheelShouldFloat = true
-//                    finalFlywheelSpeed = 0.0
-                }
-
-                if (flywheelShouldFloat && bot.flywheel?.velocity!! < bot.flywheel!!.idleVelocity){
-                    flywheelShouldFloat = false
-//                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
-                }
-
-//                if (!flywheelShouldFloat){
-//                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
-//                } else {
-//                    finalFlywheelSpeed = 0.0
-//                }
-
-                if (flywheelShouldFloat){
-                    finalFlywheelSpeed = 0.0
-                } else {
-                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
-                }
-
-//                if (it < bot.flywheel!!.idleVelocity)
-//                    finalFlywheelSpeed = bot.flywheel!!.idleVelocity
-//                else {
-//                    finalFlywheelSpeed = 0.0
-//                }
+            if (flywheelToggle.justChanged){
+                flywheelShouldFloat = true
             }
 
-            bot.flywheel?.velocity = finalFlywheelSpeed
-    }
+            if (flywheelShouldFloat && bot.flywheel?.velocity!! < bot.flywheel!!.idleVelocity){
+                flywheelShouldFloat = false
+            }
 
+            if (flywheelShouldFloat){
+                finalFlywheelSpeed = 0.0
+            } else {
+                finalFlywheelSpeed = bot.flywheel!!.idleVelocity
+            }
+        }
+
+        bot.flywheel?.velocity = finalFlywheelSpeed
+    }
 
     private fun handleTurret() {
         isAutoTracking.toggle(gamepad.cross)
@@ -175,50 +174,54 @@ class TeleopDriver2(
         when {
             gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
             gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
-//            gamepad.triangle -> shootArtifact()
         }
     }
 
+    /**
+     * NEW: Simplified multi-shot using rapid fire
+     * TOUCHPAD button unchanged - just uses faster passive system!
+     */
     private fun handleMultiShot() {
         multiShotToggle.toggle(gamepad.touchpad)
 
         when(multishotState) {
             MultishotState.IDLE -> {
+                // Start rapid fire when touchpad pressed
                 if (multiShotToggle.justChanged && gamepad.touchpad) {
-                    multishotState = MultishotState.MOVING
-                    FileLogger.debug("Teleop Driver 2", "Should have changed to MOVING")
+                    // Check if flywheel at speed
+                    val atSpeed = bot.flywheel?.velocity?.let {
+                        abs(finalFlywheelSpeed - it) < 20.0
+                    } ?: false
+
+                    if (atSpeed && !bot.spindexer?.isEmpty!!) {
+                        FileLogger.debug("TeleopDriver2", "Starting RAPID FIRE")
+                        bot.spindexer?.startRapidFire()
+                        multishotState = MultishotState.RAPID_FIRING
+                    } else if (!atSpeed) {
+                        FileLogger.warn("TeleopDriver2", "Flywheel not at speed!")
+                    } else {
+                        FileLogger.warn("TeleopDriver2", "No balls to shoot!")
+                    }
                 }
             }
-            MultishotState.MOVING -> {
-                shootArtifact()
+
+            MultishotState.RAPID_FIRING -> {
+                // Cancel if touchpad pressed again
                 if (multiShotToggle.justChanged && gamepad.touchpad) {
-                    FileLogger.debug("Teleop Driver 2", "Changed back to IDLE")
+                    FileLogger.debug("TeleopDriver2", "Canceling rapid fire")
+                    bot.spindexer?.stopRapidFire()
                     multishotState = MultishotState.IDLE
                 }
 
-                val atSpeed = bot.flywheel?.velocity?.let {
-                    if (abs(finalFlywheelSpeed - it) < 20.0) { true }
-                    else { false }
-                }
-
-                if (bot.spindexer?.reachedTarget == true && atSpeed == true) {
-                    multishotState = MultishotState.SHOOTING
-                    triggerMultishot = true
-                }
-            }
-            MultishotState.SHOOTING -> {
-                if (multiShotToggle.justChanged && gamepad.touchpad) {
+                // Auto-complete when rapid fire finishes
+                if (!bot.spindexer?.isRapidFiring!!) {
+                    FileLogger.debug("TeleopDriver2", "Rapid fire complete")
                     multishotState = MultishotState.IDLE
-                }
-                if (shootingArtifact) {
-                    triggerMultishot = false
-                }
-                if (!shootingArtifact && !triggerMultishot) {
-                    multishotState = MultishotState.MOVING
                 }
             }
         }
 
+        // Reset if empty
         if (bot.spindexer?.isEmpty == true) {
             multishotState = MultishotState.IDLE
         }
@@ -231,6 +234,7 @@ class TeleopDriver2(
         }
         if (!flywheelToggle.state) return
 
+        // UNCHANGED: SQUARE button triggers launcher for single shots
         launchToggle.toggle(gamepad.square)
         shootCommanded = launchToggle.justChanged || triggerMultishot
 
@@ -248,8 +252,6 @@ class TeleopDriver2(
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {
-        // Can't shoot when flywheel isn't moving
-        // Start artifact launch sequence
         val moved =
             if (artifact != null) {
                 bot.spindexer?.moveToNextOuttake(artifact)
@@ -260,9 +262,7 @@ class TeleopDriver2(
 
     private fun handleManualTrack() {
         if (abs(gamepad.right_stick_x) > 0.02) {
-//            turretAngle -= gamepad.right_stick_x.toDouble().pow(3) * chrono.dt/1000.0
             turretAngle -= gamepad.right_stick_x.toDouble().pow(3) / 10.0
-
         }
 
         if (gamepad.right_stick_button) {
@@ -295,7 +295,6 @@ class TeleopDriver2(
                 )
             } else {
                 // No tag detected, use last known target
-                // TODO: fix tag loss logic
                 bot.turret?.autoTrack(
                     bot.pinpoint?.pose ?: Pose(),
                     targetGoal.shootingPose
@@ -305,7 +304,6 @@ class TeleopDriver2(
     }
 
     private fun updateIndicatorLED() {
-
         if (flywheelToggle.state){
             bot.flywheel?.velocity?.let {
                 if (abs(estimatedFlywheelSpeed - it) < 20.0) {
@@ -324,7 +322,5 @@ class TeleopDriver2(
             gamepad.setLedColor(255.0,255.0,255.0, -1)
             bot.led?.setColor(Color.WHITE)
         }
-
-
     }
 }

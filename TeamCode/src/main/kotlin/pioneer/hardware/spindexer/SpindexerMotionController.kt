@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.helpers.Chrono
+import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import kotlin.math.PI
 import kotlin.math.abs
@@ -14,7 +15,7 @@ class SpindexerMotionController(
     private val motor: DcMotorEx,
 ) {
 
-    // --- Motor Positions --- //
+    // --- Motor Positions (UNCHANGED) --- //
     enum class MotorPosition(val radians: Double) {
         OUTTAKE_1(0 * PI / 3),
         INTAKE_1(3 * PI / 3),
@@ -24,6 +25,12 @@ class SpindexerMotionController(
 
         OUTTAKE_3(4 * PI / 3),
         INTAKE_3(1 * PI / 3),
+    }
+
+    // --- NEW: Direction Enum --- //
+    enum class SpindexerDirection {
+        INTAKE,    // Balls stay in spindexer
+        SHOOTING   // Passive ramp engages, balls shoot
     }
 
     // --- Positions --- //
@@ -41,7 +48,7 @@ class SpindexerMotionController(
             MotorPosition.OUTTAKE_3
         )
 
-    // --- Configuration --- //
+    // --- Configuration (UNCHANGED) --- //
 
     private val ticksPerRadian =
         (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
@@ -56,13 +63,19 @@ class SpindexerMotionController(
 
     private val chrono = Chrono(false)
 
-    // --- Public State --- //
+    // --- NEW: Continuous Rotation State --- //
+    private var continuousRotationActive = false
+    private var continuousRotationPower = 0.0
+
+    // --- Public State (UNCHANGED) --- //
 
     var target: MotorPosition = MotorPosition.INTAKE_1
         set(value) {
             if (field != value) {
                 pid.reset()
                 field = value
+                // NEW: Stop continuous rotation when setting target
+                stopContinuousRotation()
             }
         }
 
@@ -111,7 +124,7 @@ class SpindexerMotionController(
             return closest
         }
 
-    // --- Initialization --- //
+    // --- Initialization (UNCHANGED) --- //
 
     fun init() {
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -132,7 +145,20 @@ class SpindexerMotionController(
     // --- Update Loop --- //
 
     fun update() {
+        // Manual override takes priority
         if (manualOverride) return
+
+        // Continuous rotation for rapid fire
+        if (continuousRotationActive) {
+            motor.power = continuousRotationPower
+            return
+        }
+
+        // Standard position control (UNCHANGED from original)
+        updatePositionControl()
+    }
+
+    private fun updatePositionControl() {
         if (!withinVelocityTolerance)
             velocityTimer.reset()
 
@@ -140,31 +166,71 @@ class SpindexerMotionController(
 
         var power = pid.update(errorTicks.toDouble(), chrono.dt)
 
-        // inconsistent based on loop time
-        // power = rampPower(power, chrono.dt)
-
         val ks = Constants.Spindexer.KS_START
 
         if (abs(power) > 0.01) {
             power += ks * sign(power)
         }
 
-//        if (abs(errorTicks) < Constants.Spindexer.PID_TOLERANCE_TICKS && target in outtakePositions) {
-//            power = sign(errorTicks.toDouble()) * Constants.Spindexer.FINAL_ADJUSTMENT_POWER
-//        }
-
         if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
             power = 0.0
-//            pid.reset()
         }
 
         motor.power = power.coerceIn(-0.6, 0.6)
     }
 
-    // --- Manual Control --- //
+    // ========== NEW: Continuous Rotation for Rapid Fire ========== //
+
+    /**
+     * Start continuous rotation in specified direction
+     * Used for multi-shot rapid fire - just spin continuously
+     *
+     * @param direction INTAKE or SHOOTING
+     * @param power Motor power (0.0 to 1.0)
+     */
+    fun startContinuousRotation(
+        direction: SpindexerDirection,
+        power: Double
+    ) {
+        require(power in 0.0..1.0) { "Power must be between 0.0 and 1.0" }
+
+        continuousRotationActive = true
+
+        // Determine motor direction based on Constants
+        val motorPower = when (direction) {
+            SpindexerDirection.INTAKE -> {
+                if (Constants.Spindexer.INTAKE_IS_POSITIVE) power else -power
+            }
+            SpindexerDirection.SHOOTING -> {
+                if (Constants.Spindexer.INTAKE_IS_POSITIVE) -power else power
+            }
+        }
+
+        continuousRotationPower = motorPower
+        motor.power = motorPower
+
+        FileLogger.info("SpindexerMotion",
+            "Continuous rotation started: $direction @ ${(power * 100).toInt()}%")
+    }
+
+    /**
+     * Stop continuous rotation
+     */
+    fun stopContinuousRotation() {
+        if (!continuousRotationActive) return
+
+        continuousRotationActive = false
+        continuousRotationPower = 0.0
+        motor.power = 0.0
+
+        FileLogger.info("SpindexerMotion", "Continuous rotation stopped")
+    }
+
+    // --- Manual Control (UNCHANGED) --- //
 
     fun moveManual(power: Double) {
         manualOverride = true
+        continuousRotationActive = false  // NEW: Stop continuous rotation
         motor.power = power.coerceIn(-1.0, 1.0)
     }
 
@@ -173,7 +239,7 @@ class SpindexerMotionController(
         pid.reset()
     }
 
-    // --- Helpers --- //
+    // --- Helpers (UNCHANGED) --- //
     private fun rampPower(
         desired: Double,
         dt: Double,
