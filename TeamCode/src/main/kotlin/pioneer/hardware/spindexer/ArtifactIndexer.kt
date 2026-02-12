@@ -3,6 +3,7 @@ package pioneer.hardware.spindexer
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.decode.Artifact
+import pioneer.decode.Motif
 import pioneer.helpers.FileLogger
 
 class ArtifactIndexer {
@@ -36,6 +37,36 @@ class ArtifactIndexer {
         target?.let {
             artifacts.indexOfFirst { a -> a == it }.takeIf { i -> i != -1 }
         } ?: artifacts.indexOfFirst { it != null }.takeIf { it != -1 }
+
+    fun motifStartIndex(motif: Motif?): Int? {
+        // Find the best shift to match motif
+        if (motif == null || !motif.isValid()) return null
+
+        val pattern = motif.getPattern()
+
+        var bestShift: Int? = null
+        var bestScore = -1
+
+        // Try all 3 rotations
+        for (shift in 0 until 3) {
+
+            var score = 0
+
+            for (i in 0 until 3) {
+                val rotated = artifacts[(i + shift) % 3]
+                if (rotated == pattern[i]) {
+                    score++
+                }
+            }
+
+            if (score > bestScore) {
+                bestScore = score
+                bestShift = shift
+            }
+        }
+
+        return bestShift
+    }
 
     // --- Intake Logic --- //
 
@@ -71,6 +102,7 @@ class ArtifactIndexer {
     private fun handleLoss() {
         if (!artifactWasSeenRecently) return
 
+        // FIXME: whatttt
         if (artifactLostTimer.milliseconds() == 0.0) {
             artifactLostTimer.reset()
         }

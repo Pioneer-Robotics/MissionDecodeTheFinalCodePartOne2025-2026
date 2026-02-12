@@ -23,18 +23,31 @@ class SpindexerMotionController(
         INTAKE_2(5 * PI / 3),
 
         OUTTAKE_3(4 * PI / 3),
-        INTAKE_3(1 * PI / 3),
+        INTAKE_3(1 * PI / 3);
+
+        /**
+         * Helper method to get next entry + angle offset
+         * @param numShifts Shifts motorPosition by PI/3 * numShifts
+         * @return Shifted motorPosition
+         */
+        fun offset(numShifts: Int): MotorPosition {
+            val stepAngle = PI / 3
+            val fullCircle = 2 * PI
+
+            val targetAngle = (radians + numShifts * stepAngle).mod(fullCircle)
+            return entries.minBy { abs(it.radians - targetAngle) }
+        }
     }
 
     // --- Positions --- //
-    private val intakePositions =
+    val intakePositions =
         listOf(
             MotorPosition.INTAKE_1,
             MotorPosition.INTAKE_2,
             MotorPosition.INTAKE_3
         )
 
-    private val outtakePositions =
+    val outtakePositions =
         listOf(
             MotorPosition.OUTTAKE_1,
             MotorPosition.OUTTAKE_2,
@@ -42,11 +55,8 @@ class SpindexerMotionController(
         )
 
     // --- Configuration --- //
-
-    private val ticksPerRadian =
-        (Constants.Spindexer.TICKS_PER_REV / (2 * PI)).toInt()
+    private val ticksPerRadian = Constants.Spindexer.TICKS_PER_REV / (2 * PI)
     private var calibrationTicks = 0
-    private var lastPower = 0.0
 
     private val pid = PIDController(
         Constants.Spindexer.KP,
@@ -57,7 +67,6 @@ class SpindexerMotionController(
     private val chrono = Chrono(false)
 
     // --- Public State --- //
-
     var target: MotorPosition = MotorPosition.INTAKE_1
         set(value) {
             if (field != value) {
@@ -67,6 +76,11 @@ class SpindexerMotionController(
         }
 
     var manualOverride = false
+
+    private var shooting = false
+    private var shootStartTicks = 0
+    private var shootDeltaTicks = 0
+    private var shootPower = 0.0
 
     val currentTicks: Int
         get() = (-motor.currentPosition + calibrationTicks)
@@ -82,6 +96,9 @@ class SpindexerMotionController(
 
     val velocityTimer = ElapsedTime()
 
+    val isShooting: Boolean
+        get() = shooting
+
     val reachedTarget: Boolean
         get() =
             abs(errorTicks) < Constants.Spindexer.SHOOTING_TOLERANCE_TICKS &&
@@ -94,22 +111,6 @@ class SpindexerMotionController(
     val withinVelocityTolerance: Boolean
         get() =
             abs(motor.velocity) < Constants.Spindexer.VELOCITY_TOLERANCE_TPS
-
-    val closestPosition: MotorPosition
-        get() {
-            var closest = MotorPosition.INTAKE_1
-            var smallest = Double.MAX_VALUE
-
-            for (pos in MotorPosition.entries) {
-                val ticks = (pos.radians * ticksPerRadian).toInt()
-                val error = wrapTicks(ticks - currentTicks).toDouble()
-                if (abs(error) < abs(smallest)) {
-                    smallest = error
-                    closest = pos
-                }
-            }
-            return closest
-        }
 
     // --- Initialization --- //
 
@@ -132,38 +133,45 @@ class SpindexerMotionController(
     // --- Update Loop --- //
 
     fun update() {
+        if (shooting) {
+            val traveledTicks = abs(currentTicks - shootStartTicks)
+            if (traveledTicks >= shootDeltaTicks) {
+                stopShooting()
+            } else {
+                motor.power = shootPower
+            }
+            return
+        }
         if (manualOverride) return
         if (!withinVelocityTolerance)
             velocityTimer.reset()
 
         chrono.update()
 
-        var power = pid.update(errorTicks.toDouble(), chrono.dt)
+        // Correct error to only move in one direction (unless really small)
+        val correctedError: Int = run {
+            val full = Constants.Spindexer.TICKS_PER_REV.toInt()
+            val e = errorTicks % full
+            if (e < -Constants.Spindexer.ALLOWED_REVERSE_TICKS) e + full else e
+        }
 
-        // inconsistent based on loop time
-        // power = rampPower(power, chrono.dt)
-
+        var power = pid.update(correctedError.toDouble(), chrono.dt)
         val ks = Constants.Spindexer.KS_START
 
         if (abs(power) > 0.01) {
             power += ks * sign(power)
         }
 
-//        if (abs(errorTicks) < Constants.Spindexer.PID_TOLERANCE_TICKS && target in outtakePositions) {
-//            power = sign(errorTicks.toDouble()) * Constants.Spindexer.FINAL_ADJUSTMENT_POWER
-//        }
-
         if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
             power = 0.0
-//            pid.reset()
         }
 
         motor.power = power.coerceIn(-0.6, 0.6)
     }
 
     // --- Manual Control --- //
-
     fun moveManual(power: Double) {
+        if (shooting) stopShooting()
         manualOverride = true
         motor.power = power.coerceIn(-1.0, 1.0)
     }
@@ -173,21 +181,24 @@ class SpindexerMotionController(
         pid.reset()
     }
 
-    // --- Helpers --- //
-    private fun rampPower(
-        desired: Double,
-        dt: Double,
-    ): Double {
-        val maxDelta =
-            Constants.Spindexer.MAX_POWER_RATE * dt / 1000.0
-
-        val delta = desired - lastPower
-        val clipped = delta.coerceIn(-maxDelta, maxDelta)
-
-        lastPower += clipped
-        return lastPower
+    fun startShooting(deltaTicks: Int, power: Double) {
+        val clampedTicks = abs(deltaTicks)
+        if (clampedTicks == 0) return
+        manualOverride = false
+        shooting = true
+        shootStartTicks = currentTicks
+        shootDeltaTicks = clampedTicks
+        shootPower = power.coerceIn(-1.0, 1.0)
+        pid.reset()
     }
 
+    fun stopShooting() {
+        shooting = false
+        motor.power = 0.0
+        pid.reset()
+    }
+
+    // --- Helpers --- //
     private fun wrapTicks(
         error: Int,
         ticksPerRev: Double = Constants.Spindexer.TICKS_PER_REV,
