@@ -183,7 +183,7 @@ object Constants {
 
         @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
+        @JvmField var MOTOR_TOLERANCE_TICKS = 10 // CHANGED: was 0 (allows "close enough" - magnets do final alignment)
 
         const val SHOOTING_TOLERANCE_TICKS = 4
         const val DETECTION_TOLERANCE_TICKS = 18
