@@ -59,7 +59,7 @@ class AprilTagTurretTest : OpMode() {
         dashboard.telemetry.addData("Target Turret Angle", tagError)
         dashboard.telemetry.update()
 
-//        if (gamepad1.touchpad) updatePIDConstants()
+        if (gamepad1.touchpad) updatePIDConstants()
     }
 
     private fun updatePIDConstants() {

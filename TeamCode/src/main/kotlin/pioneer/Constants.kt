@@ -196,7 +196,7 @@ object Constants {
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10
     }
-
+    @Config
     object Turret {
         const val TICKS_PER_REV = 537.7 * 3 // 384.5 * 3
         const val HEIGHT = 30.48

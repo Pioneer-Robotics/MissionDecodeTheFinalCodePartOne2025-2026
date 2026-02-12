@@ -26,6 +26,7 @@ class TeleopDriver2(
     private val launchToggle = Toggle(false)
     private val multiShotToggle = Toggle(false)
     private val switchOperatingModeToggle = Toggle(false)
+    private val useVelocityAdj = Toggle(false)
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose() //Shooting target from goal tag class
     private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
@@ -116,6 +117,8 @@ class TeleopDriver2(
                     hypot(ftcPose.x, ftcPose.y),
                     targetGoal.shootingHeight
                 ) + flywheelSpeedOffset
+            } else {
+                bot.flywheel!!.estimateVelocity(turretPose, tagShootingTarget, targetGoal.shootingHeight)
             }
         }
     }
@@ -288,14 +291,31 @@ class TeleopDriver2(
 
             FileLogger.debug("TeleopDriver2", "Tag Detections: ${filteredDetections?.map { it.id }?.joinToString { ", " }}")
 
-            errorDegrees = filteredDetections?.firstOrNull()?.ftcPose?.bearing
+            val ftcPose = filteredDetections?.firstOrNull()?.ftcPose
+            errorDegrees = ftcPose?.bearing
+//            if (errorDegrees != null) {
+//                bot.turret?.tagTrack(
+//                    errorDegrees!!.times(-1.0),
+//                )
+//            } else {
+//                // No tag detected, use last known target
+//                // TODO: fix tag loss logicx
+//                bot.turret?.autoTrack(
+//                    bot.pinpoint?.pose ?: Pose(),
+//                    targetGoal.shootingPose
+//                )
+//            }
             if (errorDegrees != null) {
-                bot.turret?.tagTrack(
-                    errorDegrees!!.times(-1.0),
+                bot.turret?.velocityTagTrack(
+                    errorDegrees!!.times(1.0),
+                    bot.pinpoint!!.pose,
+                    bot.flywheel!!.getFlywheelV0(
+                        hypot(ftcPose!!.x, ftcPose!!.y),
+                        targetGoal.shootingHeight
+                    )
                 )
             } else {
                 // No tag detected, use last known target
-                // TODO: fix tag loss logic
                 bot.turret?.autoTrack(
                     bot.pinpoint?.pose ?: Pose(),
                     targetGoal.shootingPose

@@ -91,19 +91,22 @@ class Flywheel(
         return estimateVelocity(groundDistance, targetHeight)
     }
 
-    fun estimateVelocity(targetDistance: Double, targetHeight: Double) : Double {
+    fun getFlywheelV0(targetDistance: Double, targetHeight: Double) : Double {
         val heightDiff = targetHeight - Constants.Turret.HEIGHT
-        //Real world v0 of the ball
-        val v0 =
-            (targetDistance) / (
-                    cos(
-                        Constants.Turret.THETA,
-                    ) * sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * (targetDistance))) / (-980))
+        return (targetDistance) / (
+                cos(
+                    Constants.Turret.THETA,
+                ) * sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * (targetDistance))) / (-980))
                 )
+    }
+
+    fun estimateVelocity(targetDistance: Double, targetHeight: Double) : Double {
+        //Real world v0 of the ball
+        val flywheelV0 = getFlywheelV0(targetDistance, targetHeight)
         //Regression to convert real world velocity to flywheel speed
 //        val flywheelVelocity = 1.583 * v0 - 9.86811 // From 12/22 testing
 //        val flywheelVelocity = 1.64545 * v0 - 51.56276 // From 2/4 testing
-        val flywheelVelocity = 2.05204 * v0 - 290.74829 // From 2/9 testing
+        val flywheelVelocity = 2.05204 * flywheelV0 - 290.74829 // From 2/9 testing
         //Adjust for velocity of the bot when moving
 //        val thetaToTarget = -(shootPose angleTo target)
 //        val newTargetVelocityX = sin(thetaToTarget) * flywheelVelocity - pose.vx
@@ -111,6 +114,7 @@ class Flywheel(
 //        val newTargetVelocity = sqrt(newTargetVelocityX.pow(2) + newTargetVelocityY.pow(2))
 
         val newTargetVelocity = flywheelVelocity
+
         return newTargetVelocity
     }
 }

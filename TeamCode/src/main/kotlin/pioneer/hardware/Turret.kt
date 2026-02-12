@@ -5,7 +5,9 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.PIDFCoefficients
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import pioneer.Constants
+import pioneer.decode.GoalTag
 import pioneer.helpers.Chrono
 import pioneer.helpers.FileLogger
 import pioneer.helpers.MathUtils
@@ -14,8 +16,10 @@ import pioneer.helpers.Pose
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.sign
 import kotlin.math.sin
+import kotlin.math.atan2
 
 class Turret(
     private val hardwareMap: HardwareMap,
@@ -134,6 +138,24 @@ class Turret(
         gotoAngle(MathUtils.normalizeRadians(turretTheta), 0.85)
     }
 
+    fun velocityTagTrack(angleToTag: Double, odoPose: Pose, ballSpeed: Double) {
+        val robotTheta = odoPose.theta
+
+//        val tagDistance = hypot(detection.ftcPose.x, detection.ftcPose.y)
+//        val fieldOffset = Pose(cos(PI/2 + robotTheta), sin(PI/2 + robotTheta)) * tagDistance
+//        val tagPosition = when (detection.id) {
+//            20 -> GoalTag.BLUE.pose
+//            24 -> GoalTag.RED.pose
+//            else -> return
+//        }
+//        val robotPoseTag = tagPosition - fieldOffset
+        val ballVector = Pose(vx=cos(angleToTag)*ballSpeed, vy=sin(angleToTag)*ballSpeed)
+        val turretVector = ballVector - Pose(vx=odoPose.vx, vy=odoPose.vy)
+        val turretAngle = atan2(turretVector.vy,turretVector.vx) + PI/2
+
+        tagTrack(turretAngle)
+    }
+
     fun tagTrack(errorDegrees: Double?) {
         if (errorDegrees == null) {
             turret.power = 0.0
@@ -163,6 +185,31 @@ class Turret(
         turret.mode = DcMotor.RunMode.RUN_USING_ENCODER
         turret.power = power.coerceIn(-1.0, 1.0)
     }
+
+    fun tagTrackOld(errorDegrees: Double?) {
+        if (errorDegrees == null) {
+            turret.power = 0.0
+            return
+        }
+
+        val desiredDelta = Math.toRadians(errorDegrees)
+        val rawTarget = currentAngle + desiredDelta
+        // FIXME: For now the turret can't go past the motor range and it can't wrap
+//        val legalTarget = MathUtils.normalizeRadians(rawTarget, motorRange)
+        // TODO: Test turret wrapping
+//        if (rawTarget !in motorRange.first..motorRange.second) {
+//            gotoAngle(rawTarget) // Use goToAngle to wrap
+//        }
+        val legalTarget = rawTarget.coerceIn(motorRange.first, motorRange.second)
+        val legalError = legalTarget - currentAngle
+
+        val power = tagTrackPID.update(legalError, chrono.dt)
+        val static = if (abs(power) > 0.001) Constants.Turret.KS * sign(power) else 0.0
+
+        turret.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        turret.power = power + static
+    }
+
 
     fun setCustomTarget(pose: Pose, distance: Double): Pose {
         val shootPose = pose + Pose(
