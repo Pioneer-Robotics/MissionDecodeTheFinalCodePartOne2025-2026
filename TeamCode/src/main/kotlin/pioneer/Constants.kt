@@ -178,6 +178,9 @@ object Constants {
         @JvmField var KP = 0.00475
         @JvmField var KI = 0.00005
         @JvmField var KD = 0.0125
+//        @JvmField var KP = 0.00001 // 000175
+//        @JvmField var KI = 0.0 // 0.00001
+//        @JvmField var KD = 0.0002 // 0.00045
 
         @JvmField var KS_START = 0.04
 
