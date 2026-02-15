@@ -107,6 +107,7 @@ class Spindexer(
         // Rotate 120 degrees at constant speed (no PID) then hold next outtake.
         motion.target = motion.target.offset(2)
         motion.startShooting(ticksPerArtifact, Constants.Spindexer.SHOOT_POWER)
+        indexer.pop(motion.outtakePositions.indexOf(motion.target))
     }
 
     fun shootAll() {
@@ -114,7 +115,7 @@ class Spindexer(
         if (motion.isShooting) return
         // Rotate a full revolution at constant speed (no PID) to shoot all 3.
         motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt(), Constants.Spindexer.SHOOT_POWER)
-        checkClearIndex()
+        indexer.resetAll()
     }
 
 //    fun popCurrentArtifact(autoSwitchToIntake: Boolean = true): Artifact? {
@@ -148,12 +149,6 @@ class Spindexer(
         if (indexer.processIntake(index, detected)) {
             // If there aren't any more open intake positions
             if (!moveToNextOpenIntake()) readyOuttake()
-        }
-    }
-
-    private fun checkClearIndex(){
-        if (isDoneShooting){
-            indexer.resetAll()
         }
     }
 
