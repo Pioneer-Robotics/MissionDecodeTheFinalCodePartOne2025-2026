@@ -82,6 +82,8 @@ class SpindexerMotionController(
     private var shootDeltaTicks = 0
     private var shootPower = 0.0
 
+    var doneShooting = false
+
     val currentTicks: Int
         get() = (-motor.currentPosition + calibrationTicks)
 
@@ -137,8 +139,10 @@ class SpindexerMotionController(
             val traveledTicks = abs(currentTicks - shootStartTicks)
             if (traveledTicks >= shootDeltaTicks) {
                 stopShooting()
+                doneShooting = true
             } else {
                 motor.power = shootPower
+                doneShooting = false
             }
             return
         }
@@ -190,6 +194,7 @@ class SpindexerMotionController(
         shootDeltaTicks = clampedTicks
         shootPower = power.coerceIn(-1.0, 1.0)
         pid.reset()
+
     }
 
     fun stopShooting() {

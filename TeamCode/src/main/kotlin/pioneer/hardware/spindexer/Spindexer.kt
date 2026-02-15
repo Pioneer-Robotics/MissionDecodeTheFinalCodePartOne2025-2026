@@ -7,7 +7,6 @@ import pioneer.decode.Artifact
 import pioneer.decode.Motif
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.RevColorSensor
-import pioneer.helpers.next
 import kotlin.math.roundToInt
 
 class Spindexer(
@@ -31,6 +30,7 @@ class Spindexer(
     // --- Positions --- //
     var manualOverride = false
     var isSorting = false
+    val isShooting: Boolean get() = motion.isShooting
 
     private val ticksPerArtifact: Int
         get() = (Constants.Spindexer.TICKS_PER_REV / 3.0).roundToInt()
@@ -47,6 +47,7 @@ class Spindexer(
     val targetMotorTicks: Int get() = motion.targetTicks
     val reachedTarget: Boolean get() = motion.reachedTarget
     val motorState: SpindexerMotionController.MotorPosition get() = motion.target
+    val isDoneShooting: Boolean get() = motion.doneShooting
 
     // --- Initialization --- //
     override fun init() {
@@ -113,7 +114,18 @@ class Spindexer(
         if (motion.isShooting) return
         // Rotate a full revolution at constant speed (no PID) to shoot all 3.
         motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt(), Constants.Spindexer.SHOOT_POWER)
+        checkClearIndex()
     }
+
+//    fun popCurrentArtifact(autoSwitchToIntake: Boolean = true): Artifact? {
+//        if (motion.target !in outtakePositions) return null
+//        val index = outtakePositions.indexOf(motion.target) //Needs to be current ticks,
+//        val artifact = indexer.pop(index)
+//        if (autoSwitchToIntake){
+//            if (indexer.isEmpty) moveToNextOpenIntake()
+//        }
+//        return artifact
+//    }
 
     fun resetMotorPosition(resetTicks: Int) {
         motion.calibrateEncoder(resetTicks)
@@ -136,6 +148,12 @@ class Spindexer(
         if (indexer.processIntake(index, detected)) {
             // If there aren't any more open intake positions
             if (!moveToNextOpenIntake()) readyOuttake()
+        }
+    }
+
+    private fun checkClearIndex(){
+        if (isDoneShooting){
+            indexer.resetAll()
         }
     }
 
