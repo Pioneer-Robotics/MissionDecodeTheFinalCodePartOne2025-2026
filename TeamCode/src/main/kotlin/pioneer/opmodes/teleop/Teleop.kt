@@ -1,6 +1,7 @@
 package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Bot
 import pioneer.BotType
@@ -23,7 +24,6 @@ class Teleop : BaseOpMode() {
 
     override fun onInit() {
         bot = Bot.fromType(BotType.COMP_BOT, hardwareMap)
-
         driver1 = TeleopDriver1(gamepad1, bot)
         driver2 = TeleopDriver2(gamepad2, bot)
     }
@@ -105,6 +105,8 @@ class Teleop : BaseOpMode() {
 
         telemetryPacket.put("Turret Target Ticks", bot.turret?.targetTicks)
         telemetryPacket.put("Turret Current Ticks", bot.turret?.currentTicks)
+
+        addTelemetryData("Tilt Toggle", driver1.tiltToggle.state, Verbose.INFO)
 
     }
 }

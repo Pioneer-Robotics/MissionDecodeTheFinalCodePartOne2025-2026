@@ -178,12 +178,15 @@ object Constants {
         @JvmField var KP = 0.00475
         @JvmField var KI = 0.00005
         @JvmField var KD = 0.0125
+//        @JvmField var KP = 0.00001 // 000175
+//        @JvmField var KI = 0.0 // 0.00001
+//        @JvmField var KD = 0.0002 // 0.00045
 
         @JvmField var KS_START = 0.04
 
         @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
+        @JvmField var MOTOR_TOLERANCE_TICKS = 10 // CHANGED: was 0 (allows "close enough" - magnets do final alignment)
 
         const val SHOOTING_TOLERANCE_TICKS = 4
         const val DETECTION_TOLERANCE_TICKS = 18
@@ -222,7 +225,16 @@ object Constants {
 
         const val LAUNCHER_REST = 0.52
         //Was 0.3
-        const val LAUNCHER_TRIGGERED = 0.26
+        const val LAUNCHER_TRIGGERED = 0.23
+
+        const val L_PTO_DROP = 0.4
+        //Needs to be fixed (Servo Horn on wrong)
+
+        const val R_PTO_DROP = 0.3
+
+        const val L_PTO_UP = 0.9
+
+        const val R_PTO_UP = 0.43
     }
 
     object TransferData {
@@ -246,6 +258,8 @@ object Constants {
         @JvmField var KF = 0.000415
 
         val idleVelocity = 300.0
+
+        @JvmField var VELOCITY_COMPENSATION_FACTOR = 1.0
 
         enum class FlywheelOperatingMode{
             ALWAYS_IDLE,
