@@ -218,14 +218,14 @@ class AudienceSideAuto : BaseOpMode() {
 
             LaunchState.LAUNCHING -> {
                 if (bot.launcher?.isReset == true) {
-                    bot.spindexer?.popCurrentArtifact()
+                    bot.spindexer?.popCurrentArtifact(false) // CHANGED: added (false) - don't auto-switch to intake
                     motifOrder.getNextArtifact() // Cycle to next artifact
                     launchState = LaunchState.READY
                 }
             }
         }
     }
-
+    
     private fun flywheelAtSpeed(): Boolean {
         return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 10) &&
                 (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
