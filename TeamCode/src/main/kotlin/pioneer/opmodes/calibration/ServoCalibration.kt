@@ -21,7 +21,7 @@ class ServoCalibration : OpMode() {
 
     override fun loop() {
         servoToggle.toggle(gamepad1.right_bumper)
-        servo.position = if (servoToggle.state) 0.15 else 0.585
+        servo.position = if (servoToggle.state) 0.4 else 0.9
 
         motor.power = gamepad1.right_stick_y.toDouble()
 
