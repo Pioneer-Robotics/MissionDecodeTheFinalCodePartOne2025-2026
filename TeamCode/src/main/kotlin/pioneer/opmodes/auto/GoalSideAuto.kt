@@ -229,14 +229,14 @@ class GoalSideAuto : BaseOpMode() {
 
             LaunchState.LAUNCHING -> {
                 if (bot.launcher?.isReset == true) {
-                    bot.spindexer?.popCurrentArtifact()
+                    bot.spindexer?.popCurrentArtifact(false) // CHANGED: added (false) - don't auto-switch to intake
                     motifOrder.getNextArtifact() // Cycle to next artifact
                     launchState = LaunchState.READY
                 }
             }
         }
     }
-
+    
     private fun state_goto_collect() {
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer!!.moveToNextOpenIntake()

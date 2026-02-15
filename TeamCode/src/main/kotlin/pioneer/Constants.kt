@@ -178,12 +178,15 @@ object Constants {
         @JvmField var KP = 0.00475
         @JvmField var KI = 0.00005
         @JvmField var KD = 0.0125
+//        @JvmField var KP = 0.00001 // 000175
+//        @JvmField var KI = 0.0 // 0.00001
+//        @JvmField var KD = 0.0002 // 0.00045
 
         @JvmField var KS_START = 0.04
 
         @JvmField var MAX_POWER_RATE = 100.0
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
+        @JvmField var MOTOR_TOLERANCE_TICKS = 10 // CHANGED: was 0 (allows "close enough" - magnets do final alignment)
 
         const val SHOOTING_TOLERANCE_TICKS = 4
         const val DETECTION_TOLERANCE_TICKS = 18
