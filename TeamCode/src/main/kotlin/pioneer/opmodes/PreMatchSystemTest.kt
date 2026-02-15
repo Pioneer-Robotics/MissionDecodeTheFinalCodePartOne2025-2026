@@ -78,11 +78,12 @@ class PreMatchSystemTest : BaseOpMode() {
             testResults[system] = TestResult.NOT_STARTED
             testMessages[system] = ""
         }
-
-        testStartVoltage = bot.batteryMonitor?.voltage ?: 0.0
     }
 
     override fun onStart() {
+        // Record starting battery voltage after everything is initialized
+        testStartVoltage = bot.batteryMonitor?.voltage ?: 0.0
+
         // Start with first test
         startTest(getCurrentSystem())
     }
@@ -205,7 +206,15 @@ class PreMatchSystemTest : BaseOpMode() {
     // ==================== INDIVIDUAL TEST IMPLEMENTATIONS ====================
 
     private fun testBattery() {
-        val voltage = bot.batteryMonitor?.voltage ?: 0.0
+        val voltage = bot.batteryMonitor?.voltage
+
+        if (voltage == null) {
+            testMessages[TestSystem.BATTERY] = "❌ Battery monitor not initialized"
+            testResults[TestSystem.BATTERY] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         testMessages[TestSystem.BATTERY] = "Voltage: %.2f V".format(voltage)
 
         when {
@@ -270,6 +279,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testDriveIndividual() {
+        if (bot.mecanumBase == null) {
+            testMessages[TestSystem.DRIVE_INDIVIDUAL] = "❌ Drive base not initialized"
+            testResults[TestSystem.DRIVE_INDIVIDUAL] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         // Test each "corner" of the mecanum drive to verify all motors work
         val phaseDuration = 1.5 // seconds per movement
         val currentPhase = (testTimer.seconds() / phaseDuration).toInt()
@@ -306,6 +322,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testDrivePattern() {
+        if (bot.mecanumBase == null) {
+            testMessages[TestSystem.DRIVE_PATTERN] = "❌ Drive base not initialized"
+            testResults[TestSystem.DRIVE_PATTERN] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         val phaseDuration = 1.0 // seconds per movement
         val currentPhase = (testTimer.seconds() / phaseDuration).toInt()
 
@@ -381,6 +404,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testTurret() {
+        if (bot.turret == null) {
+            testMessages[TestSystem.TURRET] = "❌ Turret not initialized"
+            testResults[TestSystem.TURRET] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         val phaseDuration = 2.0 // seconds per position
         val currentPhase = (testTimer.seconds() / phaseDuration).toInt()
 
@@ -422,6 +452,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testFlywheel() {
+        if (bot.flywheel == null) {
+            testMessages[TestSystem.FLYWHEEL] = "❌ Flywheel not initialized"
+            testResults[TestSystem.FLYWHEEL] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         val targetSpeed = 500.0 // RPM for test
 
         when {
@@ -451,6 +488,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testSpindexer() {
+        if (bot.spindexer == null) {
+            testMessages[TestSystem.SPINDEXER] = "❌ Spindexer not initialized"
+            testResults[TestSystem.SPINDEXER] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         // Test all 6 positions
         val positions = listOf(
             "INTAKE_1", "OUTTAKE_1",
@@ -480,6 +524,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testIntake() {
+        if (bot.intake == null) {
+            testMessages[TestSystem.INTAKE] = "❌ Intake not initialized"
+            testResults[TestSystem.INTAKE] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         val phaseDuration = 1.5
         val currentPhase = (testTimer.seconds() / phaseDuration).toInt()
 
@@ -506,6 +557,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testLauncher() {
+        if (bot.launcher == null) {
+            testMessages[TestSystem.LAUNCHER] = "❌ Launcher not initialized"
+            testResults[TestSystem.LAUNCHER] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         when {
             testTimer.seconds() < 0.5 -> {
                 testMessages[TestSystem.LAUNCHER] = "Waiting for launcher reset..."
@@ -531,6 +589,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testCamera() {
+        if (bot.camera == null) {
+            testMessages[TestSystem.CAMERA] = "❌ Camera not initialized"
+            testResults[TestSystem.CAMERA] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         val processor = bot.camera?.getProcessor<AprilTagProcessor>()
 
         when {
@@ -562,6 +627,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testLED() {
+        if (bot.led == null) {
+            testMessages[TestSystem.LED] = "❌ LED not initialized"
+            testResults[TestSystem.LED] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         val phaseDuration = 1.0
         val currentPhase = (testTimer.seconds() / phaseDuration).toInt()
 
@@ -592,6 +664,13 @@ class PreMatchSystemTest : BaseOpMode() {
     }
 
     private fun testColorSensor() {
+        if (bot.spindexer == null) {
+            testMessages[TestSystem.COLOR_SENSOR] = "❌ Spindexer not initialized"
+            testResults[TestSystem.COLOR_SENSOR] = TestResult.FAILED
+            autoTestInProgress = false
+            return
+        }
+
         // Assume spindexer started with GREEN, PURPLE, PURPLE
         when {
             testTimer.seconds() < 1.0 -> {
