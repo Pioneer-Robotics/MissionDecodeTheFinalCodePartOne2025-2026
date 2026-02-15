@@ -58,7 +58,6 @@ object Constants {
     }
 
     // -------- Drivebase (mecanum) --------
-    @Config
     object Drive {
         // geometry (cm)
         const val TRACK_WIDTH_CM = 0.0
@@ -103,7 +102,6 @@ object Constants {
     }
 
     // -------- Follower (path following) --------
-    @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
         const val POSITION_THRESHOLD = 1.25
@@ -175,7 +173,6 @@ object Constants {
         // val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
     }
 
-    @Config
     object Spindexer {
         // External Encoder
         @JvmField var KP = 0.00475
@@ -200,7 +197,6 @@ object Constants {
         const val CONFIRM_LOSS_MS = 10
     }
 
-    @Config
     object Turret {
         const val TICKS_PER_REV = 537.7 * 3 // 384.5 * 3
         const val HEIGHT = 30.48
@@ -243,7 +239,6 @@ object Constants {
         var spindexerMotorTicks = 0
     }
 
-    @Config
     object Flywheel {
         @JvmField var KP = 0.0075
         @JvmField var KI = 0.0

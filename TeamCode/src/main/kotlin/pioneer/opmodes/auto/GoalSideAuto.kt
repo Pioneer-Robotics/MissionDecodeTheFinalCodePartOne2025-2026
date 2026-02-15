@@ -61,7 +61,7 @@ class GoalSideAuto : BaseOpMode() {
     private var state = State.GOTO_SHOOT
     private var collectState = CollectState.GOAL
     private var launchState = LaunchState.READY
-    private var targetVelocity = 815.0
+    private var targetVelocity = 730.0
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
     private var lookForTag = true
@@ -142,6 +142,9 @@ class GoalSideAuto : BaseOpMode() {
         telemetry.addData("State", state)
         telemetry.addData("Collect State", collectState)
         telemetry.addData("Launch State", launchState)
+        telemetry.addData("Spindexer Reached Target", bot.spindexer?.reachedTarget)
+        telemetry.addData("Flywheel At Speed", flywheelAtSpeed())
+
     }
 
     private fun handleTurret() {
