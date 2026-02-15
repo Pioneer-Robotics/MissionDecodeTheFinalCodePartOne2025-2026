@@ -1,5 +1,6 @@
 package pioneer.opmodes.auto
 
+import com.acmerobotics.dashboard.FtcDashboard
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
@@ -55,5 +56,9 @@ class FlywheelTesting : BaseOpMode() {
 
         telemetry.addData("Actual Flywheel Velocity", bot.flywheel?.velocity)
         telemetry.addData("Target Velocity", flywheelSpeed)
+
+        FtcDashboard.getInstance().telemetry.addData("Flywheel Velocity", bot.flywheel?.velocity)
+        FtcDashboard.getInstance().telemetry.addData("Target Velocity", flywheelSpeed)
+        FtcDashboard.getInstance().telemetry.update()
     }
 }
