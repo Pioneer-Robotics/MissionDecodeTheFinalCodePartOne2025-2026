@@ -19,7 +19,7 @@ class Intake(
             intake.power = value
         }
 
-    var defaultPower: Double = 1.0
+    var defaultPower: Double = 0.7
 
     override fun init() {
         intake =

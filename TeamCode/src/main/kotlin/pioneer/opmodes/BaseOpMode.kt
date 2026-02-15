@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
+import pioneer.BotType
 import pioneer.Constants
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.FileLogger
@@ -41,6 +42,8 @@ abstract class BaseOpMode : OpMode() {
         bot.pinpoint?.reset(Constants.TransferData.pose)
         bot.turret?.resetMotorPosition(Constants.TransferData.turretMotorTicks)
         bot.spindexer?.resetMotorPosition(Constants.TransferData.spindexerMotorTicks)
+       // Reset Servos
+        bot.servosPTO?.raiseServos()
     }
 
     final override fun start() {

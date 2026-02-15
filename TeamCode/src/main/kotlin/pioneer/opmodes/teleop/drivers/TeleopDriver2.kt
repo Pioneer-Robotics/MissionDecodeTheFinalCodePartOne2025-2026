@@ -41,6 +41,7 @@ class TeleopDriver2(
     private val launchToggle = Toggle(false)
     private val multiShotToggle = Toggle(false)
     private val switchOperatingModeToggle = Toggle(false)
+
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose()
     private var offsetShootingTarget = Pose()
@@ -228,27 +229,27 @@ class TeleopDriver2(
     }
 
     private fun processShooting() {
+        // CHANGED: Moved artifact popping to top so it happens first
         if (shootingArtifact && bot.launcher?.isReset == true ) {
             shootingArtifact = false
             bot.spindexer?.popCurrentArtifact(false)
         }
+
         if (!flywheelToggle.state) return
 
         // UNCHANGED: SQUARE button triggers launcher for single shots
         launchToggle.toggle(gamepad.square)
         shootCommanded = launchToggle.justChanged || triggerMultishot
 
+        // CHANGED: Removed bypass logic (launchPressedTimer stuff)
+        // Now ONLY shoots when spindexer is actually ready
         if (shootCommanded &&
-            bot.spindexer?.withinDetectionTolerance == true &&
+            bot.spindexer?.reachedTarget == true &&
             bot.spindexer?.isOuttakePosition == true
         ) {
             bot.launcher?.triggerLaunch()
             shootingArtifact = true
-        } else if (shootCommanded && launchPressedTimer.seconds() < 0.5) {
-            bot.launcher?.triggerLaunch()
-            shootingArtifact = true
         }
-        if (shootCommanded) launchPressedTimer.reset()
     }
 
     private fun shootArtifact(artifact: Artifact? = null) {

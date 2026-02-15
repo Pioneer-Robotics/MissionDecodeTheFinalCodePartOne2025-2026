@@ -11,6 +11,7 @@ import pioneer.hardware.LED
 import pioneer.hardware.LaunchServos
 import pioneer.hardware.Launcher
 import pioneer.hardware.MecanumBase
+import pioneer.hardware.PTOServo
 import pioneer.hardware.spindexer.Spindexer
 import pioneer.hardware.Turret
 import pioneer.localization.localizers.Pinpoint
@@ -51,6 +52,7 @@ class Bot private constructor(
     val batteryMonitor get() = get<BatteryMonitor>()
     val spindexer get() = get<Spindexer>()
     val launcher get() = get<Launcher>()
+    val servosPTO get() = get<PTOServo>()
     val led get() = get<LED>()
 
     // Follower is lazily initialized (only if accessed)
@@ -98,6 +100,7 @@ class Bot private constructor(
                         .add(Intake(hardwareMap))
                         .add(Turret(hardwareMap))
                         .add(Spindexer(hardwareMap))
+                        .add(PTOServo(hardwareMap))
                         .add(Launcher(hardwareMap))
                         .add(LED(hardwareMap))
                         .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))

@@ -98,7 +98,7 @@ class SpindexerMotionController(
     val reachedTarget: Boolean
         get() =
             abs(errorTicks) < Constants.Spindexer.SHOOTING_TOLERANCE_TICKS &&
-                    velocityTimer.milliseconds() > 300
+                    velocityTimer.milliseconds() > 150 // CHANGED: was 300
 
     val withinDetectionTolerance: Boolean
         get() =
