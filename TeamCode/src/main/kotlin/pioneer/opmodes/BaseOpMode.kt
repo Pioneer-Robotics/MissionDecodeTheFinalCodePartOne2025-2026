@@ -1,6 +1,7 @@
 package pioneer.opmodes
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
+import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
@@ -28,7 +29,14 @@ abstract class BaseOpMode : OpMode() {
     val elapsedTime: Double
         get() = run_timer.seconds()
 
+    val allHubs: List<LynxModule> by lazy {
+        hardwareMap.getAll(LynxModule::class.java)
+    }
+
     final override fun init() {
+        for (hub in allHubs) {
+            hub.bulkCachingMode = LynxModule.BulkCachingMode.MANUAL
+        }
         onInit() // Call user-defined init method
         bot.initAll() // Initialize bot hardware
         if (!::bot.isInitialized) {
@@ -49,6 +57,9 @@ abstract class BaseOpMode : OpMode() {
     }
 
     final override fun loop() {
+        for (hub in allHubs) {
+            hub.clearBulkCache()
+        }
         // Update bot systems
         bot.updateAll()
 
