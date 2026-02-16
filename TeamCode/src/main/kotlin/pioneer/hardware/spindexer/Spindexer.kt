@@ -4,35 +4,36 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.Constants
 import pioneer.decode.Artifact
+import pioneer.decode.Motif
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.RevColorSensor
+import kotlin.math.roundToInt
 
 class Spindexer(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.SPINDEXER_MOTOR,
     private val intakeSensorName: String = Constants.HardwareNames.INTAKE_SENSOR,
 ) : HardwareComponent {
+    // --- Spindexer State --- //
+    private enum class State {
+        READY,
+        INTAKE,
+    }
+
+    private var state = State.INTAKE
+
     // --- Subsystems --- //
-    private lateinit var motion: SpindexerMotionController
     private lateinit var detector: ArtifactDetector
+    private lateinit var motion: SpindexerMotionController
     private val indexer = ArtifactIndexer()
 
     // --- Positions --- //
-    private val intakePositions =
-        listOf(
-            SpindexerMotionController.MotorPosition.INTAKE_1,
-            SpindexerMotionController.MotorPosition.INTAKE_2,
-            SpindexerMotionController.MotorPosition.INTAKE_3
-        )
-
-    private val outtakePositions =
-        listOf(
-            SpindexerMotionController.MotorPosition.OUTTAKE_1,
-            SpindexerMotionController.MotorPosition.OUTTAKE_2,
-            SpindexerMotionController.MotorPosition.OUTTAKE_3
-        )
-
     var manualOverride = false
+    var isSorting = false
+    val isShooting: Boolean get() = motion.isShooting
+
+    private val ticksPerArtifact: Int
+        get() = (Constants.Spindexer.TICKS_PER_REV / 3.0).roundToInt()
 
     // --- Artifact Data --- //
     val artifacts: Array<Artifact?> get() = indexer.snapshot()
@@ -42,15 +43,9 @@ class Spindexer(
     val numStoredArtifacts: Int get() = indexer.count
 
     // --- Motor Getters --- //
-    val motorState: SpindexerMotionController.MotorPosition get() = motion.target
-    val reachedTarget: Boolean get() = motion.reachedTarget
-    val withinDetectionTolerance: Boolean get() = motion.withinDetectionTolerance
     val currentMotorTicks: Int get() = motion.currentTicks
     val targetMotorTicks: Int get() = motion.targetTicks
-    val currentMotorVelocity: Double get() = motion.velocity
-    val closestMotorPosition get() = motion.closestPosition
-    val isOuttakePosition get() = motion.target in outtakePositions
-    val isIntakePosition get() = motion.target in intakePositions
+    val reachedTarget: Boolean get() = motion.reachedTarget
 
     // --- Initialization --- //
     override fun init() {
@@ -68,87 +63,93 @@ class Spindexer(
     // --- Update Loop --- //
     override fun update() {
         motion.update()
-        motion.manualOverride = this.manualOverride
-        checkForArtifact()
+        when (state) {
+            State.INTAKE -> intakeState()
+            State.READY -> readyState()
+        }
     }
 
     // --- Public Commands --- //
+    fun moveManual(power: Double) {
+        motion.moveManual(power)
+    }
+
+    fun moveToPosition(positionIndex: Int) {
+        motion.positionIndex = positionIndex
+    }
+
+    fun setArtifacts(vararg values: Artifact?) {
+        indexer.setAll(*values)
+    }
+
     fun moveToNextOpenIntake(): Boolean {
+        state = State.INTAKE
         manualOverride = false
-        val index = indexer.nextOpenIntakeIndex() ?: return false
-        motion.target = intakePositions[index]
+        motion.stopShooting()
+        val index = indexer.nextOpenIntakeIndex(motion.positionIndex) ?: return false
+        motion.positionIndex = index
         return true
     }
 
-    fun moveToNextOuttake(artifact: Artifact? = null): Boolean {
-        manualOverride = false
-        val index = indexer.findOuttakeIndex(artifact) ?: return false
-        motion.target = outtakePositions[index]
-        return true
+    fun readyOuttake(targetMotif: Motif? = null) {
+        state = State.READY
+        motion.stopShooting()
+        // Return if there aren't any artifacts
+        val startIndex = indexer.motifStartIndex(targetMotif, motion.positionIndex) ?: return
+        motion.positionIndex = startIndex
     }
 
-    fun moveToPosition(position: SpindexerMotionController.MotorPosition) {
-        manualOverride = false
-        motion.target = position
+    fun shootNext() {
+        if (state == State.INTAKE) return
+        if (motion.isShooting) return
+        indexer.pop(motion.positionIndex)
+        // Rotate 120 degrees at constant speed (no PID) then hold next outtake.
+        motion.positionIndex += 1
+        motion.startShooting(ticksPerArtifact, Constants.Spindexer.SHOOT_POWER)
     }
 
-    fun popCurrentArtifact(autoSwitchToIntake: Boolean = true): Artifact? {
-        if (motion.target !in outtakePositions) return null
-        val index = outtakePositions.indexOf(motion.target)
-        val artifact = indexer.pop(index)
-        if (autoSwitchToIntake){
-            if (indexer.isEmpty) moveToNextOpenIntake()
-        }
-        return artifact
+    fun shootAll() {
+        if (state == State.INTAKE) return
+        if (motion.isShooting) return
+        // Rotate a full revolution plus one at constant speed (no PID) to shoot all 3.
+        motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt() + ticksPerArtifact, Constants.Spindexer.SHOOT_POWER)
+        indexer.resetAll()
     }
 
-    fun popArtifact(index: Int): Artifact? {
-        val artifact = indexer.pop(index)
-        if (indexer.isEmpty) moveToNextOpenIntake()
-        return artifact
-    }
+//    fun popCurrentArtifact(autoSwitchToIntake: Boolean = true): Artifact? {
+//        if (motion.target !in outtakePositions) return null
+//        val index = outtakePositions.indexOf(motion.target) //Needs to be current ticks,
+//        val artifact = indexer.pop(index)
+//        if (autoSwitchToIntake){
+//            if (indexer.isEmpty) moveToNextOpenIntake()
+//        }
+//        return artifact
+//    }
 
-    fun cancelLastIntake() {
-        indexer.popLastIntake()
+    fun resetMotorPosition(resetTicks: Int) {
+        motion.calibrateEncoder(resetTicks)
     }
 
     fun reset() {
         indexer.resetAll()
     }
 
-    fun moveManual(power: Double) {
-        manualOverride = true
-        motion.moveManual(power)
-    }
-
-    fun resetMotorPosition(resetTicks: Int = 0) {
-        motion.calibrateEncoder(resetTicks)
-    }
-
-    fun setArtifacts(vararg artifacts: Artifact?) {
-        indexer.setAll(*artifacts)
-    }
-
     // --- Private Helpers --- //
-    private fun checkForArtifact() {
-        if (motion.target !in intakePositions) return
+    private fun intakeState() {
+        // Make sure the spindexer is at it's target position
         if (!motion.withinDetectionTolerance) return
         if (!motion.withinVelocityTolerance) return
 
-        val index = intakePositions.indexOf(motion.target)
+        // Detect artifact
         val detected = detector.detect()
-
+        val index = motion.positionIndex
         if (indexer.processIntake(index, detected)) {
-            if (!moveToNextOpenIntake()) switchMode()
+            // If there aren't any more open intake positions
+            if (!moveToNextOpenIntake()) readyOuttake()
         }
     }
 
-    private fun switchMode() {
-        val index = intakePositions.indexOf(motion.target)
-        if (motion.target in intakePositions) {
-            motion.target = outtakePositions[(index - 1).mod(outtakePositions.size)]
-        } else {
-            motion.target = intakePositions[(index + 1).mod(intakePositions.size)]
-        }
+    private fun readyState() {
+        // TODO: check if an artifact has been shot (then pop it)
     }
 }

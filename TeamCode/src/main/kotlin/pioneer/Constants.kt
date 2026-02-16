@@ -58,7 +58,6 @@ object Constants {
     }
 
     // -------- Drivebase (mecanum) --------
-    @Config
     object Drive {
         // geometry (cm)
         const val TRACK_WIDTH_CM = 0.0
@@ -103,10 +102,9 @@ object Constants {
     }
 
     // -------- Follower (path following) --------
-    @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 1.25
+        const val POSITION_THRESHOLD = 1.75
 
         /** The threshold in radians to consider the target heading reached. */
         const val ROTATION_THRESHOLD = 0.06
@@ -138,7 +136,7 @@ object Constants {
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 3.0 // was 5.0
+        @JvmField var THETA_KP = 5.0 // was 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 
@@ -177,30 +175,32 @@ object Constants {
 
     @Config
     object Spindexer {
-        // External Encoder
-        @JvmField var KP = 0.00475 // was 0.000175
-        @JvmField var KI = 0.00005 // was 0.00001
-        @JvmField var KD = 0.0125 // was 0.00045
+        @JvmField var KP = 0.004
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.00125
 
         @JvmField var KS_START = 0.04
 
-        @JvmField var MAX_POWER_RATE = 100.0 // was 100.0
+        @JvmField var SHOOT_POWER = 0.2
+
+        @JvmField var MAX_POWER_RATE = 100.0
 
         @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
 
         const val SHOOTING_TOLERANCE_TICKS = 4
         const val DETECTION_TOLERANCE_TICKS = 18
         const val VELOCITY_TOLERANCE_TPS = 50
-        const val TICKS_PER_REV = 537.7 // 8192
+        const val ALLOWED_REVERSE_TICKS = 50 // How far spindexer can reverse without doing a 360
+        const val TICKS_PER_REV = 537.7
 
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 67.0
+        const val CONFIRM_INTAKE_MS = 25.0
 
         // Max time the artifact can disappear without resetting confirmation (ms)
-        const val CONFIRM_LOSS_MS = 10
+        const val CONFIRM_LOSS_MS = 0.0
+        const val MAX_VELOCITY = 2400 // tps
     }
 
-    @Config
     object Turret {
         const val TICKS_PER_REV = 537.7 * 3 // 384.5 * 3
         const val HEIGHT = 30.48
@@ -213,6 +213,10 @@ object Constants {
         @JvmField var KI = 0.00015
         @JvmField var KD = 1.1
         @JvmField var KS = 0.175
+
+        @JvmField var KP_ODO = 0.0
+        @JvmField var KI_ODO = 0.0
+        @JvmField var KD_ODO = 0.0
     }
 
     object ServoPositions {
@@ -241,9 +245,9 @@ object Constants {
 
     @Config
     object Flywheel {
-        @JvmField var KP = 0.0075
+        @JvmField var KP = 0.0001
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.0
+        @JvmField var KD = 0.001
         @JvmField var KF = 0.000415
 
         val idleVelocity = 300.0

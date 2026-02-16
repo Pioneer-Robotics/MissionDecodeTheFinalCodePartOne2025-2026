@@ -99,7 +99,7 @@ class Bot private constructor(
                         .add(Turret(hardwareMap))
                         .add(Spindexer(hardwareMap))
                         .add(Launcher(hardwareMap))
-                        //.add(LED(hardwareMap))
+                        .add(LED(hardwareMap))
                         .add(Camera(hardwareMap, processors = arrayOf(AprilTag().processor)))
                         .add(BatteryMonitor(hardwareMap))
                         .build()

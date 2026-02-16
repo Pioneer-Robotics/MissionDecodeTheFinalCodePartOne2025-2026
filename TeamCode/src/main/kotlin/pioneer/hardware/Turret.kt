@@ -4,8 +4,10 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import pioneer.Constants
 import pioneer.helpers.Chrono
+import pioneer.helpers.FileLogger
 import pioneer.helpers.MathUtils
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
@@ -21,12 +23,8 @@ class Turret(
     private val motorRange: Pair<Double, Double> = -3 * PI / 2 to PI / 2,
 ) : HardwareComponent {
     private lateinit var turret: DcMotorEx
+    private lateinit var tagTrackPID: PIDController
 
-    private val tagTrackPID = PIDController(
-        Constants.Turret.KP,
-        Constants.Turret.KI,
-        Constants.Turret.KD,
-    )
     private val chrono = Chrono()
 
     private val ticksPerRadian: Double = Constants.Turret.TICKS_PER_REV / (2 * PI)
@@ -61,7 +59,6 @@ class Turret(
         require(motorRange.first < motorRange.second) {
             "Motor range must be valid: ${motorRange.first} to ${motorRange.second}"
         }
-        tagTrackPID.integralClamp = 1.0
     }
 
     override fun init() {
@@ -71,11 +68,14 @@ class Turret(
                 mode = DcMotor.RunMode.RUN_USING_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 direction = DcMotorSimple.Direction.FORWARD
-//                setPIDFCoefficients(
-//                    DcMotor.RunMode.RUN_USING_ENCODER,
-//                    PIDFCoefficients(1.0, 0.0, 0.0, 0.0)
-//                )
             }
+
+        tagTrackPID = PIDController(
+            Constants.Turret.KP,
+            Constants.Turret.KI,
+            Constants.Turret.KD,
+        )
+        tagTrackPID.integralClamp = 1.0
     }
 
     val currentAngle: Double
@@ -127,6 +127,7 @@ class Turret(
             x = Constants.Turret.OFFSET * sin(-pose.theta),
             y = Constants.Turret.OFFSET * cos(-pose.theta)
         )
+
         // General Angle (From robot 0 to target):
         val targetTheta = (shootPose angleTo target)
         val turretTheta = (PI / 2 + targetTheta) - shootPose.theta
@@ -139,22 +140,28 @@ class Turret(
             return
         }
 
-        val desiredDelta = Math.toRadians(errorDegrees)
-        val rawTarget = currentAngle + desiredDelta
-        // FIXME: For now the turret can't go past the motor range and it can't wrap
-//        val legalTarget = MathUtils.normalizeRadians(rawTarget, motorRange)
-        // TODO: Test turret wrapping
-//        if (rawTarget !in motorRange.first..motorRange.second) {
-//            gotoAngle(rawTarget) // Use goToAngle to wrap
-//        }
-        val legalTarget = rawTarget.coerceIn(motorRange.first, motorRange.second)
-        val legalError = legalTarget - currentAngle
+//        val desiredDelta = Math.toRadians(errorDegrees)
+//        val rawTarget = currentAngle + desiredDelta
+//        // FIXME: For now the turret can't go past the motor range and it can't wrap
+////        val legalTarget = MathUtils.normalizeRadians(rawTarget, motorRange)
+//        // TODO: Test turret wrapping
+////        if (rawTarget !in motorRange.first..motorRange.second) {
+////            gotoAngle(rawTarget) // Use goToAngle to wrap
+////        }
+//        val legalTarget = rawTarget.coerceIn(motorRange.first, motorRange.second)
+//        val legalError = legalTarget - currentAngle
 
-        val power = tagTrackPID.update(legalError, chrono.dt)
-        val static = if (abs(power) > 0.001) Constants.Turret.KS * sign(power) else 0.0
+//        FileLogger.debug("Turret", "Adjusted Error: $legalError")
+
+        val dt = chrono.dt
+        var power = tagTrackPID.update(errorDegrees, dt)
+
+        if (abs(power) > 0.01) {
+            power += Constants.Turret.KS * sign(power)
+        }
 
         turret.mode = DcMotor.RunMode.RUN_USING_ENCODER
-        turret.power = power + static
+        turret.power = power.coerceIn(-1.0, 1.0)
     }
 
     fun setCustomTarget(pose: Pose, distance: Double): Pose {

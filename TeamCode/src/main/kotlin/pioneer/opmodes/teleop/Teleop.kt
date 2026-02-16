@@ -2,19 +2,17 @@ package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.BotType
 import pioneer.Constants
 import pioneer.general.AllianceColor
-import pioneer.hardware.prism.Color
-import pioneer.helpers.Pose
+import org.firstinspires.ftc.teamcode.prism.Color
+import pioneer.decode.Artifact
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.opmodes.teleop.drivers.TeleopDriver1
 import pioneer.opmodes.teleop.drivers.TeleopDriver2
-import kotlin.math.hypot
 
 @TeleOp(name = "Teleop")
 class Teleop : BaseOpMode() {
@@ -40,7 +38,9 @@ class Teleop : BaseOpMode() {
                     AllianceColor.RED -> Color.RED
                     AllianceColor.BLUE -> Color.BLUE
                     AllianceColor.NEUTRAL -> Color.PURPLE
-                }
+                },
+                0,
+                23,
             )
         }
         telemetry.addData("Alliance Color", bot.allianceColor)
@@ -57,18 +57,21 @@ class Teleop : BaseOpMode() {
         driver1.update()
         driver2.update()
 
+        // Display artifacts with LED
+        bot.led?.displayArtifacts(listOf(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE))
+
         // Add telemetry data
         addTelemetryData()
     }
 
     private fun addTelemetryData() {
+        addTelemetryData("Target Motif", driver2.motif, Verbose.INFO)
         addTelemetryData("Alliance Color", bot.allianceColor, Verbose.INFO)
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.INFO)
         addTelemetryData("Pose", bot.pinpoint!!.pose, Verbose.DEBUG)
         addTelemetryData("Artifacts", bot.spindexer?.artifacts.contentDeepToString(), Verbose.INFO)
 
         addTelemetryData("Turret Mode", bot.turret?.mode, Verbose.INFO)
-        addTelemetryData("Multishot Mode", driver2.multishotState, Verbose.INFO)
         addTelemetryData("Flywheel Operating", bot.flywheel?.operatingMode, Verbose.INFO)
         addTelemetryData("Use Auto Track Offset", driver2.useAutoTrackOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Speed Offset", driver2.flywheelSpeedOffset, Verbose.DEBUG)
@@ -79,7 +82,6 @@ class Teleop : BaseOpMode() {
 //        addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
 
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.DEBUG)
-        addTelemetryData("Spindexer State", bot.spindexer?.motorState, Verbose.INFO)
 
         addTelemetryData("April Tag Relative Error", driver2.errorDegrees, Verbose.INFO)
 
@@ -88,7 +90,7 @@ class Teleop : BaseOpMode() {
 
         telemetryPacket.put("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks)
         telemetryPacket.put("Spindexer Ticks", bot.spindexer?.currentMotorTicks)
-        telemetryPacket.put("Spindexer Velocity", bot.spindexer?.currentMotorVelocity)
+//        telemetryPacket.put("Spindexer Velocity", bot.spindexer?.currentMotorVelocity)
 
         addTelemetryData("Field Centric", driver1.fieldCentric, Verbose.INFO)
         addTelemetryData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy), Verbose.DEBUG)

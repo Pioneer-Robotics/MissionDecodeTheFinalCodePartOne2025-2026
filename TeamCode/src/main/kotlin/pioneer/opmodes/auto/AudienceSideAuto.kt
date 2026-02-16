@@ -12,7 +12,7 @@ import pioneer.decode.Motif
 import pioneer.decode.Obelisk
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
-import pioneer.hardware.prism.Color
+import org.firstinspires.ftc.teamcode.prism.Color
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
@@ -104,7 +104,7 @@ class AudienceSideAuto : BaseOpMode() {
         bot.apply{
             pinpoint?.reset(P.START_FAR)
             spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-            spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
+            spindexer?.readyOuttake(motifOrder)
             follower.reset()
         }
         targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
@@ -160,7 +160,7 @@ class AudienceSideAuto : BaseOpMode() {
     private fun state_goto_shoot() {
         bot.flywheel?.velocity = targetVelocity
         if (!bot.follower.isFollowing) { // Starting path
-            bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
+            bot.spindexer?.readyOuttake(motifOrder)
             bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR), 150.0)
         }
         if (bot.follower.done) { // Ending path
@@ -203,27 +203,30 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     private fun handle_shoot_all() {
-        when (launchState) {
-            LaunchState.READY -> {
-                bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
-                launchState = LaunchState.MOVING_TO_POSITION
-            }
 
-            LaunchState.MOVING_TO_POSITION -> {
-                if (bot.spindexer?.reachedTarget == true && flywheelAtSpeed()) {
-                    bot.launcher?.triggerLaunch()
-                    launchState = LaunchState.LAUNCHING
-                }
-            }
+        bot.spindexer?.shootAll()
 
-            LaunchState.LAUNCHING -> {
-                if (bot.launcher?.isReset == true) {
-                    bot.spindexer?.popCurrentArtifact()
-                    motifOrder.getNextArtifact() // Cycle to next artifact
-                    launchState = LaunchState.READY
-                }
-            }
-        }
+//        when (launchState) {
+//            LaunchState.READY -> {
+//                bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
+//                launchState = LaunchState.MOVING_TO_POSITION
+//            }
+//
+//            LaunchState.MOVING_TO_POSITION -> {
+//                if (bot.spindexer?.reachedTarget == true && flywheelAtSpeed()) {
+//                    bot.launcher?.triggerLaunch()
+//                    launchState = LaunchState.LAUNCHING
+//                }
+//            }
+//
+//            LaunchState.LAUNCHING -> {
+//                if (bot.launcher?.isReset == true) {
+//                    bot.spindexer?.popCurrentArtifact()
+//                    motifOrder.getNextArtifact() // Cycle to next artifact
+//                    launchState = LaunchState.READY
+//                }
+//            }
+//        }
     }
 
     private fun flywheelAtSpeed(): Boolean {

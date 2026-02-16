@@ -20,7 +20,7 @@
  *   SOFTWARE.
  */
 
-package pioneer.hardware.prism;
+package org.firstinspires.ftc.teamcode.prism;
 
 import androidx.annotation.NonNull;
 

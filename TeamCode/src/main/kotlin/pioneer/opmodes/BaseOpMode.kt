@@ -71,6 +71,7 @@ abstract class BaseOpMode : OpMode() {
         Constants.TransferData.turretMotorTicks = bot.turret?.currentTicks ?: 0
         Constants.TransferData.spindexerMotorTicks = bot.spindexer?.currentMotorTicks ?: 0
 
+        bot.led?.clear()
         bot.mecanumBase?.stop() // Ensure motors are stopped
         FileLogger.flush() // Flush any logged data
         onStop() // Call user-defined stop method
