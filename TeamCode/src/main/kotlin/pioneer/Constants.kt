@@ -104,7 +104,7 @@ object Constants {
     // -------- Follower (path following) --------
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 1.25
+        const val POSITION_THRESHOLD = 1.75
 
         /** The threshold in radians to consider the target heading reached. */
         const val ROTATION_THRESHOLD = 0.06
@@ -136,7 +136,7 @@ object Constants {
         @JvmField var Y_KD = 0.0
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 3.0 // was 5.0
+        @JvmField var THETA_KP = 5.0 // was 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 
@@ -175,13 +175,9 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.0025
+        @JvmField var KP = 0.004
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.001
-
-        @JvmField var KP_Vel = 0.0
-        @JvmField var KI_Vel = 0.0
-        @JvmField var KD_Vel = 0.0
+        @JvmField var KD = 0.00125
 
         @JvmField var KS_START = 0.04
 
@@ -198,10 +194,10 @@ object Constants {
         const val TICKS_PER_REV = 537.7
 
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 67.0
+        const val CONFIRM_INTAKE_MS = 25.0
 
         // Max time the artifact can disappear without resetting confirmation (ms)
-        const val CONFIRM_LOSS_MS = 10
+        const val CONFIRM_LOSS_MS = 0.0
         const val MAX_VELOCITY = 2400 // tps
     }
 
@@ -247,10 +243,11 @@ object Constants {
         var spindexerMotorTicks = 0
     }
 
+    @Config
     object Flywheel {
-        @JvmField var KP = 0.0075
+        @JvmField var KP = 0.0001
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.0
+        @JvmField var KD = 0.001
         @JvmField var KF = 0.000415
 
         val idleVelocity = 300.0

@@ -133,7 +133,7 @@ class SpindexerMotionController(
             power = 0.0
         }
 
-        motor.power = power.coerceIn(-0.4, 0.4)
+        motor.power = power.coerceIn(-0.75, 0.75)
     }
 
     // --- Manual Control --- //
