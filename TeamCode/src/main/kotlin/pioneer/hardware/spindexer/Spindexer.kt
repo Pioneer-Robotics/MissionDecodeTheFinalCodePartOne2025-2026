@@ -46,8 +46,6 @@ class Spindexer(
     val currentMotorTicks: Int get() = motion.currentTicks
     val targetMotorTicks: Int get() = motion.targetTicks
     val reachedTarget: Boolean get() = motion.reachedTarget
-    val motorState: SpindexerMotionController.MotorPosition get() = motion.target
-    val isDoneShooting: Boolean get() = motion.doneShooting
 
     // --- Initialization --- //
     override fun init() {
@@ -76,8 +74,8 @@ class Spindexer(
         motion.moveManual(power)
     }
 
-    fun moveToPosition(position: SpindexerMotionController.MotorPosition) {
-        motion.target = position
+    fun moveToPosition(positionIndex: Int) {
+        motion.positionIndex = positionIndex
     }
 
     fun setArtifacts(vararg values: Artifact?) {
@@ -88,8 +86,8 @@ class Spindexer(
         state = State.INTAKE
         manualOverride = false
         motion.stopShooting()
-        val index = indexer.nextOpenIntakeIndex() ?: return false
-        motion.target = motion.intakePositions[index]
+        val index = indexer.nextOpenIntakeIndex(motion.positionIndex) ?: return false
+        motion.positionIndex = index
         return true
     }
 
@@ -97,24 +95,24 @@ class Spindexer(
         state = State.READY
         motion.stopShooting()
         // Return if there aren't any artifacts
-        val startIndex = indexer.motifStartIndex(targetMotif) ?: return
-        motion.target = motion.outtakePositions[startIndex]
+        val startIndex = indexer.motifStartIndex(targetMotif, motion.positionIndex) ?: return
+        motion.positionIndex = startIndex
     }
 
     fun shootNext() {
         if (state == State.INTAKE) return
         if (motion.isShooting) return
+        indexer.pop(motion.positionIndex)
         // Rotate 120 degrees at constant speed (no PID) then hold next outtake.
-        motion.target = motion.target.offset(2)
+        motion.positionIndex += 1
         motion.startShooting(ticksPerArtifact, Constants.Spindexer.SHOOT_POWER)
-        indexer.pop(motion.outtakePositions.indexOf(motion.target))
     }
 
     fun shootAll() {
         if (state == State.INTAKE) return
         if (motion.isShooting) return
-        // Rotate a full revolution at constant speed (no PID) to shoot all 3.
-        motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt(), Constants.Spindexer.SHOOT_POWER)
+        // Rotate a full revolution plus one at constant speed (no PID) to shoot all 3.
+        motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt() + ticksPerArtifact, Constants.Spindexer.SHOOT_POWER)
         indexer.resetAll()
     }
 
@@ -144,8 +142,7 @@ class Spindexer(
 
         // Detect artifact
         val detected = detector.detect()
-        val index = motion.intakePositions.indexOf(motion.target)
-        if (index == -1) return // Sanity check: make sure we aren't in an outtake
+        val index = motion.positionIndex
         if (indexer.processIntake(index, detected)) {
             // If there aren't any more open intake positions
             if (!moveToNextOpenIntake()) readyOuttake()

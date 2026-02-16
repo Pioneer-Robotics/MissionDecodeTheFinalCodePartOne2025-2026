@@ -65,13 +65,13 @@ class Teleop : BaseOpMode() {
     }
 
     private fun addTelemetryData() {
+        addTelemetryData("Target Motif", driver2.motif, Verbose.INFO)
         addTelemetryData("Alliance Color", bot.allianceColor, Verbose.INFO)
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.INFO)
         addTelemetryData("Pose", bot.pinpoint!!.pose, Verbose.DEBUG)
         addTelemetryData("Artifacts", bot.spindexer?.artifacts.contentDeepToString(), Verbose.INFO)
 
         addTelemetryData("Turret Mode", bot.turret?.mode, Verbose.INFO)
-        addTelemetryData("Multishot Mode", driver2.multishotState, Verbose.INFO)
         addTelemetryData("Flywheel Operating", bot.flywheel?.operatingMode, Verbose.INFO)
         addTelemetryData("Use Auto Track Offset", driver2.useAutoTrackOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Speed Offset", driver2.flywheelSpeedOffset, Verbose.DEBUG)
@@ -82,7 +82,6 @@ class Teleop : BaseOpMode() {
 //        addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
 
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.DEBUG)
-        addTelemetryData("Spindexer State", bot.spindexer?.motorState, Verbose.INFO)
 
         addTelemetryData("April Tag Relative Error", driver2.errorDegrees, Verbose.INFO)
 

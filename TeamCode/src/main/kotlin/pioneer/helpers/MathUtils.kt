@@ -32,6 +32,17 @@ object MathUtils {
         return normalized
     }
 
+    fun wrap(
+        value: Int,
+        range: Pair<Int, Int>,
+    ): Int {
+        val spread = range.second - range.first
+        var normalized = value
+        while (normalized > range.second) normalized -= spread
+        while (normalized <= range.first) normalized += spread
+        return normalized
+    }
+
     /**
      * Creates a linearly spaced array of values.
      * @param start Starting value

@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import pioneer.Constants
+import pioneer.helpers.Chrono
+import pioneer.helpers.PIDController
 
 //@Disabled
 @TeleOp(name = "Manual Spindexer Control", group = "Calibration")
@@ -12,8 +14,10 @@ class ManualSpindexerControl : OpMode() {
 
     var power = 0.0
 
+    val chrono = Chrono()
+
     override fun init() {
-        motor = hardwareMap.get(DcMotorEx::class.java, Constants.HardwareNames.TURRET_MOTOR)
+        motor = hardwareMap.get(DcMotorEx::class.java, Constants.HardwareNames.INTAKE_MOTOR)
     }
 
     override fun loop() {
@@ -25,8 +29,11 @@ class ManualSpindexerControl : OpMode() {
 //            motor.power = 0.0
 //        }
 
-        if (gamepad1.right_bumper) power += 0.004
-        if (gamepad1.left_bumper) power -= 0.004
+        if (gamepad1.rightBumperWasPressed()) power += 0.05
+        if (gamepad1.leftBumperWasPressed()) power -= 0.05
+
+//        val targetVelocity = power * Constants.Spindexer.MAX_VELOCITY
+//        motor.velocity = targetVelocity
 
         motor.power = power
 

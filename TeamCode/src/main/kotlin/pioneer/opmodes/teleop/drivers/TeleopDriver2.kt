@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.Bot
 import pioneer.Constants
-import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.general.AllianceColor
 import pioneer.hardware.Turret
@@ -42,18 +41,9 @@ class TeleopDriver2(
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
     var errorDegrees: Double? = 0.0
-    var shootCommanded = false
-    var triggerMultishot = false
 
     var motif: Motif = Motif(21)
 
-    var multishotState = MultishotState.IDLE
-
-    enum class MultishotState {
-        IDLE,
-        MOVING,
-        SHOOTING
-    }
     var flywheelShouldFloat = true
 
     fun update() {
@@ -65,7 +55,6 @@ class TeleopDriver2(
         updateMotif()
         readyOuttake()
         handleShootInput()
-        handleMultiShot()
 //        processShooting()
         updateIndicatorLED()
     }
@@ -177,17 +166,17 @@ class TeleopDriver2(
     }
 
     private fun updateMotif(){
-        if (gamepad.right_bumper){
+        if (gamepad.rightBumperWasPressed()){
             motif = motif.nextMotif()!!
         }
 
-        if (gamepad.left_bumper){
+        if (gamepad.leftBumperWasPressed()){
             motif = motif.prevMotif()!!
         }
     }
 
     private fun readyOuttake(){
-        if (gamepad.circle){
+        if (gamepad.circleWasPressed()){
             bot.spindexer?.readyOuttake(motif)
         }
     }
@@ -195,97 +184,10 @@ class TeleopDriver2(
     private fun handleShootInput() {
         if (shootingArtifact) return
         when {
-//            gamepad.right_bumper -> shootArtifact(Artifact.PURPLE)
-//            gamepad.left_bumper -> shootArtifact(Artifact.GREEN)
             gamepad.square -> bot.spindexer?.shootNext()
+            gamepad.touchpad -> bot.spindexer?.shootAll()
         }
     }
-
-    private fun handleMultiShot() {
-        multiShotToggle.toggle(gamepad.touchpad)
-
-        if (multiShotToggle.state){
-            bot.spindexer?.shootAll()
-        }
-
-//        when(multishotState) {
-//            MultishotState.IDLE -> {
-//                if (multiShotToggle.justChanged && gamepad.touchpad) {
-//                    multishotState = MultishotState.MOVING
-//                    FileLogger.debug("Teleop Driver 2", "Should have changed to MOVING")
-//                }
-//            }
-//            MultishotState.MOVING -> {
-//                shootArtifact()
-//                if (multiShotToggle.justChanged && gamepad.touchpad) {
-//                    FileLogger.debug("Teleop Driver 2", "Changed back to IDLE")
-//                    multishotState = MultishotState.IDLE
-//                }
-//
-//                val atSpeed = bot.flywheel?.velocity?.let {
-//                    if (abs(finalFlywheelSpeed - it) < 20.0) { true }
-//                    else { false }
-//                }
-//
-//                if (bot.spindexer?.reachedTarget == true && atSpeed == true) {
-//                    multishotState = MultishotState.SHOOTING
-//                    triggerMultishot = true
-//                }
-//            }
-//            MultishotState.SHOOTING -> {
-//                if (multiShotToggle.justChanged && gamepad.touchpad) {
-//                    multishotState = MultishotState.IDLE
-//                }
-//                if (shootingArtifact) {
-//                    triggerMultishot = false
-//                }
-//                if (!shootingArtifact && !triggerMultishot) {
-//                    multishotState = MultishotState.MOVING
-//                }
-//            }
-//        }
-//
-//        if (bot.spindexer?.isEmpty == true) {
-//            multishotState = MultishotState.IDLE
-//        }
-    }
-
-//    private fun processShooting() {
-//        if (shootingArtifact && bot.launcher?.isReset == true ) {
-//            shootingArtifact = false
-////            bot.spindexer?.popCurrentArtifact(false)
-//        }
-//        if (!flywheelToggle.state) return
-//
-//        launchToggle.toggle(gamepad.square)
-//        shootCommanded = launchToggle.justChanged || triggerMultishot
-//
-//        if (shootCommanded &&
-//            bot.spindexer?.withinDetectionTolerance == true &&
-//            bot.spindexer?.isOuttakePosition == true
-//        ) {
-//            bot.launcher?.triggerLaunch()
-//            shootingArtifact = true
-//        } else if (shootCommanded && launchPressedTimer.seconds() < 0.5) {
-//            bot.launcher?.triggerLaunch()
-//            shootingArtifact = true
-//        }
-//        if (shootCommanded) launchPressedTimer.reset()
-//    }
-
-//    private fun shootArtifact(artifact: Artifact? = null) {
-//        // Can't shoot when flywheel isn't moving
-//        // Start artifact launch sequence
-//        val moved =
-//            if (artifact != null) {
-//                bot.spindexer?.moveToNextOuttake(artifact)
-//            } else {
-//                bot.spindexer?.moveToNextOuttake()
-//            }
-//
-//        bot.spindexer?.readyOuttake(motif)
-//        bot.spindexer?.shootNext()
-//    }
 
     private fun handleManualTrack() {
         if (abs(gamepad.right_stick_x) > 0.02) {

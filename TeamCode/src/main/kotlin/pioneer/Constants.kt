@@ -173,15 +173,19 @@ object Constants {
         // val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
     }
 
+    @Config
     object Spindexer {
-        // External Encoder
-        @JvmField var KP = 0.00475
-        @JvmField var KI = 0.00005
-        @JvmField var KD = 0.0125
+        @JvmField var KP = 0.0025
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.001
+
+        @JvmField var KP_Vel = 0.0
+        @JvmField var KI_Vel = 0.0
+        @JvmField var KD_Vel = 0.0
 
         @JvmField var KS_START = 0.04
 
-        @JvmField var SHOOT_POWER = 0.5
+        @JvmField var SHOOT_POWER = 0.2
 
         @JvmField var MAX_POWER_RATE = 100.0
 
@@ -198,6 +202,7 @@ object Constants {
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 10
+        const val MAX_VELOCITY = 2400 // tps
     }
 
     object Turret {

@@ -30,15 +30,21 @@ class ArtifactIndexer {
         get() = artifacts.count { it != null }
 
     // --- Index Helpers --- //
-    fun nextOpenIntakeIndex(): Int? =
-        artifacts.indexOfFirst { it == null }.takeIf { it != -1 }
+    fun nextOpenIntakeIndex(currentIndex: Int): Int? = run {
+        for (i in 0..2) {
+            // -i for reversed direction
+            val index = Math.floorMod(currentIndex - i, 3)
+            if (artifacts[index] == null) return index
+        }
+        null
+    }
 
     fun findOuttakeIndex(target: Artifact? = null): Int? =
         target?.let {
             artifacts.indexOfFirst { a -> a == it }.takeIf { i -> i != -1 }
         } ?: artifacts.indexOfFirst { it != null }.takeIf { it != -1 }
 
-    fun motifStartIndex(motif: Motif?): Int? {
+    fun motifStartIndex(motif: Motif?, currentIndex: Int): Int? {
         // Find the best shift to match motif
         if (motif == null || !motif.isValid()) return null
 
@@ -48,10 +54,12 @@ class ArtifactIndexer {
         var bestScore = -1
 
         // Try all 3 rotations
-        for (shift in 0 until 3) {
-
+        for (offset in 0 until 3) {
+            // -offset for reversed direction, -2 to account for shooting vs intake difference
+            val shift = Math.floorMod((currentIndex - offset - 2), 3)
             var score = 0
 
+            // Score this rotation based on how many positions match the motif pattern
             for (i in 0 until 3) {
                 val rotated = artifacts[(i + shift) % 3]
                 if (rotated == pattern[i]) {
@@ -65,7 +73,7 @@ class ArtifactIndexer {
             }
         }
 
-        return bestShift
+        return bestShift?.minus(2)
     }
 
     // --- Intake Logic --- //
