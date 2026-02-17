@@ -99,20 +99,20 @@ class Spindexer(
         motion.positionIndex = startIndex
     }
 
-    fun shootNext() {
+    fun shootNext(shootPower: Double = Constants.Spindexer.SHOOT_POWER_CLOSE) {
         if (state == State.INTAKE) return
         if (motion.isShooting) return
         indexer.pop(motion.positionIndex)
         // Rotate 120 degrees at constant speed (no PID) then hold next outtake.
         motion.positionIndex += 1
-        motion.startShooting(ticksPerArtifact, Constants.Spindexer.SHOOT_POWER)
+        motion.startShooting(ticksPerArtifact, shootPower)
     }
 
-    fun shootAll() {
+    fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER_CLOSE) {
         if (state == State.INTAKE) return
         if (motion.isShooting) return
         // Rotate a full revolution plus one at constant speed (no PID) to shoot all 3.
-        motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt() + ticksPerArtifact, Constants.Spindexer.SHOOT_POWER)
+        motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt() + ticksPerArtifact, shootPower)
         indexer.resetAll()
     }
 

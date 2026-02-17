@@ -67,6 +67,8 @@ class AudienceSideAuto : BaseOpMode() {
     private var lookForTag = true
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
+    private val shootTimer = ElapsedTime()
+    private val shootTime = 3.5 // TODO: Tune
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -109,6 +111,10 @@ class AudienceSideAuto : BaseOpMode() {
         }
         targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
         tagTimer.reset()
+
+        // Constantly run intake to keep balls in spindexer
+        bot.intake?.forward()
+
     }
 
     override fun onLoop() {
@@ -122,8 +128,7 @@ class AudienceSideAuto : BaseOpMode() {
         }
 
         checkForTimeUp()
-
-//        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
+        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
         handleTurret()
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
@@ -135,6 +140,9 @@ class AudienceSideAuto : BaseOpMode() {
         telemetry.addData("State", state)
         telemetry.addData("Collect State", collectState)
         telemetry.addData("Launch State", launchState)
+
+        telemetryPacket.put("Target Flywheel Speed", bot.flywheel?.targetVelocity)
+        telemetryPacket.put("Actual Flywheel Speed", bot.flywheel?.velocity)
     }
 
     private fun handleTurret() {
@@ -165,13 +173,14 @@ class AudienceSideAuto : BaseOpMode() {
         }
         if (bot.follower.done) { // Ending path
             bot.follower.reset()
+            shootTimer.reset()
             state = State.SHOOT
         }
     }
 
     private fun state_shoot() {
         handle_shoot_all()
-        if (bot.spindexer?.isEmpty == true) {
+        if (shootTimer.seconds() > shootTime) {
             state = State.GOTO_COLLECT
 
             // Breakpoint for the different auto options
@@ -204,7 +213,7 @@ class AudienceSideAuto : BaseOpMode() {
 
     private fun handle_shoot_all() {
 
-        bot.spindexer?.shootAll()
+        bot.spindexer?.shootAll(Constants.Spindexer.SHOOT_POWER_FAR)
 
 //        when (launchState) {
 //            LaunchState.READY -> {

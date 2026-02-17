@@ -20,6 +20,7 @@ class FlywheelTesting : BaseOpMode() {
     var incFlywheelSpeed = Toggle(false)
     var decFlywheelSpeed = Toggle(false)
     var flywheelSpeed = 0.0
+    var scale = 1.0
 
     var flywheelToggle = Toggle(false)
 
@@ -33,17 +34,26 @@ class FlywheelTesting : BaseOpMode() {
     }
 
     override fun onLoop() {
+        if (gamepad1.triangleWasPressed()) {
+            scale += 1.0
+        }
+
+        if (gamepad1.crossWasPressed()) {
+            scale -= 1.0
+        }
 
         incFlywheelSpeed.toggle(gamepad1.right_bumper)
         decFlywheelSpeed.toggle(gamepad1.left_bumper)
         flywheelToggle.toggle(gamepad1.dpad_left)
 
         if (incFlywheelSpeed.justChanged){
-            flywheelSpeed += 50.0
+            flywheelSpeed += 50.0 * scale
         }
         if (decFlywheelSpeed.justChanged){
-            flywheelSpeed -= 50.0
+            flywheelSpeed -= 50.0 * scale
         }
+
+
 
         if (flywheelToggle.state){
             bot.flywheel?.velocity = flywheelSpeed
@@ -57,7 +67,9 @@ class FlywheelTesting : BaseOpMode() {
 
         telemetry.addData("Actual Flywheel Velocity", bot.flywheel?.velocity)
         telemetry.addData("Target Velocity", flywheelSpeed)
+        telemetry.addData("Scale Factor", scale)
 
+        telemetryPacket.put("Scale Factor", scale)
         telemetryPacket.put("Flywheel Velocity", bot.flywheel?.velocity)
         telemetryPacket.put("Target Velocity", flywheelSpeed)
 

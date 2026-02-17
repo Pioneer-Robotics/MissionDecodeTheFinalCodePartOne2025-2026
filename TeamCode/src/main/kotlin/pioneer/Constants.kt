@@ -181,7 +181,8 @@ object Constants {
 
         @JvmField var KS_START = 0.04
 
-        @JvmField var SHOOT_POWER = 0.2
+        @JvmField var SHOOT_POWER_CLOSE = 0.19 //Was 0.2, change after hardware fix
+        @JvmField var SHOOT_POWER_FAR = 0.08
 
         @JvmField var MAX_POWER_RATE = 100.0
 
@@ -245,10 +246,15 @@ object Constants {
 
     @Config
     object Flywheel {
-        @JvmField var KP = 0.0001
+//        @JvmField var KP = 0.0001
+//        @JvmField var KI = 0.0
+//        @JvmField var KD = 0.001
+//        @JvmField var KF = 0.000415
+
+        @JvmField var KP = 0.00525
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.001
-        @JvmField var KF = 0.000415
+        @JvmField var KD = 0.0
+        @JvmField var KF = 0.00035
 
         val idleVelocity = 300.0
 

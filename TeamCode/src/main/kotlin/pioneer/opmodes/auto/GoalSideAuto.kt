@@ -148,6 +148,9 @@ class GoalSideAuto : BaseOpMode() {
         telemetry.addData("State", state)
         telemetry.addData("Collect State", collectState)
         telemetry.addData("Launch State", launchState)
+
+        telemetryPacket.put("Target Flywheel Speed", bot.flywheel?.targetVelocity)
+        telemetryPacket.put("Actual Flywheel Speed", bot.flywheel?.velocity)
     }
 
     private fun handleTurret() {
@@ -285,7 +288,7 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun state_collect() {
-        bot.flywheel?.velocity = 0.0
+//        bot.flywheel?.velocity = 0.0
         if (!bot.follower.isFollowing) { // Starting path
             when (collectState) {
                 CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 10.0)
