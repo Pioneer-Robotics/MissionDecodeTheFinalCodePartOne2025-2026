@@ -189,8 +189,15 @@ class Follower(
     ): Double {
         val t = s / path.getLength()
         val k = path.getCurvature(t)
+        val pathConstraint = path.velocityConstraint[s]
         val curveMaxVelocity = sqrt(Constants.Follower.MAX_CENTRIPETAL_ACCELERATION / abs(k))
-        val velocityLimit = min(maxVelocity, Constants.Follower.MAX_DRIVE_VELOCITY)
+        val velocityLimit = min(
+            pathConstraint,
+            min(
+                maxVelocity, 
+                Constants.Follower.MAX_DRIVE_VELOCITY
+            )
+        )
         return if (curveMaxVelocity.isNaN()) {
             velocityLimit
         } else {

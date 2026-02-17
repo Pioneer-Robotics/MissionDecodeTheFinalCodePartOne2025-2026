@@ -1,6 +1,7 @@
 package pioneer.pathing.paths
 
 import pioneer.helpers.Pose
+import pioneer.pathing.motionprofile.constraints.VelocityConstraint
 
 /**
  * LinearPath class representing a straight line path in 2D space
@@ -14,6 +15,8 @@ class LinearPath(
 ) : Path {
     // Constructor overloads
     constructor(startX: Double, startY: Double, endX: Double, endY: Double) : this(Pose(startX, startY), Pose(endX, endY))
+
+    override var velocityConstraint: VelocityConstraint = VelocityConstraint { Double.MAX_VALUE }
 
     override fun getLength(): Double = startPose.distanceTo(endPose)
 
