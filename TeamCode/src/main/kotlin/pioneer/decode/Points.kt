@@ -46,8 +46,27 @@ class Points(
     val SHOOT_CLOSE = Pose(55.0, 25.0, theta = -PI/2).T(color)
     val SHOOT_FAR = Pose(43.0, -140.0, theta = -PI/2).T(color)
 
+
+
     // Leave position
     val LEAVE_POSITION = Pose(60.0, -60.0).T(color)
+
+    private fun collectY(i: Int) = 30 - (i * 60.0) // 30, -30, -90
+
+    private val prepCollectX = 78.5
+    private val collectTheta = -PI / 2 // Point to right
+    val PREP_COLLECT_GOAL = Pose(prepCollectX, collectY(0), theta=collectTheta).T(color)
+    val PREP_COLLECT_MID = Pose(prepCollectX, collectY(1), theta=collectTheta).T(color)
+    val PREP_COLLECT_AUDIENCE = Pose(prepCollectX, collectY(2), theta=collectTheta).T(color)
+
+    val PREP_COLLECT_START_VELOCITY = Pose(0.0, 0.0).T(color)
+    val PREP_COLLECT_END_VELOCITY = Pose(80.0, 0.0).T(color)
+    val GOTO_SHOOT_VELOCITY = Pose(-175.0, 0.0).T(color)
+
+    private val collectX = 125.0
+    val COLLECT_GOAL = Pose(collectX, collectY(0), theta=collectTheta).T(color)
+    val COLLECT_MID = Pose(collectX, collectY(1), theta=collectTheta).T(color)
+    val COLLECT_AUDIENCE = Pose(collectX, collectY(2), theta=collectTheta).T(color)
 
     // More complex paths
     fun PATH_HUMAN_PLAYER(startPose: Pose): Path {
