@@ -1,7 +1,9 @@
 package pioneer.opmodes.teleop
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
+import pioneer.Constants
 import pioneer.decode.Motif
 import pioneer.hardware.spindexer.Spindexer
 import pioneer.opmodes.BaseOpMode
@@ -9,6 +11,8 @@ import pioneer.opmodes.BaseOpMode
 @TeleOp(name = "Spindexer Test")
 class SpindexerTest : BaseOpMode() {
     var motifOrder: Motif? = Motif(22)
+    var launchConditions = false
+    var delayTimer = ElapsedTime()
 
     override fun onInit() {
         bot = Bot
@@ -21,6 +25,15 @@ class SpindexerTest : BaseOpMode() {
 
     override fun onLoop() {
         bot.updateAll()
+
+        if (bot.spindexer!!.isShooting) {
+            delayTimer.reset()
+        }
+
+        if (delayTimer.seconds() > Constants.Spindexer.SHOOT_ALL_DELAY) {
+            launchConditions = true
+        }
+
         if (gamepad1.dpad_down) bot.spindexer?.moveToNextOpenIntake()
         if (gamepad1.leftBumperWasPressed()) {
             motifOrder = motifOrder?.prevMotif()
@@ -31,6 +44,7 @@ class SpindexerTest : BaseOpMode() {
             bot.spindexer?.readyOuttake(motifOrder)
         }
         if (gamepad1.touchpadWasPressed()) bot.spindexer?.shootAll()
+//        if (gamepad1.touchpadWasPressed()) bot.spindexer?.requestShootAll(launchConditions)
         if (gamepad1.circleWasPressed()) bot.spindexer?.shootNext()
 
         if (gamepad1.dpad_up) bot.intake?.forward() else bot.intake?.stop()
@@ -46,8 +60,9 @@ class SpindexerTest : BaseOpMode() {
         telemetry.addData("Ready for Next Shot", bot.spindexer?.readyForNextShot)
 //        telemetry.addData("Just Finished Shot", bot.spindexer?.finishedShot)
         telemetry.addData("Shoot All Commanded", bot.spindexer?.shootAllCommanded)
-        telemetry.addData("Delay Timer", bot.spindexer?.delayTimer)
+//        telemetry.addData("Delay Timer", bot.spindexer?.delayTimer)
         telemetry.addData("Shot Counter", bot.spindexer?.shotCounter)
         telemetry.addData("Is Shooting", bot.spindexer?.isShooting)
     }
 }
+
