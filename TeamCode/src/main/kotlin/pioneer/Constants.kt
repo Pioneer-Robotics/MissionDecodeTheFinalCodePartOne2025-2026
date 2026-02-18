@@ -226,6 +226,7 @@ object Constants {
 //        Was 0.3
 //        const val LAUNCHER_TRIGGERED = 0.75
 
+        // PTO L values (0.45, 0.75)
         const val LAUNCHER_REST = 0.52
         //Was 0.3
         const val LAUNCHER_TRIGGERED = 0.26

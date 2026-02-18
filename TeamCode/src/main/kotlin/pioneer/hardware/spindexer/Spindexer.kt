@@ -2,7 +2,6 @@ package pioneer.hardware.spindexer
 
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.decode.Motif
@@ -33,7 +32,6 @@ class Spindexer(
     var isSorting = false
     val isShooting: Boolean get() = motion.isShooting
     val finishedShot: Boolean get() = motion.justStoppedShooting
-//    val delayTimer = ElapsedTime()
     var readyForNextShot = true
     var shotCounter = 0
     var shootAllCommanded = false
@@ -156,7 +154,7 @@ class Spindexer(
 //        if (delayTimer.seconds() > Constants.Spindexer.SHOOT_ALL_DELAY){
 //            readyForNextShot = true
 //        }
-        if (launchConditionsMet){
+        if (launchConditionsMetGlobal){
             readyForNextShot = true
         }
     }

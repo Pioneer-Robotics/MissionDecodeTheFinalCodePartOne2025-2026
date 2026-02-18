@@ -16,10 +16,7 @@ import pioneer.decode.Points
 import pioneer.helpers.Pose
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
-import pioneer.pathing.motionprofile.constraints.VelocityConstraint
-import pioneer.pathing.paths.HermitePath
 import pioneer.pathing.paths.LinearPath
-import kotlin.math.PI
 
 @Autonomous(name = "Audience Side Auto", group = "Autonomous")
 class AudienceSideAuto : BaseOpMode() {
@@ -166,9 +163,7 @@ class AudienceSideAuto : BaseOpMode() {
             startedShooting = true
         }
 
-        // Was shotTimer.seconds() > shotTime
-        // Untested, might only shoot one
-        if (bot.spindexer?.finishedShot == true) {
+        if (shotTimer.seconds() > shotTime) {
             startedShooting = false
             state = State.COLLECT
         }
