@@ -5,6 +5,7 @@ import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.decode.Motif
 import pioneer.helpers.FileLogger
+import kotlin.collections.get
 
 class ArtifactIndexer {
     private val artifacts: Array<Artifact?> = Array(3) { null }
@@ -14,7 +15,6 @@ class ArtifactIndexer {
     private val artifactLostTimer = ElapsedTime()
     private var artifactSeen = false
     private var artifactWasSeenRecently = false
-
     private var lastStoredIndex = 0
 
     // --- Public State --- //
@@ -45,39 +45,31 @@ class ArtifactIndexer {
         } ?: artifacts.indexOfFirst { it != null }.takeIf { it != -1 }
 
     fun motifStartIndex(motif: Motif?, currentIndex: Int): Int? {
-        // Find the best shift to match motif
         if (motif == null || !motif.isValid()) return null
 
         val pattern = motif.getPattern()
-
         var bestShift: Int? = null
         var bestScore = -1
 
-        // Try all 3 rotations
+        // Check all 3 possible alignments of the motif pattern with the current index
         for (offset in 0 until 3) {
-            // -offset for reversed direction, -2 to account for shooting vs intake difference
             val shift = Math.floorMod((currentIndex - offset - 2), 3)
             var score = 0
-
-            // Score this rotation based on how many positions match the motif pattern
             for (i in 0 until 3) {
                 val rotated = artifacts[(i + shift) % 3]
-                if (rotated == pattern[i]) {
-                    score++
-                }
+                if (rotated == pattern[i]) score++
             }
-
             if (score > bestScore) {
                 bestScore = score
                 bestShift = shift
             }
         }
 
-        return bestShift?.minus(2)
+        // We need to shift back by 2 to get the motif start index
+        return bestShift?.let { Math.floorMod(it - 2, 3) }
     }
 
     // --- Intake Logic --- //
-
     /**
      * Call continuously while at an intake position.
      * Returns true when an artifact is CONFIRMED and stored.

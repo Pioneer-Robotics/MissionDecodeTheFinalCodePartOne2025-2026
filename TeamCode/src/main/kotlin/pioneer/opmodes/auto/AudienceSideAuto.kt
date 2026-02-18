@@ -10,65 +10,49 @@ import pioneer.decode.Artifact
 import pioneer.decode.GoalTag
 import pioneer.decode.Motif
 import pioneer.decode.Obelisk
-import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import org.firstinspires.ftc.teamcode.prism.Color
+import pioneer.decode.Points
 import pioneer.helpers.Pose
-import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
+import pioneer.pathing.motionprofile.constraints.VelocityConstraint
+import pioneer.pathing.paths.HermitePath
 import pioneer.pathing.paths.LinearPath
-import java.util.Timer
-import java.util.TimerTask
+import kotlin.math.PI
 
 @Autonomous(name = "Audience Side Auto", group = "Autonomous")
 class AudienceSideAuto : BaseOpMode() {
-    enum class AutoOptions {
-        PRELOAD_ONLY,
-        FIRST_ROW,
-        SECOND_ROW,
-        ALL,
-    }
-
     // Main state for auto
     enum class State {
         GOTO_SHOOT,
         SHOOT,
-        GOTO_COLLECT,
         COLLECT,
         LEAVE,
-        STOP,
     }
 
+    // Collects in the order specified by the enum
     enum class CollectState {
-        GOAL,
-        MID,
+        HUMAN_PLAYER,
         AUDIENCE,
         DONE,
     }
 
-    enum class LaunchState {
-        READY,
-        MOVING_TO_POSITION,
-        LAUNCHING,
-    }
-
-    private val allianceToggle = Toggle(false)
     private lateinit var P: Points
     private lateinit var targetGoal: GoalTag
-    private var startLeave = true
-    private var autoType = AutoOptions.ALL
+
     private var state = State.GOTO_SHOOT
-    private var collectState = CollectState.AUDIENCE
-    private var launchState = LaunchState.READY
-    private var targetVelocity = 980.0
+    private var collectState = CollectState.HUMAN_PLAYER
+    private var shouldStartLeave = true
+    private var startedShooting = true
+
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
     private var lookForTag = true
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
-    private val shootTimer = ElapsedTime()
-    private val shootTime = 3.5 // TODO: Tune
+    private val shotTimer = ElapsedTime()
+    private val shotTime = 3.0
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -76,8 +60,7 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     override fun init_loop() {
-        allianceToggle.toggle(gamepad1.touchpad)
-        if (allianceToggle.justChanged) {
+        if (gamepad1.touchpadWasPressed()) {
             bot.allianceColor = bot.allianceColor.next()
             bot.led?.setColor(
                 when(bot.allianceColor) {
@@ -88,17 +71,8 @@ class AudienceSideAuto : BaseOpMode() {
             )
         }
 
-        bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
-            Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
-                motifOrder = detectedMotif
-            }
-        }
-
-        telemetry.apply {
-            addData("Alliance Color", bot.allianceColor)
-            addData("Detected Motif", motifOrder.toString())
-            update()
-        }
+        telemetry.addData("Alliance Color", bot.allianceColor)
+        telemetry.update()
     }
 
     override fun onStart() {
@@ -114,22 +88,20 @@ class AudienceSideAuto : BaseOpMode() {
 
         // Constantly run intake to keep balls in spindexer
         bot.intake?.forward()
-
     }
 
     override fun onLoop() {
         when (state) {
-            State.GOTO_SHOOT -> state_goto_shoot()
-            State.SHOOT -> state_shoot()
-            State.GOTO_COLLECT -> state_goto_collect()
-            State.COLLECT -> state_collect()
-            State.LEAVE -> state_leave()
-            State.STOP -> state_stop()
+            State.GOTO_SHOOT -> stateGotoShoot()
+            State.SHOOT -> stateShoot()
+            State.COLLECT -> stateCollect()
+            State.LEAVE -> stateLeave()
         }
 
         checkForTimeUp()
-        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
         handleTurret()
+
+        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height) ?: 1750.0
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
@@ -139,14 +111,16 @@ class AudienceSideAuto : BaseOpMode() {
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
         telemetry.addData("State", state)
         telemetry.addData("Collect State", collectState)
-        telemetry.addData("Launch State", launchState)
 
         telemetryPacket.put("Target Flywheel Speed", bot.flywheel?.targetVelocity)
         telemetryPacket.put("Actual Flywheel Speed", bot.flywheel?.velocity)
     }
 
     private fun handleTurret() {
-        if (lookForTag && tagTimer.seconds() < tagTimeout) {
+        if (tagTimer.seconds() > tagTimeout) {
+            lookForTag = false
+        }
+        if (lookForTag) {
             bot.turret?.autoTrack(bot.pinpoint!!.pose, Pose(0.0, 200.0))
             bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
                 Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
@@ -160,151 +134,79 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     private fun checkForTimeUp() {
-        if ((30.0 - elapsedTime) < 1.5) {
+        if ((30.0 - elapsedTime) < 1.0) {
             state = State.LEAVE
         }
     }
 
-    private fun state_goto_shoot() {
-        bot.flywheel?.velocity = targetVelocity
+    private fun stateGotoShoot() {
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer?.readyOuttake(motifOrder)
-            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_GOAL_FAR))
+            bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_FAR))
         }
         if (bot.follower.done) { // Ending path
             bot.follower.reset()
-            shootTimer.reset()
+            shotTimer.reset()
             state = State.SHOOT
         }
     }
 
-    private fun state_shoot() {
-        handle_shoot_all()
-        if (shootTimer.seconds() > shootTime) {
-            state = State.GOTO_COLLECT
-
-            // Breakpoint for the different auto options
-            when (autoType) {
-                AutoOptions.PRELOAD_ONLY -> {
-                    if (collectState == CollectState.GOAL) {
-                        bot.follower.reset()
-                        bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.LEAVE_POSITION))
-                        state = State.STOP
-                    }
-                }
-                AutoOptions.FIRST_ROW -> {
-                    if (collectState == CollectState.MID) {
-                        bot.follower.reset()
-                        bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.LEAVE_POSITION))
-                        state = State.STOP
-                    }
-                }
-                AutoOptions.SECOND_ROW -> {
-                    if (collectState == CollectState.AUDIENCE) {
-                        bot.follower.reset()
-                        bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.LEAVE_POSITION))
-                        state = State.STOP
-                    }
-                }
-                AutoOptions.ALL -> {}
-            }
-        }
-    }
-
-    private fun handle_shoot_all() {
-
-        bot.spindexer?.shootAll(Constants.Spindexer.SHOOT_POWER_FAR)
-
-//        when (launchState) {
-//            LaunchState.READY -> {
-//                bot.spindexer?.moveToNextOuttake(motifOrder.currentArtifact)
-//                launchState = LaunchState.MOVING_TO_POSITION
-//            }
-//
-//            LaunchState.MOVING_TO_POSITION -> {
-//                if (bot.spindexer?.reachedTarget == true && flywheelAtSpeed()) {
-//                    bot.launcher?.triggerLaunch()
-//                    launchState = LaunchState.LAUNCHING
-//                }
-//            }
-//
-//            LaunchState.LAUNCHING -> {
-//                if (bot.launcher?.isReset == true) {
-//                    bot.spindexer?.popCurrentArtifact()
-//                    motifOrder.getNextArtifact() // Cycle to next artifact
-//                    launchState = LaunchState.READY
-//                }
-//            }
-//        }
-    }
-
     private fun flywheelAtSpeed(): Boolean {
-        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 10) &&
-                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
+        return (bot.flywheel?.velocity ?: 0.0) > (bot.flywheel!!.targetVelocity - 20) &&
+                (bot.flywheel?.velocity ?: 0.0) < (bot.flywheel!!.targetVelocity + 20)
     }
 
-    private fun state_goto_collect() {
-        if (!bot.follower.isFollowing) { // Starting path
-            bot.spindexer!!.moveToNextOpenIntake()
-            when (collectState) {
-                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_GOAL))
-                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_MID))
-                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.PREP_COLLECT_AUDIENCE))
-                CollectState.DONE -> state = State.STOP
-            }
-        }
-
-        if (bot.follower.done) { // Ending path
-            bot.follower.reset()
+    private fun stateShoot() {
+        if (!flywheelAtSpeed()) return
+        bot.spindexer?.shootAll()
+        if (shotTimer.seconds() > shotTime) {
             state = State.COLLECT
         }
     }
-
-    private fun state_collect() {
-        bot.intake?.forward()
+    private fun stateCollect() {
         if (!bot.follower.isFollowing) { // Starting path
             when (collectState) {
-                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 10.0)
-                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID), 10.0)
-                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE), 10.0)
-                CollectState.DONE -> {}
+                CollectState.HUMAN_PLAYER -> collectHumanPlayer()
+                CollectState.AUDIENCE -> collectAudience()
+                CollectState.DONE -> shouldStartLeave = true
             }
         }
 
         if (bot.follower.done || bot.spindexer?.isFull == true) { // Ending path
             bot.follower.reset()
+            collectState = collectState.next()
             state = State.GOTO_SHOOT
-            Timer().schedule(object : TimerTask() {
-                override fun run() {
-                    bot.intake?.stop()
-                }
-            }, 1000)
-            bot.flywheel?.velocity = targetVelocity
-            when (collectState) {
-                CollectState.AUDIENCE -> collectState = CollectState.MID
-                CollectState.MID -> collectState = CollectState.GOAL
-                CollectState.GOAL -> collectState = CollectState.DONE
-                CollectState.DONE -> {}
-            }
         }
     }
 
-    private fun state_leave() {
-        if (startLeave) {
+    private fun stateLeave() {
+        if (shouldStartLeave) {
             bot.flywheel?.velocity = 0.0
             bot.intake?.stop()
             bot.follower.followPath(LinearPath(bot.pinpoint?.pose ?: Pose(), P.LEAVE_POSITION))
-            startLeave = false
+            shouldStartLeave = false
         }
         if (bot.follower.done) {
             bot.follower.reset()
         }
     }
 
-    private fun state_stop() {
-        if (bot.follower.done) {
-            bot.follower.reset()
-            requestOpModeStop()
-        }
+    private fun collectHumanPlayer() {
+        bot.follower.followPath(
+            HermitePath.Builder()
+                .addPoint(bot.pinpoint!!.pose, Pose(0.0, 100.0))
+                .addPoint(Pose(100.0,-110.0, theta = -6.0 * PI / 7.0))
+                .addPoint(Pose(148.0, -150.0, theta = - 6.0 * PI / 7.0), Pose(-50.0,-300.0))
+                .build()
+                .apply {
+                    velocityConstraint = VelocityConstraint {
+                            s -> if (s > this.getLength() - 40.0) 15.0 else Double.MAX_VALUE
+                    }
+                }
+        )
+    }
+
+    private fun collectAudience() {
+
     }
 }

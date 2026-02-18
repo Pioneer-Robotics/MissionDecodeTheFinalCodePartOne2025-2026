@@ -7,7 +7,6 @@ import pioneer.Constants
 import pioneer.helpers.Chrono
 import pioneer.helpers.MathUtils
 import pioneer.helpers.PIDController
-import pioneer.helpers.Toggle
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -165,7 +164,6 @@ class SpindexerMotionController(
 
     fun stopShooting() {
         shooting = false
-//        shootingToggle.state = false
         motor.power = 0.0
         pid.reset()
     }

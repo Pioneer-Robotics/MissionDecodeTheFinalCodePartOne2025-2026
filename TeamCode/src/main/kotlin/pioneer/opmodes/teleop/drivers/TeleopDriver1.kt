@@ -76,6 +76,7 @@ class TeleopDriver1(
 
     private fun updateIntake() {
         intakeToggle.toggle(gamepad.circle)
+
         if (gamepad.dpad_down) {
             bot.intake?.reverse()
         } else {

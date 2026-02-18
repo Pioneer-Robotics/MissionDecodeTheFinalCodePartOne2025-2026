@@ -37,28 +37,22 @@ class Points(
 
     // Key positions on the field
     // Written in ACTION_POSITION format
-    val START_GOAL = Pose(133.0, 134.0, theta = 0.67).T(color)
+    val START_GOAL = Pose(120.0, 127.5, theta = 0.67 + PI).T(color)
     val START_FAR = Pose(43.0, -157.0, theta = 0.0).T(color)
 
-    val SHOOT_GOAL_CLOSE = Pose(55.0, 25.0, theta = -PI/2).T(color)
-    val SHOOT_GOAL_FAR = Pose(43.0, -140.0, theta = -PI/2).T(color)
+    val SHOOT_CLOSE = Pose(55.0, 25.0, theta = -PI/2).T(color)
+    val SHOOT_FAR = Pose(43.0, -140.0, theta = -PI/2).T(color)
 
+    // Goal mark
+    val COLLECT_GOAL_END = Pose(127.5, 30.0, theta = -PI/2).T(color)
+    val COLLECT_GOAL_END_VEL = Pose(200.0, 0.0).T(color)
+    val COLLECT_GOAL_START_VEL = Pose(0.0, 0.0).T(color)
+
+    // Human player
+    val COLLECT_HUMAN_PLAYER = Pose()
+    val COLLECT_HUMAN_PLAYER_START_VEL = Pose()
+    val COLLECT_HUMAN_PLAYER_END_VEL = Pose()
+
+    // Leave position
     val LEAVE_POSITION = Pose(60.0, -60.0).T(color)
-
-    private fun collectY(i: Int) = 30 - (i * 60.0) // 30, -30, -90
-
-    private val prepCollectX = 78.5
-    private val collectTheta = -PI / 2 // Point to right
-    val PREP_COLLECT_GOAL = Pose(prepCollectX, collectY(0), theta=collectTheta).T(color)
-    val PREP_COLLECT_MID = Pose(prepCollectX, collectY(1), theta=collectTheta).T(color)
-    val PREP_COLLECT_AUDIENCE = Pose(prepCollectX, collectY(2), theta=collectTheta).T(color)
-
-    val PREP_COLLECT_START_VELOCITY = Pose(0.0, 0.0).T(color)
-    val PREP_COLLECT_END_VELOCITY = Pose(80.0, 0.0).T(color)
-    val GOTO_SHOOT_VELOCITY = Pose(-175.0, 0.0).T(color)
-
-    private val collectX = 125.0
-    val COLLECT_GOAL = Pose(collectX, collectY(0), theta=collectTheta).T(color)
-    val COLLECT_MID = Pose(collectX, collectY(1), theta=collectTheta).T(color)
-    val COLLECT_AUDIENCE = Pose(collectX, collectY(2), theta=collectTheta).T(color)
 }

@@ -96,6 +96,8 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Velocity", "vx: %.2f, vy: %.2f".format(bot.pinpoint?.pose?.vx, bot.pinpoint?.pose?.vy), Verbose.DEBUG)
         addTelemetryData("Voltage", bot.batteryMonitor?.voltage, Verbose.INFO)
 
+        addTelemetryData("Intake Motor Current", bot.intake?.current, Verbose.INFO)
+
         addTelemetryData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS), Verbose.DEBUG)
         telemetryPacket.put("Flywheel TPS", (bot.flywheel?.velocity ?: 0.0))
         telemetryPacket.put("Target Flywheel TPS", (driver2.finalFlywheelSpeed))
