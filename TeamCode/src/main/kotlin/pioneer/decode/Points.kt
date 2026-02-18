@@ -2,6 +2,9 @@ package pioneer.decode
 
 import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
+import pioneer.pathing.motionprofile.constraints.VelocityConstraint
+import pioneer.pathing.paths.HermitePath
+import pioneer.pathing.paths.Path
 import kotlin.math.PI
 
 /*
@@ -25,7 +28,7 @@ BLUE ALLIANCE   |               0----> +X       |    RED ALLIANCE
 
 // All points are defined from the RED ALLIANCE perspective
 class Points(
-    color: AllianceColor,
+    val color: AllianceColor,
 ) {
     // Function to transform a point based on alliance color
     fun Pose.T(c: AllianceColor): Pose =
@@ -43,16 +46,29 @@ class Points(
     val SHOOT_CLOSE = Pose(55.0, 25.0, theta = -PI/2).T(color)
     val SHOOT_FAR = Pose(43.0, -140.0, theta = -PI/2).T(color)
 
-    // Goal mark
-    val COLLECT_GOAL_END = Pose(127.5, 30.0, theta = -PI/2).T(color)
-    val COLLECT_GOAL_END_VEL = Pose(200.0, 0.0).T(color)
-    val COLLECT_GOAL_START_VEL = Pose(0.0, 0.0).T(color)
-
-    // Human player
-    val COLLECT_HUMAN_PLAYER = Pose()
-    val COLLECT_HUMAN_PLAYER_START_VEL = Pose()
-    val COLLECT_HUMAN_PLAYER_END_VEL = Pose()
-
     // Leave position
     val LEAVE_POSITION = Pose(60.0, -60.0).T(color)
+
+    // More complex paths
+    fun PATH_HUMAN_PLAYER(startPose: Pose): Path {
+        return HermitePath.Builder()
+            .addPoint(startPose, Pose(0.0, 100.0).T(color))
+            .addPoint(Pose(100.0, -110.0, theta = -6.0 * PI / 7.0).T(color))
+            .addPoint(Pose(148.0, -150.0, theta = -6.0 * PI / 7.0).T(color), Pose(-50.0, -300.0).T(color))
+            .build()
+            .apply {
+                // Slow down near the end of the path
+                velocityConstraint = VelocityConstraint { s ->
+                    if (s > this.getLength() - 40.0) 15.0 else Double.MAX_VALUE
+                }
+            }
+    }
+
+    fun PATH_COLLECT_AUDIENCE(startPose: Pose) : Path {
+        return HermitePath.Builder()
+            .addPoint(startPose, Pose(0.0, 100.0).T(color))
+            .addPoint(Pose(78.5, -90.0, theta = -PI/2).T(color), Pose(-100.0, 0.0).T(color))
+            .addPoint(Pose(127.5, -90.0, theta = -PI/2).T(color))
+            .build()
+    }
 }

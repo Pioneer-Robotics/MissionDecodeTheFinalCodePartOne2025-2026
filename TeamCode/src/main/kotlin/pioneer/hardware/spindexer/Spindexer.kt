@@ -37,6 +37,7 @@ package pioneer.hardware.spindexer
         var readyForNextShot = true
         var shotCounter = 0
         var shootAllCommanded = false
+        var requestedShootPower = Constants.Spindexer.SHOOT_POWER
         val ticksPerArtifact: Int
             get() = (Constants.Spindexer.TICKS_PER_REV / 3.0).roundToInt()
 
@@ -74,7 +75,7 @@ package pioneer.hardware.spindexer
             }
             // Only run shootAll when commanded and we're in READY
             if (shootAllCommanded && state == State.READY) {
-                shootAll(Constants.Spindexer.SHOOT_POWER)
+                handleShootAll(requestedShootPower)
             }
         }
 
@@ -124,7 +125,7 @@ package pioneer.hardware.spindexer
             return true
         }
 
-        fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER) {
+        fun handleShootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER) {
             // Guard: must be in READY
             if (state != State.READY) return
 
@@ -161,13 +162,15 @@ package pioneer.hardware.spindexer
             }
         }
 
-        fun requestShootAll() {
+        fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER) {
+            // Ensure we are in READY when running; caller should call readyOuttake first.
+            if (state != State.READY) return
             // Initialize shoot-all state
             shootAllCommanded = true
             shotCounter = 0
             readyForNextShot = true
             delayTimer.reset()
-            // Ensure we are in READY when running; caller should call readyOuttake first.
+            requestedShootPower = shootPower
         }
 
         fun resetMotorPosition(resetTicks: Int) {

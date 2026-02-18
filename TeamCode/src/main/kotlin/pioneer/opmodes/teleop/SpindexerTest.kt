@@ -3,8 +3,6 @@ package pioneer.opmodes.teleop
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.decode.Motif
-import pioneer.hardware.Flywheel
-import pioneer.hardware.Intake
 import pioneer.hardware.spindexer.Spindexer
 import pioneer.opmodes.BaseOpMode
 
@@ -32,7 +30,7 @@ class SpindexerTest : BaseOpMode() {
             motifOrder = motifOrder?.nextMotif()
             bot.spindexer?.readyOuttake(motifOrder)
         }
-        if (gamepad1.touchpadWasPressed()) bot.spindexer?.requestShootAll()
+        if (gamepad1.touchpadWasPressed()) bot.spindexer?.shootAll()
         if (gamepad1.circleWasPressed()) bot.spindexer?.shootNext()
 
         if (gamepad1.dpad_up) bot.intake?.forward() else bot.intake?.stop()

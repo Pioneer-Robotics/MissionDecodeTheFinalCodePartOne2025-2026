@@ -44,7 +44,7 @@ class AudienceSideAuto : BaseOpMode() {
     private var state = State.GOTO_SHOOT
     private var collectState = CollectState.HUMAN_PLAYER
     private var shouldStartLeave = true
-    private var startedShooting = true
+    private var startedShooting = false
 
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
@@ -152,23 +152,39 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     private fun flywheelAtSpeed(): Boolean {
-        return (bot.flywheel?.velocity ?: 0.0) > (bot.flywheel!!.targetVelocity - 20) &&
-                (bot.flywheel?.velocity ?: 0.0) < (bot.flywheel!!.targetVelocity + 20)
+        val fw = bot.flywheel ?: return false
+        val target = fw.targetVelocity
+        val actual = fw.velocity
+        return actual > (target - 20) && actual < (target + 20)
     }
 
     private fun stateShoot() {
         if (!flywheelAtSpeed()) return
-        bot.spindexer?.shootAll()
-        if (shotTimer.seconds() > shotTime) {
+
+        if (!startedShooting) {
+            bot.spindexer?.shootAll()
+            startedShooting = true
+        }
+
+        // Was shotTimer.seconds() > shotTime
+        // Untested, might only shoot one
+        if (bot.spindexer?.finishedShot == true) {
+            startedShooting = false
             state = State.COLLECT
         }
     }
+
     private fun stateCollect() {
         if (!bot.follower.isFollowing) { // Starting path
             when (collectState) {
-                CollectState.HUMAN_PLAYER -> collectHumanPlayer()
-                CollectState.AUDIENCE -> collectAudience()
-                CollectState.DONE -> shouldStartLeave = true
+                CollectState.HUMAN_PLAYER ->
+                    bot.follower.followPath(P.PATH_HUMAN_PLAYER(bot.pinpoint!!.pose))
+                CollectState.AUDIENCE ->
+                    bot.follower.followPath(P.PATH_COLLECT_AUDIENCE(bot.pinpoint!!.pose))
+                CollectState.DONE -> {
+                    shouldStartLeave = true
+                    return
+                }
             }
         }
 
@@ -189,24 +205,5 @@ class AudienceSideAuto : BaseOpMode() {
         if (bot.follower.done) {
             bot.follower.reset()
         }
-    }
-
-    private fun collectHumanPlayer() {
-        bot.follower.followPath(
-            HermitePath.Builder()
-                .addPoint(bot.pinpoint!!.pose, Pose(0.0, 100.0))
-                .addPoint(Pose(100.0,-110.0, theta = -6.0 * PI / 7.0))
-                .addPoint(Pose(148.0, -150.0, theta = - 6.0 * PI / 7.0), Pose(-50.0,-300.0))
-                .build()
-                .apply {
-                    velocityConstraint = VelocityConstraint {
-                            s -> if (s > this.getLength() - 40.0) 15.0 else Double.MAX_VALUE
-                    }
-                }
-        )
-    }
-
-    private fun collectAudience() {
-
     }
 }
