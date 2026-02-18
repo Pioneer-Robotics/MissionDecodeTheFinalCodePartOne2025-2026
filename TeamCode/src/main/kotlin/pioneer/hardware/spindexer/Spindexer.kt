@@ -39,7 +39,6 @@ class Spindexer(
     val delayTimer = ElapsedTime()
     var readyForNextShot = true
     var shotCounter = 0
-    var prevShotCounter = -1
     var shootAllCommanded = false
     val ticksPerArtifact: Int
         get() = (Constants.Spindexer.TICKS_PER_REV / 3.0).roundToInt()
@@ -130,20 +129,6 @@ class Spindexer(
 //    }
 
     fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER_CLOSE){
-//        do {
-//            if (readyForNextShot){
-//                shootNext(shootPower)
-//                shotCounter += 1
-//                readyForNextShot = false
-//            }
-//            if (finishedShot){
-//                delayTimer.reset()
-//            }
-//            if (delayTimer.seconds() > 2 && finishedShot){
-//                readyForNextShot = true
-//            }
-//        } while (shotCounter <= 3)
-//        finishedShot = motion.justStoppedShooting
         if (shotCounter>=3) {
             shotCounter = 0
             shootAllCommanded = false
@@ -153,12 +138,13 @@ class Spindexer(
             shotCounter += 1
             readyForNextShot = false
         }
-        if (finishedShot){
+
+        if (isShooting){
             delayTimer.reset()
         }
-        if (delayTimer.seconds() > 2 && shotCounter > prevShotCounter){
+
+        if (delayTimer.seconds() > Constants.Spindexer.SHOOT_ALL_DELAY){
             readyForNextShot = true
-            prevShotCounter = shotCounter
         }
     }
 

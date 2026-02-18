@@ -38,7 +38,6 @@ class SpindexerMotionController(
 
     private var shooting = false
     private var prevShooting = false
-//    private var shootingToggle = Toggle(false)
     private var shootStartTicks = 0
     private var shootDeltaTicks = 0
     private var shootPower = 0.0
@@ -157,7 +156,6 @@ class SpindexerMotionController(
         if (clampedTicks == 0) return
         manualOverride = false
         shooting = true
-//        shootingToggle.state = true
         shootStartTicks = currentTicks
         shootDeltaTicks = clampedTicks
         shootPower = power.coerceIn(-1.0, 1.0)
@@ -172,12 +170,9 @@ class SpindexerMotionController(
         pid.reset()
     }
 
+    //FIXME? Lowk might be broken, but not used rn
+    //Checks if shooting state just changed
     fun checkJustStoppedShooting(): Boolean{
-//        if (shootingToggle.justChanged && !shootingToggle.state) {
-//            return true
-//        } else {
-//            return false
-//        }
         if (prevShooting && !shooting) {
             prevShooting = shooting
             return true

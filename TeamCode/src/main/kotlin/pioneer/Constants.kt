@@ -182,8 +182,9 @@ object Constants {
 
         @JvmField var KS_START = 0.04
 
-        @JvmField var SHOOT_POWER_CLOSE = 0.19 //Was 0.2, change after hardware fix
+        @JvmField var SHOOT_POWER_CLOSE = 0.6 //Was 0.2, change after hardware fix
         @JvmField var SHOOT_POWER_FAR = 0.08
+        @JvmField var SHOOT_ALL_DELAY = 1 //Time between each shot in shoot all, in seconds //TODO: Tune
 
         @JvmField var MAX_POWER_RATE = 100.0
 

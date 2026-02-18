@@ -46,12 +46,10 @@ class SpindexerTest : BaseOpMode() {
         telemetry.addData("Reached Target", bot.spindexer?.reachedTarget)
         telemetry.addData("Shot Counter", bot.spindexer?.shotCounter)
         telemetry.addData("Ready for Next Shot", bot.spindexer?.readyForNextShot)
-        telemetry.addData("Just Finished Shot", bot.spindexer?.finishedShot)
+//        telemetry.addData("Just Finished Shot", bot.spindexer?.finishedShot)
         telemetry.addData("Shoot All Commanded", bot.spindexer?.shootAllCommanded)
         telemetry.addData("Delay Timer", bot.spindexer?.delayTimer)
         telemetry.addData("Shot Counter", bot.spindexer?.shotCounter)
-        telemetry.addData("Clamped Ticks", bot.spindexer?.ticksPerArtifact)
         telemetry.addData("Is Shooting", bot.spindexer?.isShooting)
-
     }
 }
