@@ -16,23 +16,24 @@ class SpindexerTest : BaseOpMode() {
         bot = Bot
                 .Builder()
                 .add(Spindexer(hardwareMap))
-                .add(Flywheel(hardwareMap))
-                .add(Intake(hardwareMap))
+//                .add(Flywheel(hardwareMap))
+//                .add(Intake(hardwareMap))
                 .build()
     }
 
     override fun onLoop() {
+        bot.updateAll()
         if (gamepad1.dpad_down) bot.spindexer?.moveToNextOpenIntake()
-        if (gamepad1.left_bumper) {
+        if (gamepad1.leftBumperWasPressed()) {
             motifOrder = motifOrder?.prevMotif()
             bot.spindexer?.readyOuttake(motifOrder)
         }
-        if (gamepad1.left_bumper) {
+        if (gamepad1.rightBumperWasPressed()) {
             motifOrder = motifOrder?.nextMotif()
             bot.spindexer?.readyOuttake(motifOrder)
         }
-        if (gamepad1.touchpad) bot.spindexer?.shootAll()
-        if (gamepad1.circle) bot.spindexer?.shootNext()
+        if (gamepad1.touchpadWasPressed()) bot.spindexer?.requestShootAll()
+        if (gamepad1.circleWasPressed()) bot.spindexer?.shootNext()
 
         if (gamepad1.dpad_up) bot.intake?.forward() else bot.intake?.stop()
         if (gamepad1.dpad_right) bot.flywheel?.velocity = 600.0
@@ -43,5 +44,14 @@ class SpindexerTest : BaseOpMode() {
         telemetry.addData("Target Motif", motifOrder.toString())
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
         telemetry.addData("Reached Target", bot.spindexer?.reachedTarget)
+        telemetry.addData("Shot Counter", bot.spindexer?.shotCounter)
+        telemetry.addData("Ready for Next Shot", bot.spindexer?.readyForNextShot)
+        telemetry.addData("Just Finished Shot", bot.spindexer?.finishedShot)
+        telemetry.addData("Shoot All Commanded", bot.spindexer?.shootAllCommanded)
+        telemetry.addData("Delay Timer", bot.spindexer?.delayTimer)
+        telemetry.addData("Shot Counter", bot.spindexer?.shotCounter)
+        telemetry.addData("Clamped Ticks", bot.spindexer?.ticksPerArtifact)
+        telemetry.addData("Is Shooting", bot.spindexer?.isShooting)
+
     }
 }

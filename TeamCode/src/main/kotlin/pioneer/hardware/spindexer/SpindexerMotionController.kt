@@ -2,14 +2,12 @@ package pioneer.hardware.spindexer
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.helpers.Chrono
-import pioneer.helpers.FileLogger
 import pioneer.helpers.MathUtils
 import pioneer.helpers.PIDController
-import kotlin.math.PI
+import pioneer.helpers.Toggle
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -39,6 +37,8 @@ class SpindexerMotionController(
     var manualOverride = false
 
     private var shooting = false
+    private var prevShooting = false
+//    private var shootingToggle = Toggle(false)
     private var shootStartTicks = 0
     private var shootDeltaTicks = 0
     private var shootPower = 0.0
@@ -72,6 +72,10 @@ class SpindexerMotionController(
     val withinVelocityTolerance: Boolean
         get() =
             abs(motor.velocity) < Constants.Spindexer.VELOCITY_TOLERANCE_TPS
+
+    val justStoppedShooting: Boolean
+        get() =
+            checkJustStoppedShooting()
 
     // --- Initialization --- //
 
@@ -153,6 +157,7 @@ class SpindexerMotionController(
         if (clampedTicks == 0) return
         manualOverride = false
         shooting = true
+//        shootingToggle.state = true
         shootStartTicks = currentTicks
         shootDeltaTicks = clampedTicks
         shootPower = power.coerceIn(-1.0, 1.0)
@@ -162,8 +167,25 @@ class SpindexerMotionController(
 
     fun stopShooting() {
         shooting = false
+//        shootingToggle.state = false
         motor.power = 0.0
         pid.reset()
+    }
+
+    fun checkJustStoppedShooting(): Boolean{
+//        if (shootingToggle.justChanged && !shootingToggle.state) {
+//            return true
+//        } else {
+//            return false
+//        }
+        if (prevShooting && !shooting) {
+            prevShooting = shooting
+            return true
+        } else {
+            prevShooting = shooting
+            return false
+        }
+
     }
 
     // --- Helpers --- //

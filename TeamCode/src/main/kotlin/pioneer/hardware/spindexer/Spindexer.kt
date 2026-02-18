@@ -2,12 +2,16 @@ package pioneer.hardware.spindexer
 
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.decode.Motif
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.RevColorSensor
+import pioneer.helpers.Toggle
+import java.util.Timer
 import kotlin.math.roundToInt
+import kotlin.properties.Delegates
 
 class Spindexer(
     private val hardwareMap: HardwareMap,
@@ -31,8 +35,13 @@ class Spindexer(
     var manualOverride = false
     var isSorting = false
     val isShooting: Boolean get() = motion.isShooting
-
-    private val ticksPerArtifact: Int
+    val finishedShot: Boolean get() = motion.justStoppedShooting
+    val delayTimer = ElapsedTime()
+    var readyForNextShot = true
+    var shotCounter = 0
+    var prevShotCounter = -1
+    var shootAllCommanded = false
+    val ticksPerArtifact: Int
         get() = (Constants.Spindexer.TICKS_PER_REV / 3.0).roundToInt()
 
     // --- Artifact Data --- //
@@ -67,6 +76,10 @@ class Spindexer(
             State.INTAKE -> intakeState()
             State.READY -> readyState()
         }
+        if (shootAllCommanded){
+            shootAll(Constants.Spindexer.SHOOT_POWER_CLOSE)
+        }
+//        finishedShot = motion.justStoppedShooting
     }
 
     // --- Public Commands --- //
@@ -108,13 +121,51 @@ class Spindexer(
         motion.startShooting(ticksPerArtifact, shootPower)
     }
 
-    fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER_CLOSE) {
-        if (state == State.INTAKE) return
-        if (motion.isShooting) return
-        // Rotate a full revolution plus one at constant speed (no PID) to shoot all 3.
-        motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt() + ticksPerArtifact, shootPower)
-        indexer.resetAll()
+//    fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER_CLOSE) {
+//        if (state == State.INTAKE) return
+//        if (motion.isShooting) return
+//        // Rotate a full revolution plus one at constant speed (no PID) to shoot all 3.
+//        motion.startShooting(Constants.Spindexer.TICKS_PER_REV.roundToInt() + ticksPerArtifact, shootPower)
+//        indexer.resetAll()
+//    }
+
+    fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER_CLOSE){
+//        do {
+//            if (readyForNextShot){
+//                shootNext(shootPower)
+//                shotCounter += 1
+//                readyForNextShot = false
+//            }
+//            if (finishedShot){
+//                delayTimer.reset()
+//            }
+//            if (delayTimer.seconds() > 2 && finishedShot){
+//                readyForNextShot = true
+//            }
+//        } while (shotCounter <= 3)
+//        finishedShot = motion.justStoppedShooting
+        if (shotCounter>=3) {
+            shotCounter = 0
+            shootAllCommanded = false
+        }
+        if (readyForNextShot){
+            shootNext(shootPower)
+            shotCounter += 1
+            readyForNextShot = false
+        }
+        if (finishedShot){
+            delayTimer.reset()
+        }
+        if (delayTimer.seconds() > 2 && shotCounter > prevShotCounter){
+            readyForNextShot = true
+            prevShotCounter = shotCounter
+        }
     }
+
+    fun requestShootAll(){
+        shootAllCommanded = true
+    }
+
 
 //    fun popCurrentArtifact(autoSwitchToIntake: Boolean = true): Artifact? {
 //        if (motion.target !in outtakePositions) return null
