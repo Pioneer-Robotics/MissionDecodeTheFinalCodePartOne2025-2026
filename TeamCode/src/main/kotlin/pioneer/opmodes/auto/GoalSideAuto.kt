@@ -70,7 +70,7 @@ class GoalSideAuto : BaseOpMode() {
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
     private val shootTimer = ElapsedTime()
-    private val shootTime = 2.5 // TODO: Tune
+    private val minShotTime = 0.75
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -199,7 +199,8 @@ class GoalSideAuto : BaseOpMode() {
 
     private fun state_shoot() {
         handle_shoot_all()
-        if (shootTimer.seconds() > shootTime) {
+        // Check if the spindexer is empty and the last shot has cleared
+        if (bot.spindexer?.isEmpty == true && bot.spindexer?.reachedTarget == true) {
             state = State.GOTO_COLLECT
 
             // Breakpoint for the different auto options
@@ -231,7 +232,11 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun handle_shoot_all() {
-        bot.spindexer?.shootAll() //TODO WRITE LOGIC
+        // Add a minimum delay and check that flywheel is at speed
+        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
+            bot.spindexer?.shootNext()
+            shootTimer.reset()
+        }
     }
 
     private fun state_goto_collect() {

@@ -182,16 +182,11 @@ object Constants {
 
         @JvmField var KS_START = 0.04
 
-        @JvmField var SHOOT_ALL_DELAY = 1 //Time between each shot in shoot all, in seconds //TODO: Tune
-        @JvmField var SHOOT_POWER = 0.3
-
-        @JvmField var MAX_POWER_RATE = 100.0
+        @JvmField var OUTTAKE_IS_POSITIVE = true
 
         @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
 
         const val SHOOTING_TOLERANCE_TICKS = 4
-        const val DETECTION_TOLERANCE_TICKS = 18
-        const val VELOCITY_TOLERANCE_TPS = 50
         const val ALLOWED_REVERSE_TICKS = 50 // How far spindexer can reverse without doing a 360
         const val TICKS_PER_REV = 537.7
 
@@ -200,7 +195,6 @@ object Constants {
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 0.0
-        const val MAX_VELOCITY = 2400 // tps
     }
 
     object Turret {

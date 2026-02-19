@@ -8,58 +8,39 @@ import pioneer.decode.Artifact
 import pioneer.decode.Motif
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.RevColorSensor
-import kotlin.math.roundToInt
+import kotlin.math.E
 
 class Spindexer(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.SPINDEXER_MOTOR,
     private val intakeSensorName: String = Constants.HardwareNames.INTAKE_SENSOR,
 ) : HardwareComponent {
-    // --- Spindexer State --- //
-    private enum class State {
-        READY,
-        INTAKE,
-    }
-
-    private var state = State.INTAKE
-
-    // --- Subsystems --- //
     private lateinit var detector: ArtifactDetector
     private lateinit var motion: SpindexerMotionController
-    private val indexer = ArtifactIndexer()
+    private val _artifacts = arrayOfNulls<Artifact?>(3)
+    private val intakeDir = if (Constants.Spindexer.OUTTAKE_IS_POSITIVE) -1 else 1
+    private val outtakeDir = -intakeDir
+    private val detectionTimer = ElapsedTime()
 
-    // --- Positions --- //
-    var manualOverride = false
-    var isSorting = false
-    val isShooting: Boolean get() = motion.isShooting
-    val finishedShot: Boolean get() = motion.justStoppedShooting
-    val delayTimer = ElapsedTime()
-    var readyForNextShot = true
-    var shotCounter = 0
-    var shootAllCommanded = false
-        private set
-    var requestedShootPower = Constants.Spindexer.SHOOT_POWER
-    var launchConditionsMetGlobal = false
-    val ticksPerArtifact: Int
-        get() = (Constants.Spindexer.TICKS_PER_REV / 3.0).roundToInt()
-
-    // --- Artifact Data --- //
-    val artifacts: Array<Artifact?> get() = indexer.snapshot()
-
-    val isFull: Boolean get() = indexer.isFull
-    val isEmpty: Boolean get() = indexer.isEmpty
-    val numStoredArtifacts: Int get() = indexer.count
+    // --- Public State --- //
+    val artifacts: Array<Artifact?> get() = _artifacts
+    val isFull: Boolean
+        get() = artifacts.none { it == null }
+    val isEmpty: Boolean
+        get() = artifacts.all { it == null }
+    val count: Int
+        get() = artifacts.count { it != null }
 
     // --- Motor Getters --- //
     val currentMotorTicks: Int get() = motion.currentTicks
     val targetMotorTicks: Int get() = motion.targetTicks
     val reachedTarget: Boolean get() = motion.reachedTarget
+    val isManualOverride: Boolean get() = motion.manualOverride
 
     // --- Initialization --- //
     override fun init() {
         val motor = hardwareMap.get(DcMotorEx::class.java, motorName)
         motion = SpindexerMotionController(motor)
-        motion.init()
 
         val sensor = RevColorSensor(hardwareMap, intakeSensorName).apply {
             init()
@@ -68,150 +49,137 @@ class Spindexer(
         detector = ArtifactDetector(sensor)
     }
 
-    // --- Update Loop --- //
     override fun update() {
         motion.update()
-        when (state) {
-            State.INTAKE -> intakeState()
-            State.READY -> readyState()
+        // Update artifact states based on the detector
+        val detected = detector.detect()
+        if (detected == null) {
+            // No artifact detected; reset the timer
+            detectionTimer.reset()
         }
-        // Only run shootAll when commanded and we're in READY
-        if (shootAllCommanded && state == State.READY) {
-            handleShootAll(requestedShootPower)
+        if (detectionTimer.seconds() > Constants.Spindexer.CONFIRM_INTAKE_MS) {
+            // If the artifact has been detected for long enough, confirm the intake
+            _artifacts[motion.positionIndex] = detected
+            moveToNextOpenIntake()
         }
     }
 
     // --- Public Commands --- //
+    fun reset() {
+        motion.manualOverride = false
+        motion.setTarget(0, intakeDir)
+        for (i in 0..2) {
+            _artifacts[i] = null
+        }
+    }
+
+    fun moveToIndex(index: Int) {
+        motion.setTarget(index, intakeDir)
+    }
+
+    fun resetMotorPosition(ticks: Int) {
+        motion.calibrateEncoder(ticks)
+    }
+
     fun moveManual(power: Double) {
         motion.moveManual(power)
     }
 
-    fun moveToPosition(positionIndex: Int) {
-        motion.positionIndex = positionIndex
+    fun setArtifacts(vararg values: Artifact?) {
+        for (i in 0..2) {
+            _artifacts[i] = values.getOrNull(i)
+        }
     }
 
-    fun setArtifacts(vararg values: Artifact?) {
-        indexer.setAll(*values)
+    fun shootNext() {
+        // Command the motion controller to shoot by moving in the outtake direction
+        val newTarget = Math.floorMod(motion.positionIndex + outtakeDir, 3)
+        motion.setTarget(newTarget, outtakeDir)
     }
 
     fun moveToNextOpenIntake(): Boolean {
-        state = State.INTAKE
-        manualOverride = false
-        motion.stopShooting()
-        val index = indexer.nextOpenIntakeIndex(motion.positionIndex) ?: return false
-        motion.positionIndex = index
-        return true
-    }
-
-    fun readyOuttake(targetMotif: Motif? = null) {
-        state = State.READY
-        motion.stopShooting()
-        // Return if there aren't any artifacts
-        val startIndex = indexer.motifStartIndex(targetMotif, motion.positionIndex) ?: return
-        motion.positionIndex = startIndex
-    }
-
-        /**
-         * Attempt to start the next shot. Returns true if a shot was actually started.
-         */
-    fun shootNext(shootPower: Double = Constants.Spindexer.SHOOT_POWER): Boolean {
-        if (state == State.INTAKE) return false
-        if (motion.isShooting) return false
-
-        // Pop the artifact at current outtake position (if any)
-        indexer.pop(motion.positionIndex)
-
-        // Rotate 120 degrees at constant speed (no PID) then hold next outtake.
-        motion.positionIndex = (motion.positionIndex + 1) % 3
-        motion.startShooting(ticksPerArtifact, shootPower)
-        return true
-    }
-
-    fun handleShootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER ){
-        // Guard: must be in READY
-        if (state != State.READY) return
-
-        //    // If we've already issued 3 shots, wait for the last shot to finish before clearing
-        if (shotCounter>=3) {
-            if (!motion.isShooting) {
-                // All shots finished
-                shotCounter = 0
-                shootAllCommanded = false
-                readyForNextShot = true
-            }
-            return
-        }
-        if (readyForNextShot && !motion.isShooting){
-            val started = shootNext(shootPower)
-            if (started){
-                shotCounter += 1
-                readyForNextShot = false
+        for (i in 0..2) {
+            // Check current position first, then in the direction of intake
+            val checkPosition = Math.floorMod(motion.positionIndex + i * intakeDir, 3)
+            if (_artifacts[checkPosition] == null) {
+                // Move to the position of the open intake
+                motion.setTarget(checkPosition, intakeDir)
+                return true
             }
         }
+        return false
+    }
 
-        if (isShooting){
-            delayTimer.reset()
+    fun readyOuttake(motif: Motif?) {
+        // Move to the position of the next artifact to shoot, if not already there
+        // TODO: Doing this explicitly for now; there be a better way
+        var targetIndex: Int = 0
+        if (isEmpty) return // No artifacts, so no need to move
+        if (motif == null) {
+            // Don't care about the color
+            when (count) {
+                1 -> {
+                    // Move to the position of the one artifact
+                    targetIndex = _artifacts.indexOfFirst { it != null }
+                }
+                2 -> {
+                    // Move to the position of the first consecutive artifact
+                    targetIndex = when {
+                        _artifacts[0] != null && _artifacts[1] != null -> 0
+                        _artifacts[1] != null && _artifacts[2] != null -> 1
+                        else -> 2
+                    }
+                }
+                3 -> {
+                    // All three _artifacts; don't move
+                    return
+                }
+            }
+        } else {
+            // There is a target motif; move to the position that best matches it
+            when (count) {
+                1 -> {
+                    // Move to the position of the one artifact
+                    targetIndex = _artifacts.indexOfFirst { it != null }
+                }
+                2 -> {
+                    // Move to the position of the first consecutive artifact
+                    // FIXME: Doesn't look for motif match; just picks the first consecutive pair.
+                    // Spindexer shooting would get messed up if there was a gap between artifacts
+                    targetIndex = when {
+                        _artifacts[0] != null && _artifacts[1] != null -> 0
+                        _artifacts[1] != null && _artifacts[2] != null -> 1
+                        else -> 2
+                    }
+                }
+                3 -> {
+                    // Find the best match for the motif among the three possible rotations
+                    // Look starting at the current position and moving in the direction of intake
+                    var bestScore = -1
+                    var bestIndex = 0
+                    val pattern = motif.getPattern()
+                    for (i in 0..2) {
+                        val checkIndex = Math.floorMod(motion.positionIndex + i * intakeDir, 3)
+                        // Score is number of matches with the motif pattern
+                        val score = (0..2).count { j ->
+                            val artifact = _artifacts[Math.floorMod(checkIndex + j, 3)]
+                            val expected = pattern[j]
+                            artifact == expected
+                        }
+                        if (score > bestScore) {
+                            bestScore = score
+                            bestIndex = checkIndex
+                        }
+                    }
+                    targetIndex = bestIndex
+                }
+            }
         }
-
-        if (delayTimer.seconds() > Constants.Spindexer.SHOOT_ALL_DELAY && launchConditionsMetGlobal){
-            readyForNextShot = true
-        }
-    }
-
-    fun requestShootAll(launchConditionsMet: Boolean){
-        launchConditionsMetGlobal = launchConditionsMet
-        shootAllCommanded = true
-    }
-
-
-//    fun popCurrentArtifact(autoSwitchToIntake: Boolean = true): Artifact? {
-//        if (motion.target !in outtakePositions) return null
-//        val index = outtakePositions.indexOf(motion.target) //Needs to be current ticks,
-//        val artifact = indexer.pop(index)
-//        if (autoSwitchToIntake){
-//            if (indexer.isEmpty) moveToNextOpenIntake()
-//        }
-//        return artifact
-//    }
-    fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER) {
-        // Ensure we are in READY when running; caller should call readyOuttake first.
-        if (state != State.READY) return
-        // Initialize shoot-all state
-        shootAllCommanded = true
-        shotCounter = 0
-        readyForNextShot = true
-        delayTimer.reset()
-        requestedShootPower = shootPower
-    }
-
-    fun updateLaunchConditions(launchConditionsMet: Boolean){
-        launchConditionsMetGlobal = launchConditionsMet
-    }
-
-    fun resetMotorPosition(resetTicks: Int) {
-        motion.calibrateEncoder(resetTicks)
-    }
-
-    fun reset() {
-        indexer.resetAll()
-    }
-
-    // --- Private Helpers --- //
-    private fun intakeState() {
-        // Make sure the spindexer is at it's target position
-        if (!motion.withinDetectionTolerance) return
-        if (!motion.withinVelocityTolerance) return
-
-        // Detect artifact
-        val detected = detector.detect()
-        val index = motion.positionIndex
-        if (indexer.processIntake(index, detected)) {
-            // If there aren't any more open intake positions
-            if (!moveToNextOpenIntake()) readyOuttake()
-        }
-    }
-
-    private fun readyState() {
-        // TODO: check if an artifact has been shot (then pop it)
+        // Shift the targetIndex in the direction of outtake
+        // because MotionController expects the index of the intake slot to move to
+        targetIndex += outtakeDir
+        targetIndex = Math.floorMod(targetIndex, 3)
+        // Still move in intakeDir to not shoot
+        motion.setTarget(targetIndex, intakeDir)
     }
 }

@@ -2,10 +2,8 @@ package pioneer.hardware.spindexer
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Constants
 import pioneer.helpers.Chrono
-import pioneer.helpers.MathUtils
 import pioneer.helpers.PIDController
 import kotlin.math.abs
 import kotlin.math.sign
@@ -13,129 +11,63 @@ import kotlin.math.sign
 class SpindexerMotionController(
     private val motor: DcMotorEx,
 ) {
-    // --- Configuration --- //
-    private var calibrationTicks = 0
+    // --- Motion logic --- //
+    var positionIndex = 0
+        private set
+    var direction = 1
+        private set
+    var manualOverride = false
 
+    // --- Logic for calibrating encoder --- //
+    private var calibrationTicks = 0
+    val currentTicks: Int
+        get() = (-motor.currentPosition + calibrationTicks)
+    val targetTicks: Int
+        get() {
+            // Target is defined so that positionIndex 0 is in the intake position,
+            // and indices increase as spindexer moves in the direction of outtake.
+            val outtakeDir = if (Constants.Spindexer.OUTTAKE_IS_POSITIVE) 1 else -1
+            return Math.floorMod(
+                (positionIndex * Constants.Spindexer.TICKS_PER_REV / 3 * outtakeDir).toInt(),
+                Constants.Spindexer.TICKS_PER_REV.toInt()
+            )
+        }
+
+    val errorTicks: Int
+        get() = wrapTicks(targetTicks - currentTicks, direction)
+
+    // --- PID Controller --- //
     private val pid = PIDController(
         Constants.Spindexer.KP,
         Constants.Spindexer.KI,
         Constants.Spindexer.KD,
     )
+    val chrono = Chrono()
 
-    private val chrono = Chrono(false)
-
-    // --- Public State --- //
-    var positionIndex = 0
-        set(value) {
-            if (field != value) {
-                pid.reset()
-                field = value
-            }
-        }
-
-    var manualOverride = false
-
-    private var shooting = false
-    private var prevShooting = false
-    private var shootStartTicks = 0
-    private var shootDeltaTicks = 0
-    private var shootPower = 0.0
-
-    val currentTicks: Int
-        get() = (-motor.currentPosition + calibrationTicks)
-
-    val velocity: Double
-        get() = motor.velocity
-
-    val targetTicks: Int
-        get() = (positionIndex * -Constants.Spindexer.TICKS_PER_REV / 3).toInt()
-
-    val errorTicks: Int
-        get() = wrapTicks(targetTicks - currentTicks)
-
-    val velocityTimer = ElapsedTime()
-
-    val isShooting: Boolean
-        get() = shooting
-
-    val reachedTarget: Boolean
-        get() =
-            abs(errorTicks) < Constants.Spindexer.SHOOTING_TOLERANCE_TICKS &&
-                    velocityTimer.milliseconds() > 300
-
-    val withinDetectionTolerance: Boolean
-        get() =
-            abs(errorTicks) < Constants.Spindexer.DETECTION_TOLERANCE_TICKS
-
-    val withinVelocityTolerance: Boolean
-        get() =
-            abs(motor.velocity) < Constants.Spindexer.VELOCITY_TOLERANCE_TPS
-
-
-    var justStoppedShootingFlag = false
-    val justStoppedShooting: Boolean
-        get() {
-            val v = justStoppedShootingFlag
-            justStoppedShootingFlag = false
-            return v
-        }
-
-    // --- Initialization --- //
-
-    fun init() {
+    init {
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         pid.integralClamp = 1_000.0
     }
 
-    fun calibrateEncoder(calibrationTicks: Int = 0) {
-        motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
-
-        // Logical offset from encoder zero to real zero
-        this.calibrationTicks = calibrationTicks
-
-        pid.reset()
-    }
-
-    // --- Update Loop --- //
+    // --- Other Public State --- //
+    val reachedTarget: Boolean
+        get() =
+            abs(errorTicks) < Constants.Spindexer.SHOOTING_TOLERANCE_TICKS
 
     fun update() {
-        if (shooting) {
-            val traveledTicks = abs(currentTicks - shootStartTicks)
-            if (traveledTicks >= shootDeltaTicks) {
-                stopShooting()
-            } else {
-                motor.velocity = -shootPower * Constants.Spindexer.MAX_VELOCITY
-            }
-            return
-        }
         if (manualOverride) return
-        if (!withinVelocityTolerance)
-            velocityTimer.reset()
 
-        chrono.update()
+        // Run PID
+        var power = pid.update(errorTicks.toDouble(), chrono.dt)
 
-        // Correct error to only move in one direction (unless really small)
-        val correctedError: Int = run {
-            val full = Constants.Spindexer.TICKS_PER_REV.toInt()
-            val allowedReverse = Constants.Spindexer.ALLOWED_REVERSE_TICKS
-            // Wrap to enforce movement direction
-//            val range = Pair(-allowedReverse, full - allowedReverse)
-            // For reversed spindexer
-             val range = Pair(-(full + allowedReverse), allowedReverse)
-            MathUtils.wrap(errorTicks, range)
-        }
-
-//        FileLogger.debug("Spindexer Motor Control", "Corrected Error: $correctedError")
-
-        var power = -pid.update(correctedError.toDouble(), chrono.dt)
+        // Apply feedforward to help get past static friction
         val ks = Constants.Spindexer.KS_START
-
         if (abs(power) > 0.01) {
             power += ks * sign(power)
         }
 
+        // Don't try to correct if we're close enough to the target
         if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
             power = 0.0
         }
@@ -143,48 +75,48 @@ class SpindexerMotionController(
         motor.power = power.coerceIn(-0.5, 0.5)
     }
 
-    // --- Manual Control --- //
+    fun calibrateEncoder(ticks: Int) {
+        calibrationTicks = ticks
+        motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+    }
+
     fun moveManual(power: Double) {
-        if (shooting) stopShooting()
         manualOverride = true
-        motor.power = power.coerceIn(-1.0, 1.0)
+        motor.power = power
     }
 
-    fun stopManual() {
+    fun setTarget(positionIndex: Int, direction: Int = 0) {
         manualOverride = false
-        pid.reset()
+        this.positionIndex = Math.floorMod(positionIndex, 3)
+        this.direction = direction
     }
 
-    fun startShooting(deltaTicks: Int, power: Double) {
-        val clampedTicks = abs(deltaTicks)
-        if (clampedTicks == 0) return
-        manualOverride = false
-        shooting = true
-        shootStartTicks = currentTicks
-        shootDeltaTicks = clampedTicks
-        shootPower = power.coerceIn(-1.0, 1.0)
-        pid.reset()
-
-    }
-
-    fun stopShooting() {
-        // set one-shot flag only if we were shooting
-        if (shooting) {
-            justStoppedShootingFlag = true
-        }
-        shooting = false
-        motor.power = 0.0
-        pid.reset()
-    }
-
-    // --- Helpers --- //
+    // --- Helper functions --- //
     private fun wrapTicks(
         error: Int,
+        direction: Int,
         ticksPerRev: Double = Constants.Spindexer.TICKS_PER_REV,
     ): Int {
-        var e = error % ticksPerRev
-        if (e > ticksPerRev / 2) e -= ticksPerRev
-        if (e < -ticksPerRev / 2) e += ticksPerRev
-        return e.toInt()
+
+        val ticks = ticksPerRev.toInt()
+
+        // Get error in both directions
+        val forward = Math.floorMod(error, ticks)
+        val reverse = if (forward == 0) 0 else forward - ticks
+        val allowedReverse = Constants.Spindexer.ALLOWED_REVERSE_TICKS
+
+        return when (direction) {
+            1 -> { // Prefer forward
+                if (abs(reverse) <= allowedReverse) reverse
+                else forward
+            }
+            -1 -> { // Prefer reverse
+                if (abs(forward) <= allowedReverse) forward
+                else reverse
+            }
+            // Direction 0 means no preference, so just take the smaller error
+            else -> if (abs(forward) <= abs(reverse)) forward else reverse
+        }
     }
 }

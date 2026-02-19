@@ -43,8 +43,11 @@ class TeleopDriver2(
     var errorDegrees: Double? = 0.0
 
     var motif: Motif = Motif(21)
+    var shootAll = false
 
     var flywheelShouldFloat = true
+    val shootTimer = ElapsedTime()
+    val minShotTime = 0.75
 
     fun update() {
         updateFlywheelOperatingMode()
@@ -55,7 +58,6 @@ class TeleopDriver2(
         updateMotif()
         readyOuttake()
         handleShootInput()
-//        processShooting()
         updateIndicatorLED()
     }
 
@@ -65,6 +67,7 @@ class TeleopDriver2(
         }
         tagShootingTarget = targetGoal.shootingPose
         offsetShootingTarget = tagShootingTarget
+        shootTimer.reset()
     }
 
     fun resetTurretOffsets(){
@@ -185,8 +188,27 @@ class TeleopDriver2(
         if (shootingArtifact) return
         when {
             gamepad.square -> bot.spindexer?.shootNext()
-            gamepad.touchpad -> bot.spindexer?.shootAll() //TODO WRITE LOGIC
+            gamepad.touchpad -> shootAll = true
         }
+    }
+
+    private fun handleShootAll() {
+        if (!shootAll) return
+        // Add a minimum delay and check that flywheel is at speed
+        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
+            bot.spindexer?.shootNext()
+            shootTimer.reset()
+        }
+        // Check if the spindexer is empty and the last shot has cleared
+        if (bot.spindexer?.isEmpty == true && bot.spindexer?.reachedTarget == true) {
+            shootAll = false
+        }
+    }
+
+    private fun flywheelAtSpeed(): Boolean {
+        val fw = bot.flywheel ?: return false
+        return (bot.flywheel?.velocity ?: 0.0) > (fw.targetVelocity - 20) &&
+                (bot.flywheel?.velocity ?: 0.0) < (fw.targetVelocity + 20)
     }
 
     private fun handleManualTrack() {
@@ -236,7 +258,13 @@ class TeleopDriver2(
     }
 
     private fun updateIndicatorLED() {
+        // Display current target motif on bot LED:
+        bot.led?.displayArtifacts(motif.artifacts)
 
+        // Display flywheel status on LED:
+        // GREEN --> at speed
+        // YELLOW --> under speed
+        // RED --> over speed
         if (flywheelToggle.state){
             bot.flywheel?.velocity?.let {
                 if (abs(estimatedFlywheelSpeed - it) < 20.0) {
@@ -255,7 +283,5 @@ class TeleopDriver2(
             gamepad.setLedColor(255.0,255.0,255.0, -1)
             bot.led?.setColor(Color.WHITE)
         }
-
-
     }
 }

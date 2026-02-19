@@ -48,10 +48,9 @@ class AudienceSideAuto : BaseOpMode() {
     private var lookForTag = true
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
-    private val shotTimer = ElapsedTime()
-    private val minShotTime = 1.0
+    private val shootTimer = ElapsedTime()
+    private val minShotTime = 0.75
     private val collectionTimer = ElapsedTime()
-    private var isShooting = false
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -84,7 +83,7 @@ class AudienceSideAuto : BaseOpMode() {
         }
         targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
         tagTimer.reset()
-        shotTimer.reset()
+        shootTimer.reset()
 
         bot.flywheel?.velocity = 1650.0
 
@@ -107,7 +106,6 @@ class AudienceSideAuto : BaseOpMode() {
 
         checkForTimeUp()
         handleTurret()
-        bot.spindexer?.updateLaunchConditions(flywheelAtSpeed())
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
@@ -168,14 +166,13 @@ class AudienceSideAuto : BaseOpMode() {
 
     private fun stateShoot() {
         // Shoot all stored balls
-        // FIXME: For now just say we've shot everything
-//        bot.spindexer?.reset()
-        if (!isShooting) {
-            bot.spindexer?.shootAll()
-            isShooting = true
+        // Add a minimum delay and check that flywheel is at speed
+        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
+            bot.spindexer?.shootNext()
+            shootTimer.reset()
         }
-        if (bot.spindexer?.shootAllCommanded == false) {
-            isShooting = false
+        // Check if the spindexer is empty and the last shot has cleared
+        if (bot.spindexer?.isEmpty == true && bot.spindexer?.reachedTarget == true) {
             state = State.COLLECT
         }
     }

@@ -57,9 +57,6 @@ class Teleop : BaseOpMode() {
         driver1.update()
         driver2.update()
 
-        // Display artifacts with LED
-        bot.led?.displayArtifacts(listOf(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE))
-
         // Add telemetry data
         addTelemetryData()
     }

@@ -97,7 +97,7 @@ class TeleopDriver1(
         }
         if (gamepad.left_trigger > 0.1) {
             bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
-        } else if (bot.spindexer?.manualOverride == true) {
+        } else if (bot.spindexer?.isManualOverride == true) {
             bot.spindexer?.moveManual(0.0)
         }
     }
