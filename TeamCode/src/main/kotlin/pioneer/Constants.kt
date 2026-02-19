@@ -227,12 +227,12 @@ object Constants {
         //Was 0.3
         const val LAUNCHER_TRIGGERED = 0.23
 
-        const val L_PTO_DROP = 0.4
+        const val L_PTO_DROP = 0.7
         //Needs to be fixed (Servo Horn on wrong)
 
         const val R_PTO_DROP = 0.3
 
-        const val L_PTO_UP = 0.9
+        const val L_PTO_UP = 0.45
 
         const val R_PTO_UP = 0.43
     }
