@@ -27,7 +27,9 @@ class TeleopDriver1(
     private var decDrivePower: Toggle = Toggle(false)
     private var fieldCentricToggle: Toggle = Toggle(false)
     private var intakeToggle: Toggle = Toggle(false)
-    var tiltToggle = Toggle(false)
+    var tiltServoToggle = Toggle(false)
+
+    var tiltDrive = Toggle(startState = false)
     var tiltTargetDistance = 0
 
     var detection: AprilTagDetection? = null
@@ -130,29 +132,30 @@ class TeleopDriver1(
     }
 
     private fun handleTilt(){
-        tiltToggle.toggle(gamepad.dpad_up && gamepad.square)
+        tiltServoToggle.toggle(gamepad.dpad_up && gamepad.cross)
+        tiltDrive.toggle(button = gamepad.dpad_down && gamepad.cross)
 
-        if (tiltToggle.justChanged) {
-            if (tiltToggle.state) {
+        if (tiltServoToggle.justChanged) {
+            if (tiltServoToggle.state) {
                 bot.servosPTO?.dropServos()
+
+            } else {
+                bot.servosPTO?.raiseServos()
+            }
+        }
+
+        if (tiltDrive.justChanged) {
+            if (tiltDrive.state) {
                 driveDisabled = true
                 bot.mecanumBase?.stop()
                 tiltTargetDistance = (bot.mecanumBase?.getMotorPositions()[0] ?: 0) + 500
-            } else {
-                bot.servosPTO?.raiseServos()
+                bot.mecanumBase?.setMotorPowers(listOf(0.2, 0.0, 0.0, 0.2))
+            }
+            else  {
                 driveDisabled = false
             }
         }
 
-
-
-        if (bot.servosPTO?.isReset == true &&
-            bot.mecanumBase?.getMotorPositions()?.let { it[0] < tiltTargetDistance } == true &&
-            tiltToggle.state) {
-            bot.mecanumBase?.setMotorPowers(listOf(0.2,0.0,0.0,0.2))
-        } else if (tiltToggle.state) {
-            bot.mecanumBase?.stop()
-        }
     }
 
 }
