@@ -71,9 +71,14 @@ class SpindexerMotionController(
         get() =
             abs(motor.velocity) < Constants.Spindexer.VELOCITY_TOLERANCE_TPS
 
+
+    var justStoppedShootingFlag = false
     val justStoppedShooting: Boolean
-        get() =
-            checkJustStoppedShooting()
+        get() {
+            val v = justStoppedShootingFlag
+            justStoppedShootingFlag = false
+            return v
+        }
 
     // --- Initialization --- //
 
@@ -163,22 +168,13 @@ class SpindexerMotionController(
     }
 
     fun stopShooting() {
+        // set one-shot flag only if we were shooting
+        if (shooting) {
+            justStoppedShootingFlag = true
+        }
         shooting = false
         motor.power = 0.0
         pid.reset()
-    }
-
-    //FIXME? Lowk might be broken, but not used rn
-    //Checks if shooting state just changed
-    fun checkJustStoppedShooting(): Boolean{
-        if (prevShooting && !shooting) {
-            prevShooting = shooting
-            return true
-        } else {
-            prevShooting = shooting
-            return false
-        }
-
     }
 
     // --- Helpers --- //
