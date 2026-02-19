@@ -162,7 +162,7 @@ class AudienceSideAuto : BaseOpMode() {
         if (!flywheelAtSpeed()) return
 
         if (!startedShooting) {
-            bot.spindexer?.shootAll()
+            bot.spindexer?.shootAll() //TODO WRITE LOGIC
             startedShooting = true
         }
 

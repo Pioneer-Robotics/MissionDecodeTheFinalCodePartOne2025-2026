@@ -231,7 +231,7 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun handle_shoot_all() {
-        bot.spindexer?.shootAll()
+        bot.spindexer?.shootAll() //TODO WRITE LOGIC
     }
 
     private fun state_goto_collect() {

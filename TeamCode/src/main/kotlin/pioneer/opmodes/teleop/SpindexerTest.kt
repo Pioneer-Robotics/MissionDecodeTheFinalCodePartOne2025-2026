@@ -12,7 +12,7 @@ import pioneer.opmodes.BaseOpMode
 class SpindexerTest : BaseOpMode() {
     var motifOrder: Motif? = Motif(22)
     var launchConditions = false
-    var delayTimer = ElapsedTime()
+    var delayTimer2 = ElapsedTime()
 
     override fun onInit() {
         bot = Bot
@@ -27,12 +27,16 @@ class SpindexerTest : BaseOpMode() {
         bot.updateAll()
 
         if (bot.spindexer!!.isShooting) {
-            delayTimer.reset()
+            delayTimer2.reset()
         }
 
-        if (delayTimer.seconds() > Constants.Spindexer.SHOOT_ALL_DELAY) {
+        if (delayTimer2.seconds() > (Constants.Spindexer.SHOOT_ALL_DELAY + 5)) {
             launchConditions = true
+        } else {
+            launchConditions = false
         }
+
+        bot.spindexer?.updateLaunchConditions(launchConditions)
 
         if (gamepad1.dpad_down) bot.spindexer?.moveToNextOpenIntake()
         if (gamepad1.leftBumperWasPressed()) {
@@ -43,6 +47,7 @@ class SpindexerTest : BaseOpMode() {
             motifOrder = motifOrder?.nextMotif()
             bot.spindexer?.readyOuttake(motifOrder)
         }
+        //Need to continously update launchConditions
         if (gamepad1.touchpadWasPressed()) bot.spindexer?.shootAll()
 //        if (gamepad1.touchpadWasPressed()) bot.spindexer?.requestShootAll(launchConditions)
         if (gamepad1.circleWasPressed()) bot.spindexer?.shootNext()
@@ -60,9 +65,13 @@ class SpindexerTest : BaseOpMode() {
         telemetry.addData("Ready for Next Shot", bot.spindexer?.readyForNextShot)
 //        telemetry.addData("Just Finished Shot", bot.spindexer?.finishedShot)
         telemetry.addData("Shoot All Commanded", bot.spindexer?.shootAllCommanded)
-//        telemetry.addData("Delay Timer", bot.spindexer?.delayTimer)
+        telemetry.addData("Delay Timer", bot.spindexer?.delayTimer)
+        telemetry.addData("Delay Timer 2", delayTimer2)
         telemetry.addData("Shot Counter", bot.spindexer?.shotCounter)
         telemetry.addData("Is Shooting", bot.spindexer?.isShooting)
+        telemetry.addData("Launch Conditions Met Global", bot.spindexer?.launchConditionsMetGlobal)
+        telemetry.addData("Launch Conditions Met Local", launchConditions)
+
     }
 }
 

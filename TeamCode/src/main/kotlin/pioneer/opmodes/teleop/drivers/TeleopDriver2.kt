@@ -185,7 +185,7 @@ class TeleopDriver2(
         if (shootingArtifact) return
         when {
             gamepad.square -> bot.spindexer?.shootNext()
-            gamepad.touchpad -> bot.spindexer?.shootAll()
+            gamepad.touchpad -> bot.spindexer?.shootAll() //TODO WRITE LOGIC
         }
     }
 

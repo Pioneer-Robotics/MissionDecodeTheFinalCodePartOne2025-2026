@@ -33,12 +33,12 @@ class Spindexer(
     var isSorting = false
     val isShooting: Boolean get() = motion.isShooting
     val finishedShot: Boolean get() = motion.justStoppedShooting
-//    val delayTimer = ElapsedTime()
+    val delayTimer = ElapsedTime()
     var readyForNextShot = true
     var shotCounter = 0
     var shootAllCommanded = false
     var requestedShootPower = Constants.Spindexer.SHOOT_POWER
-    private var launchConditionsMetGlobal = false
+    var launchConditionsMetGlobal = false
     val ticksPerArtifact: Int
         get() = (Constants.Spindexer.TICKS_PER_REV / 3.0).roundToInt()
 
@@ -126,12 +126,11 @@ class Spindexer(
         return true
     }
 
-    fun handleShootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER) {
+    fun handleShootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER ){
         // Guard: must be in READY
         if (state != State.READY) return
 
-    // If we've already issued 3 shots, wait for the last shot to finish before clearing
-//    fun shootAll(shootPower: Double = Constants.Spindexer.SHOOT_POWER_CLOSE, launchConditionsMet: Boolean){
+        //    // If we've already issued 3 shots, wait for the last shot to finish before clearing
         if (shotCounter>=3) {
             if (!motion.isShooting) {
                 // All shots finished
@@ -149,14 +148,11 @@ class Spindexer(
             }
         }
 
-//        if (isShooting){
-//            delayTimer.reset()
-//        }
-        //Change to flywheel at speed
-//        if (delayTimer.seconds() > Constants.Spindexer.SHOOT_ALL_DELAY){
-//            readyForNextShot = true
-//        }
-        if (launchConditionsMet){
+        if (isShooting){
+            delayTimer.reset()
+        }
+
+        if (delayTimer.seconds() > Constants.Spindexer.SHOOT_ALL_DELAY && launchConditionsMetGlobal){
             readyForNextShot = true
         }
     }
@@ -183,8 +179,12 @@ class Spindexer(
         shootAllCommanded = true
         shotCounter = 0
         readyForNextShot = true
-//        delayTimer.reset()
+        delayTimer.reset()
         requestedShootPower = shootPower
+    }
+
+    fun updateLaunchConditions(launchConditionsMet: Boolean){
+        launchConditionsMetGlobal = launchConditionsMet
     }
 
     fun resetMotorPosition(resetTicks: Int) {
