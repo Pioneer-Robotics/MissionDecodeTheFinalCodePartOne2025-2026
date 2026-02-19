@@ -33,7 +33,7 @@ class ArtifactIndexer {
     fun nextOpenIntakeIndex(currentIndex: Int): Int? = run {
         for (i in 0..2) {
             // -i for reversed direction
-            val index = Math.floorMod(currentIndex - i, 3)
+            val index = Math.floorMod(currentIndex + i, 3)
             if (artifacts[index] == null) return index
         }
         null
@@ -48,25 +48,29 @@ class ArtifactIndexer {
         if (motif == null || !motif.isValid()) return null
 
         val pattern = motif.getPattern()
-        var bestShift: Int? = null
+        var bestShift = currentIndex
         var bestScore = -1
 
-        // Check all 3 possible alignments of the motif pattern with the current index
-        for (offset in 0 until 3) {
-            val shift = Math.floorMod((currentIndex - offset - 2), 3)
+        // Try all 3 circular shifts
+        for (shift in 0 until 3) {
             var score = 0
+
             for (i in 0 until 3) {
-                val rotated = artifacts[(i + shift) % 3]
-                if (rotated == pattern[i]) score++
+                val artifact = artifacts[Math.floorMod(shift + i, 3)]
+                val expected = pattern[i]
+
+                if (artifact == expected) {
+                    score++
+                }
             }
+
             if (score > bestScore) {
                 bestScore = score
                 bestShift = shift
             }
         }
 
-        // We need to shift back by 2 to get the motif start index
-        return bestShift?.let { Math.floorMod(it - 2, 3) }
+        return Math.floorMod(bestShift+2,3)
     }
 
     // --- Intake Logic --- //

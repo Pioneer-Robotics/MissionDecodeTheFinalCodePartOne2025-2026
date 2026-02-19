@@ -183,7 +183,7 @@ object Constants {
         @JvmField var KS_START = 0.04
 
         @JvmField var SHOOT_ALL_DELAY = 1 //Time between each shot in shoot all, in seconds //TODO: Tune
-        @JvmField var SHOOT_POWER = 0.65
+        @JvmField var SHOOT_POWER = 0.3
 
         @JvmField var MAX_POWER_RATE = 100.0
 
@@ -226,7 +226,7 @@ object Constants {
 //        Was 0.3
 //        const val LAUNCHER_TRIGGERED = 0.75
 
-        // PTO L values (0.45, 0.75)
+        // PTO L values (0.50, 0.75)
         const val LAUNCHER_REST = 0.52
         //Was 0.3
         const val LAUNCHER_TRIGGERED = 0.26
@@ -253,10 +253,10 @@ object Constants {
 //        @JvmField var KD = 0.001
 //        @JvmField var KF = 0.000415
 
-        @JvmField var KP = 0.00525
+        @JvmField var KP = 0.004
         @JvmField var KI = 0.0
         @JvmField var KD = 0.0
-        @JvmField var KF = 0.00035
+        @JvmField var KF = 0.00045
 
         val idleVelocity = 300.0
 

@@ -3,7 +3,9 @@ package pioneer.decode
 import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
 import pioneer.pathing.motionprofile.constraints.VelocityConstraint
+import pioneer.pathing.paths.CompoundPath
 import pioneer.pathing.paths.HermitePath
+import pioneer.pathing.paths.LinearPath
 import pioneer.pathing.paths.Path
 import kotlin.math.PI
 
@@ -46,8 +48,6 @@ class Points(
     val SHOOT_CLOSE = Pose(55.0, 25.0, theta = -PI/2).T(color)
     val SHOOT_FAR = Pose(43.0, -140.0, theta = -PI/2).T(color)
 
-
-
     // Leave position
     val LEAVE_POSITION = Pose(60.0, -60.0).T(color)
 
@@ -73,21 +73,57 @@ class Points(
         return HermitePath.Builder()
             .addPoint(startPose, Pose(0.0, 100.0).T(color))
             .addPoint(Pose(100.0, -110.0, theta = -6.0 * PI / 7.0).T(color))
-            .addPoint(Pose(148.0, -150.0, theta = -6.0 * PI / 7.0).T(color), Pose(-50.0, -300.0).T(color))
+            .addPoint(Pose(150.0, -150.0, theta = -6.0 * PI / 7.0).T(color), Pose(-40.0, -300.0).T(color))
             .build()
             .apply {
                 // Slow down near the end of the path
                 velocityConstraint = VelocityConstraint { s ->
-                    if (s > this.getLength() - 40.0) 15.0 else Double.MAX_VALUE
+                    if (s > this.getLength() - 37.5) 22.5 else Double.MAX_VALUE
                 }
             }
     }
 
     fun PATH_COLLECT_AUDIENCE(startPose: Pose) : Path {
-        return HermitePath.Builder()
-            .addPoint(startPose, Pose(0.0, 100.0).T(color))
-            .addPoint(Pose(78.5, -90.0, theta = -PI/2).T(color), Pose(-100.0, 0.0).T(color))
-            .addPoint(Pose(127.5, -90.0, theta = -PI/2).T(color))
-            .build()
+        return CompoundPath.Builder()
+            .addPath(
+                HermitePath.Builder()
+                    .addPoint(startPose, Pose(0.0, 100.0).T(color))
+                    .addPoint(Pose(60.0, -95.0, theta = -PI/2).T(color), Pose(100.0, 0.0).T(color))
+                    .build()
+            )
+            .addPath(
+                LinearPath.Builder()
+                    .addPoint(Pose(60.0, -95.0, theta = -PI/2).T(color))
+                    .addPoint(Pose(127.5, -90.0, theta = -PI/2).T(color))
+                    .build()
+            )
+            .build().apply {
+                // Slow down for collection
+                velocityConstraint = VelocityConstraint { s ->
+                    if (s > this.getLength() - 50.0) 10.0 else Double.MAX_VALUE
+                }
+            }
+    }
+
+    fun PATH_COLLECT_MID(startPose: Pose) : Path {
+        return CompoundPath.Builder()
+            .addPath(
+                HermitePath.Builder()
+                    .addPoint(startPose, Pose(0.0, 100.0).T(color))
+                    .addPoint(Pose(78.5, -30.0, theta = -PI/2).T(color), Pose(100.0, 0.0).T(color))
+                    .build()
+            )
+            .addPath(
+                LinearPath.Builder()
+                    .addPoint(Pose(78.5, -30.0, theta = -PI/2).T(color))
+                    .addPoint(Pose(127.5, -30.0, theta = -PI/2).T(color))
+                    .build()
+            )
+            .build().apply {
+                // Slow down for collection
+                velocityConstraint = VelocityConstraint { s ->
+                    if (s > this.getLength() - 45.0) 10.0 else Double.MAX_VALUE
+                }
+            }
     }
 }

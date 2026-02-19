@@ -17,7 +17,7 @@ class ManualSpindexerControl : OpMode() {
     val chrono = Chrono()
 
     override fun init() {
-        motor = hardwareMap.get(DcMotorEx::class.java, Constants.HardwareNames.INTAKE_MOTOR)
+        motor = hardwareMap.get(DcMotorEx::class.java, Constants.HardwareNames.SPINDEXER_MOTOR)
     }
 
     override fun loop() {

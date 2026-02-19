@@ -37,6 +37,7 @@ class Spindexer(
     var readyForNextShot = true
     var shotCounter = 0
     var shootAllCommanded = false
+        private set
     var requestedShootPower = Constants.Spindexer.SHOOT_POWER
     var launchConditionsMetGlobal = false
     val ticksPerArtifact: Int

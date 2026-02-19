@@ -27,7 +27,7 @@ class Intake(
 
     var defaultPower: Double = 0.9
     private val pauseTimer = ElapsedTime()
-    private val reverseTime = 0.35
+    private val reverseTime = 0.5
     private val pauseTime = 0.0
     private var continuePower = -defaultPower
     private var paused = false

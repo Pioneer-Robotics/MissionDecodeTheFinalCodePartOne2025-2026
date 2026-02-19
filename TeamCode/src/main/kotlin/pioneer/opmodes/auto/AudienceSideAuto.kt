@@ -30,8 +30,9 @@ class AudienceSideAuto : BaseOpMode() {
 
     // Collects in the order specified by the enum
     enum class CollectState {
-        HUMAN_PLAYER,
         AUDIENCE,
+//        MID,
+        HUMAN_PLAYER,
         DONE,
     }
 
@@ -39,9 +40,8 @@ class AudienceSideAuto : BaseOpMode() {
     private lateinit var targetGoal: GoalTag
 
     private var state = State.GOTO_SHOOT
-    private var collectState = CollectState.HUMAN_PLAYER
-    private var shouldStartLeave = true
-    private var startedShooting = false
+    private var collectState = CollectState.entries.first()
+    private var shouldStartLeave = false
 
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
@@ -49,7 +49,9 @@ class AudienceSideAuto : BaseOpMode() {
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
     private val shotTimer = ElapsedTime()
-    private val shotTime = 3.0
+    private val minShotTime = 1.0
+    private val collectionTimer = ElapsedTime()
+    private var isShooting = false
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -82,9 +84,12 @@ class AudienceSideAuto : BaseOpMode() {
         }
         targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
         tagTimer.reset()
+        shotTimer.reset()
+
+        bot.flywheel?.velocity = 1650.0
 
         // Constantly run intake to keep balls in spindexer
-        bot.intake?.forward()
+        bot.intake?.power = -1.0
     }
 
     override fun onLoop() {
@@ -95,10 +100,14 @@ class AudienceSideAuto : BaseOpMode() {
             State.LEAVE -> stateLeave()
         }
 
+        if (shouldStartLeave) {
+            state = State.LEAVE
+            return
+        }
+
         checkForTimeUp()
         handleTurret()
-
-        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height) ?: 1750.0
+        bot.spindexer?.updateLaunchConditions(flywheelAtSpeed())
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
@@ -111,6 +120,8 @@ class AudienceSideAuto : BaseOpMode() {
 
         telemetryPacket.put("Target Flywheel Speed", bot.flywheel?.targetVelocity)
         telemetryPacket.put("Actual Flywheel Speed", bot.flywheel?.velocity)
+        telemetryPacket.put("Target Turret Position", bot.turret?.targetTicks)
+        telemetryPacket.put("Actual Turret Position", bot.turret?.currentTicks)
     }
 
     private fun handleTurret() {
@@ -138,12 +149,12 @@ class AudienceSideAuto : BaseOpMode() {
 
     private fun stateGotoShoot() {
         if (!bot.follower.isFollowing) { // Starting path
+            bot.intake?.power = -1.0
             bot.spindexer?.readyOuttake(motifOrder)
             bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_FAR))
         }
         if (bot.follower.done) { // Ending path
             bot.follower.reset()
-            shotTimer.reset()
             state = State.SHOOT
         }
     }
@@ -152,35 +163,47 @@ class AudienceSideAuto : BaseOpMode() {
         val fw = bot.flywheel ?: return false
         val target = fw.targetVelocity
         val actual = fw.velocity
-        return actual > (target - 20) && actual < (target + 20)
+        return actual in (target - 20) .. (target + 20)
     }
 
     private fun stateShoot() {
-        if (!flywheelAtSpeed()) return
-
-        if (!startedShooting) {
-            bot.spindexer?.shootAll() //TODO WRITE LOGIC
-            startedShooting = true
+        // Shoot all stored balls
+        // FIXME: For now just say we've shot everything
+//        bot.spindexer?.reset()
+        if (!isShooting) {
+            bot.spindexer?.shootAll()
+            isShooting = true
         }
-
-        if (shotTimer.seconds() > shotTime) {
-            startedShooting = false
+        if (bot.spindexer?.shootAllCommanded == false) {
+            isShooting = false
             state = State.COLLECT
         }
     }
 
     private fun stateCollect() {
         if (!bot.follower.isFollowing) { // Starting path
+            bot.spindexer?.moveToNextOpenIntake()
+            bot.intake?.forward()
+            collectionTimer.reset()
             when (collectState) {
                 CollectState.HUMAN_PLAYER ->
                     bot.follower.followPath(P.PATH_HUMAN_PLAYER(bot.pinpoint!!.pose))
                 CollectState.AUDIENCE ->
                     bot.follower.followPath(P.PATH_COLLECT_AUDIENCE(bot.pinpoint!!.pose))
+//                CollectState.MID ->
+//                    bot.follower.followPath(P.PATH_COLLECT_MID(bot.pinpoint!!.pose))
                 CollectState.DONE -> {
                     shouldStartLeave = true
                     return
                 }
             }
+        }
+
+        // If collecting from the human player, add a timeout
+        if (collectState == CollectState.HUMAN_PLAYER && collectionTimer.seconds() > 7.5) {
+            bot.follower.reset()
+            collectState = collectState.next()
+            state = State.GOTO_SHOOT
         }
 
         if (bot.follower.done || bot.spindexer?.isFull == true) { // Ending path

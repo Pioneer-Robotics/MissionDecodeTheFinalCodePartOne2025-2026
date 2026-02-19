@@ -48,7 +48,7 @@ class SpindexerMotionController(
         get() = motor.velocity
 
     val targetTicks: Int
-        get() = (positionIndex * Constants.Spindexer.TICKS_PER_REV / 3).toInt()
+        get() = (positionIndex * -Constants.Spindexer.TICKS_PER_REV / 3).toInt()
 
     val errorTicks: Int
         get() = wrapTicks(targetTicks - currentTicks)
@@ -140,7 +140,7 @@ class SpindexerMotionController(
             power = 0.0
         }
 
-        motor.power = power.coerceIn(-0.75, 0.75)
+        motor.power = power.coerceIn(-0.5, 0.5)
     }
 
     // --- Manual Control --- //

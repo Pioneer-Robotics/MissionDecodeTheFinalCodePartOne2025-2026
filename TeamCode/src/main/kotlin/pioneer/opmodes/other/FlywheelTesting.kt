@@ -53,8 +53,6 @@ class FlywheelTesting : BaseOpMode() {
             flywheelSpeed -= 50.0 * scale
         }
 
-
-
         if (flywheelToggle.state){
             bot.flywheel?.velocity = flywheelSpeed
         } else {

@@ -106,6 +106,5 @@ class Teleop : BaseOpMode() {
 
         telemetryPacket.put("Turret Target Ticks", bot.turret?.targetTicks)
         telemetryPacket.put("Turret Current Ticks", bot.turret?.currentTicks)
-
     }
 }
