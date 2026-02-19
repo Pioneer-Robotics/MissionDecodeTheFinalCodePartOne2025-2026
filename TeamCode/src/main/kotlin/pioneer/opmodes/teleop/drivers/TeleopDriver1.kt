@@ -149,7 +149,8 @@ class TeleopDriver1(
                 driveDisabled = true
                 bot.mecanumBase?.stop()
                 tiltTargetDistance = (bot.mecanumBase?.getMotorPositions()[0] ?: 0) + 500
-                bot.mecanumBase?.setMotorPowers(listOf(0.2, 0.0, 0.0, 0.2))
+                bot.mecanumBase?.setMotorPowers(listOf(0.0, 0.2, 0.0, -0.2))
+
             }
             else  {
                 driveDisabled = false

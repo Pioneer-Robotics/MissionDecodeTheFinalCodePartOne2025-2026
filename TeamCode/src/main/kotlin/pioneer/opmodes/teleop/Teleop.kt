@@ -106,7 +106,9 @@ class Teleop : BaseOpMode() {
         telemetryPacket.put("Turret Target Ticks", bot.turret?.targetTicks)
         telemetryPacket.put("Turret Current Ticks", bot.turret?.currentTicks)
 
-        addTelemetryData("Tilt Toggle", driver1.tiltToggle.state, Verbose.INFO)
+        addTelemetryData("Tilt Servo Toggle", driver1.tiltServoToggle.state, Verbose.INFO)
+        addTelemetryData("Tilt Drive Toggle", driver1.tiltDrive.state, Verbose.INFO)
+
 
     }
 }
