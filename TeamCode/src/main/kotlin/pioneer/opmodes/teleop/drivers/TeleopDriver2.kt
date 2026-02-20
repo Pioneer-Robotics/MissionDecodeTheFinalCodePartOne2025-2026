@@ -21,7 +21,7 @@ class TeleopDriver2(
     private val bot: Bot,
 ) {
     private val isAutoTracking = Toggle(false)
-    private val isEstimatingSpeed = Toggle(true)
+    val isEstimatingSpeed = Toggle(true)
     private val flywheelToggle = Toggle(false)
     private val launchToggle = Toggle(false)
     private val multiShotToggle = Toggle(false)

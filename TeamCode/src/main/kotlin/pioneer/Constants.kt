@@ -252,10 +252,10 @@ object Constants {
 //        @JvmField var KD = 0.001
 //        @JvmField var KF = 0.000415
 
-        @JvmField var KP = 0.004
+        @JvmField var KP = 0.00225
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.0
-        @JvmField var KF = 0.00045
+        @JvmField var KD = 0.0001
+        @JvmField var KF = 0.00041
 
         val idleVelocity = 300.0
 

@@ -60,7 +60,7 @@ class FlywheelTesting : BaseOpMode() {
         }
 
         if (gamepad1.square){
-            bot.launcher?.triggerLaunch()
+            bot.spindexer?.shootNext()
         }
 
         telemetry.addData("Actual Flywheel Velocity", bot.flywheel?.velocity)
