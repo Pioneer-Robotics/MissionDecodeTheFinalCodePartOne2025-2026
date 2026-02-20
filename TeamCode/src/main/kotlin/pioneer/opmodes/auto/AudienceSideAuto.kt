@@ -48,7 +48,7 @@ class AudienceSideAuto : BaseOpMode() {
     private var motifOrder: Motif = Motif(21)
     private var lookForTag = true
     private val tagTimer = ElapsedTime()
-    private val tagTimeout = 3.0
+    private val tagTimeout = 2.0
     private val shootTimer = ElapsedTime()
     private val minShotTime = 2.0
     private val collectionTimer = ElapsedTime()
@@ -85,9 +85,8 @@ class AudienceSideAuto : BaseOpMode() {
         tagTimer.reset()
         shootTimer.reset()
 
-//        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height)
-//            ?: 1700.0
-        bot.flywheel?.velocity = 1650.0
+//        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height) ?: 1700.0
+        bot.flywheel?.velocity = 1700.0
 
         // Constantly run intake to keep balls in spindexer
         bot.intake?.power = -1.0
@@ -135,11 +134,11 @@ class AudienceSideAuto : BaseOpMode() {
         }
         if (lookForTag) {
             bot.turret?.autoTrack(bot.pinpoint!!.pose, Pose(0.0, 200.0))
-
             bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
                 Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
                     motifOrder = detectedMotif
                     lookForTag = false // Detected the motif
+                    bot.spindexer?.readyOuttake(motifOrder)
                 }
             }
         } else {
@@ -148,7 +147,7 @@ class AudienceSideAuto : BaseOpMode() {
     }
 
     private fun checkForTimeUp() {
-        if ((30.0 - elapsedTime) < 1.0) {
+        if ((30.0 - elapsedTime) < 0.8) {
             state = State.LEAVE
         }
     }

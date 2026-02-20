@@ -43,13 +43,13 @@ enum class GoalTag(
     val height: Double
         get() = position[2].toDouble()
 
-    val shootingHeight = height + 75.0
+    val shootingHeight = height + 45.0
 
     val shootingPose: Pose
         get() =
             when (this) {
-                BLUE -> this.pose + Pose(x = -30.0, y = 32.5) // -X +Y
-                RED -> this.pose + Pose(x = 30.0, y = 32.5) // +X +Y
+                BLUE -> this.pose + Pose(x = -39.5, y = 32.5) // -X +Y
+                RED -> this.pose + Pose(x = 39.5, y = 32.5) // +X +Y
 
                 //X: 24 Y: 30 Z: 45
             }

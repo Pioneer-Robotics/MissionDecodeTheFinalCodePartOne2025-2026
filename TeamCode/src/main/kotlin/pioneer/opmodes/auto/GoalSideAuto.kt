@@ -70,7 +70,7 @@ class GoalSideAuto : BaseOpMode() {
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
     private val shootTimer = ElapsedTime()
-    private val minShotTime = 0.75
+    private val minShotTime = 1.25
 
     override fun onInit() {
         Constants.TransferData.reset()
@@ -131,7 +131,7 @@ class GoalSideAuto : BaseOpMode() {
             State.STOP -> state_stop()
         }
 
-        checkForTimeUp()
+//        checkForTimeUp()
 
         targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
 
@@ -177,7 +177,7 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun checkForTimeUp() {
-        if ((30.0 - elapsedTime) < 0.75) {
+        if ((30.0 - elapsedTime) < 1.5) {
             state = State.LEAVE
         }
     }
@@ -186,8 +186,8 @@ class GoalSideAuto : BaseOpMode() {
         bot.flywheel?.velocity = targetVelocity
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer?.readyOuttake(motifOrder)
-            val endPose = if (firstShoot) P.SHOOT_CLOSE.copy(theta = 0.0) else P.SHOOT_CLOSE
             firstShoot = false
+            val endPose = if (30.0 - elapsedTime < 10.0) P.SHOOT_CLOSE_LEAVE else P.SHOOT_CLOSE
             bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, endPose))
         }
         if (bot.follower.done) { // Ending path
@@ -272,17 +272,17 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun flywheelAtSpeed(): Boolean {
-        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 10) &&
-                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
+        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 50) &&
+                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 50)
     }
 
     private fun state_collect() {
 //        bot.flywheel?.velocity = 0.0
         if (!bot.follower.isFollowing) { // Starting path
             when (collectState) {
-                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 10.0)
-                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID), 10.0)
-                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE), 10.0)
+                CollectState.GOAL -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_GOAL), 8.0)
+                CollectState.MID -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_MID), 8.0)
+                CollectState.AUDIENCE -> bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.COLLECT_AUDIENCE), 8.0)
                 CollectState.DONE -> {}
             }
         }

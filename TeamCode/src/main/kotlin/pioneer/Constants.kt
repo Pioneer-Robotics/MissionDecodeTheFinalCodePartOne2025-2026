@@ -105,16 +105,16 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 3.0
+        const val POSITION_THRESHOLD = 4.0
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.075
+        const val ROTATION_THRESHOLD = 0.1
 
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 150.0
 
         /** The maximum drive acceleration in cm per second squared. */
-        const val MAX_DRIVE_ACCELERATION = 110.0
+        const val MAX_DRIVE_ACCELERATION = 120.0
 
         /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
         const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
@@ -127,17 +127,17 @@ object Constants {
 
         // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 4.0 // was 7.0
+        @JvmField var X_KP = 2.67 // was 7.0
         @JvmField var X_KI = 0.0
         @JvmField var X_KD = 0.1
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 4.0 // was 7.0
+        @JvmField var Y_KP = 2.67 // was 7.0
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.1
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 4.0 // was 5.0
+        @JvmField var THETA_KP = 3.067 // was 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 
