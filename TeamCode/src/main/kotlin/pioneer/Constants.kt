@@ -176,18 +176,18 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.004
+        @JvmField var KP = 0.0025
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.00125
+        @JvmField var KD = 0.003
 
-        @JvmField var KS_START = 0.04
+        @JvmField var KS_START = 0.01
 
         @JvmField var OUTTAKE_IS_POSITIVE = true
 
         @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
 
-        const val SHOOTING_TOLERANCE_TICKS = 4
-        const val ALLOWED_REVERSE_TICKS = 50 // How far spindexer can reverse without doing a 360
+        const val DETECTION_TOLERANCE_TICKS = 25
+        const val ALLOWED_REVERSE_TICKS = 125 // How far spindexer can reverse without doing a 360
         const val TICKS_PER_REV = 537.7
 
         // Time required to confirm an artifact has been intaken (ms)

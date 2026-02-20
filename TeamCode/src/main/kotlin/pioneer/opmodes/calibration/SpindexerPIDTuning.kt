@@ -20,7 +20,7 @@ class SpindexerPIDTuning : OpMode() {
 
     override fun loop() {
         if (gamepad1.circleWasPressed()) targetIndex = (targetIndex + 1) % 3
-        if (gamepad1.crossWasPressed()) spindexer.moveToIndex(targetIndex)
+        if (gamepad1.crossWasPressed()) spindexer.moveToIndex(targetIndex, 1)
 
         spindexer.update()
 

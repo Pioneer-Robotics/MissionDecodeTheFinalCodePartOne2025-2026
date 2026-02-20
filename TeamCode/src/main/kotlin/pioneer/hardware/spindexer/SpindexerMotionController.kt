@@ -2,8 +2,10 @@ package pioneer.hardware.spindexer
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import pioneer.Constants
 import pioneer.helpers.Chrono
+import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import kotlin.math.abs
 import kotlin.math.sign
@@ -21,7 +23,7 @@ class SpindexerMotionController(
     // --- Logic for calibrating encoder --- //
     private var calibrationTicks = 0
     val currentTicks: Int
-        get() = (-motor.currentPosition + calibrationTicks)
+        get() = motor.currentPosition + calibrationTicks
     val targetTicks: Int
         get() {
             // Target is defined so that positionIndex 0 is in the intake position,
@@ -53,9 +55,10 @@ class SpindexerMotionController(
     // --- Other Public State --- //
     val reachedTarget: Boolean
         get() =
-            abs(errorTicks) < Constants.Spindexer.SHOOTING_TOLERANCE_TICKS
+            abs(errorTicks) < Constants.Spindexer.DETECTION_TOLERANCE_TICKS
 
     fun update() {
+        FileLogger.debug("Spindexer Motor Controller", "Position index: $positionIndex")
         if (manualOverride) return
 
         // Run PID
@@ -67,18 +70,19 @@ class SpindexerMotionController(
             power += ks * sign(power)
         }
 
-        // Don't try to correct if we're close enough to the target
-        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
-            power = 0.0
-        }
+//        // Don't try to correct if we're close enough to the target
+//        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
+//            power = 0.0
+//        }
 
-        motor.power = power.coerceIn(-0.5, 0.5)
+        motor.power = power.coerceIn(-1.0, 1.0)
     }
 
     fun calibrateEncoder(ticks: Int) {
         calibrationTicks = ticks
         motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        motor.direction = DcMotorSimple.Direction.REVERSE
     }
 
     fun moveManual(power: Double) {
@@ -98,7 +102,6 @@ class SpindexerMotionController(
         direction: Int,
         ticksPerRev: Double = Constants.Spindexer.TICKS_PER_REV,
     ): Int {
-
         val ticks = ticksPerRev.toInt()
 
         // Get error in both directions

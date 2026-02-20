@@ -49,7 +49,7 @@ class AudienceSideAuto : BaseOpMode() {
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 3.0
     private val shootTimer = ElapsedTime()
-    private val minShotTime = 0.75
+    private val minShotTime = 2.0
     private val collectionTimer = ElapsedTime()
 
     override fun onInit() {
@@ -78,14 +78,14 @@ class AudienceSideAuto : BaseOpMode() {
         bot.apply{
             pinpoint?.reset(P.START_FAR)
             spindexer?.setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
-            spindexer?.readyOuttake(motifOrder)
             follower.reset()
         }
         targetGoal = if (bot.allianceColor == AllianceColor.RED) GoalTag.RED else GoalTag.BLUE
         tagTimer.reset()
         shootTimer.reset()
 
-        bot.flywheel?.velocity = 1650.0
+        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height)
+            ?: 1700.0
 
         // Constantly run intake to keep balls in spindexer
         bot.intake?.power = -1.0

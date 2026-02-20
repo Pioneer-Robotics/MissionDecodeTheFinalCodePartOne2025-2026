@@ -72,8 +72,8 @@ class Points(
     fun PATH_HUMAN_PLAYER(startPose: Pose): Path {
         return HermitePath.Builder()
             .addPoint(startPose, Pose(0.0, 100.0).T(color))
-            .addPoint(Pose(100.0, -110.0, theta = -6.0 * PI / 7.0).T(color))
-            .addPoint(Pose(150.0, -150.0, theta = -6.0 * PI / 7.0).T(color), Pose(-40.0, -300.0).T(color))
+            .addPoint(Pose(100.0, -110.0, theta = -8.0 * PI / 10.0).T(color))
+            .addPoint(Pose(150.0, -150.0, theta = -9.0 * PI / 10.0).T(color), Pose(-40.0, -300.0).T(color))
             .build()
             .apply {
                 // Slow down near the end of the path
@@ -100,7 +100,7 @@ class Points(
             .build().apply {
                 // Slow down for collection
                 velocityConstraint = VelocityConstraint { s ->
-                    if (s > this.getLength() - 50.0) 10.0 else Double.MAX_VALUE
+                    if (s > this.getLength() - 55.0) 10.0 else Double.MAX_VALUE
                 }
             }
     }

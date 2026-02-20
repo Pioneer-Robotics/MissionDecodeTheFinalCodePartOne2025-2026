@@ -1,4 +1,3 @@
-// TODO: redo logic for passive spindexer
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
@@ -187,7 +186,12 @@ class TeleopDriver2(
     private fun handleShootInput() {
         if (shootingArtifact) return
         when {
-            gamepad.square -> bot.spindexer?.shootNext()
+            gamepad.square -> {
+                if (shootTimer.seconds() > minShotTime) {
+                    shootTimer.reset()
+                    bot.spindexer?.shootNext()
+                }
+            }
             gamepad.touchpad -> shootAll = true
         }
     }
@@ -267,10 +271,10 @@ class TeleopDriver2(
         // RED --> over speed
         if (flywheelToggle.state){
             bot.flywheel?.velocity?.let {
-                if (abs(estimatedFlywheelSpeed - it) < 20.0) {
+                if (abs(estimatedFlywheelSpeed - it) < 40.0) {
                     bot.led?.setColor(Color.GREEN)
                     gamepad.setLedColor(0.0, 1.0, 0.0, -1)
-                } else if (it < estimatedFlywheelSpeed - 20.0){
+                } else if (it < estimatedFlywheelSpeed - 40.0){
                     bot.led?.setColor(Color.YELLOW)
                     gamepad.setLedColor(255.0,165.0,0.0, -1)
                 }

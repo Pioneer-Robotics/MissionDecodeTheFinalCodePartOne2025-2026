@@ -8,6 +8,7 @@ import pioneer.decode.Artifact
 import pioneer.decode.Motif
 import pioneer.hardware.HardwareComponent
 import pioneer.hardware.RevColorSensor
+import pioneer.helpers.FileLogger
 import kotlin.math.E
 
 class Spindexer(
@@ -53,11 +54,11 @@ class Spindexer(
         motion.update()
         // Update artifact states based on the detector
         val detected = detector.detect()
-        if (detected == null) {
-            // No artifact detected; reset the timer
+        if (detected == null || !motion.reachedTarget || artifacts[motion.positionIndex] != null) {
+            // Reset the timer if there isn't an artifact to be indexed
             detectionTimer.reset()
         }
-        if (detectionTimer.seconds() > Constants.Spindexer.CONFIRM_INTAKE_MS) {
+        if (detectionTimer.milliseconds() > Constants.Spindexer.CONFIRM_INTAKE_MS) {
             // If the artifact has been detected for long enough, confirm the intake
             _artifacts[motion.positionIndex] = detected
             moveToNextOpenIntake()
@@ -73,8 +74,8 @@ class Spindexer(
         }
     }
 
-    fun moveToIndex(index: Int) {
-        motion.setTarget(index, intakeDir)
+    fun moveToIndex(index: Int, direction: Int = 0) {
+        motion.setTarget(index, direction)
     }
 
     fun resetMotorPosition(ticks: Int) {
@@ -92,6 +93,8 @@ class Spindexer(
     }
 
     fun shootNext() {
+        // Remove artifact
+        _artifacts[Math.floorMod(motion.positionIndex + intakeDir, 3)] = null
         // Command the motion controller to shoot by moving in the outtake direction
         val newTarget = Math.floorMod(motion.positionIndex + outtakeDir, 3)
         motion.setTarget(newTarget, outtakeDir)
@@ -113,7 +116,7 @@ class Spindexer(
     fun readyOuttake(motif: Motif?) {
         // Move to the position of the next artifact to shoot, if not already there
         // TODO: Doing this explicitly for now; there be a better way
-        var targetIndex: Int = 0
+        var targetIndex = 0
         if (isEmpty) return // No artifacts, so no need to move
         if (motif == null) {
             // Don't care about the color
