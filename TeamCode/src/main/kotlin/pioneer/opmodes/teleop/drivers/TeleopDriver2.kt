@@ -29,7 +29,7 @@ class TeleopDriver2(
     private val launchPressedTimer = ElapsedTime()
     private var tagShootingTarget = Pose() //Shooting target from goal tag class
     private var offsetShootingTarget = Pose() //Shooting target that has been rotated by manual adjustment
-    private var finalShootingTarget = Pose() //Final target that the turret tracks
+//    private var finalShootingTarget = Pose() //Final target that the turret tracks
     private var turretPose = Pose()
     private var shootingArtifact = false
     var useAutoTrackOffset = false
@@ -40,6 +40,7 @@ class TeleopDriver2(
     var manualFlywheelSpeed = 0.0
     var flywheelSpeedOffset = 0.0
     var errorDegrees: Double? = 0.0
+    var shotCounter = 0
 
     var motif: Motif = Motif(21)
     var shootAll = false
@@ -57,6 +58,7 @@ class TeleopDriver2(
         updateMotif()
         readyOuttake()
         handleShootInput()
+        handleShootAll()
         updateIndicatorLED()
     }
 
@@ -113,6 +115,8 @@ class TeleopDriver2(
                     hypot(ftcPose.x, ftcPose.y),
                     targetGoal.shootingHeight
                 ) + flywheelSpeedOffset
+            } else {
+                estimatedFlywheelSpeed = bot.flywheel!!.estimateVelocity(turretPose, tagShootingTarget, targetGoal.shootingHeight) + flywheelSpeedOffset
             }
         }
     }
@@ -192,7 +196,7 @@ class TeleopDriver2(
                     bot.spindexer?.shootNext()
                 }
             }
-            gamepad.touchpad -> shootAll = true
+            gamepad.touchpadWasPressed() -> shootAll = true
         }
     }
 
@@ -202,14 +206,17 @@ class TeleopDriver2(
         if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
             bot.spindexer?.shootNext()
             shootTimer.reset()
+            shotCounter += 1
+
         }
         // Check if the spindexer is empty and the last shot has cleared
         if (bot.spindexer?.isEmpty == true && bot.spindexer?.reachedTarget == true) {
             shootAll = false
+            shotCounter = 0
         }
     }
 
-    private fun flywheelAtSpeed(): Boolean {
+    fun flywheelAtSpeed(): Boolean {
         val fw = bot.flywheel ?: return false
         return (bot.flywheel?.velocity ?: 0.0) > (fw.targetVelocity - 20) &&
                 (bot.flywheel?.velocity ?: 0.0) < (fw.targetVelocity + 20)

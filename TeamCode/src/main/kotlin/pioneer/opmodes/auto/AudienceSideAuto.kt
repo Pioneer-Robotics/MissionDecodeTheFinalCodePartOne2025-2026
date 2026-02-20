@@ -17,6 +17,7 @@ import pioneer.helpers.Pose
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.LinearPath
+import kotlin.math.hypot
 
 @Autonomous(name = "Audience Side Auto", group = "Autonomous")
 class AudienceSideAuto : BaseOpMode() {
@@ -84,8 +85,9 @@ class AudienceSideAuto : BaseOpMode() {
         tagTimer.reset()
         shootTimer.reset()
 
-        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height)
-            ?: 1700.0
+//        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height)
+//            ?: 1700.0
+        bot.flywheel?.velocity = 1650.0
 
         // Constantly run intake to keep balls in spindexer
         bot.intake?.power = -1.0
@@ -99,6 +101,10 @@ class AudienceSideAuto : BaseOpMode() {
             State.LEAVE -> stateLeave()
         }
 
+        if (30.0 - elapsedTime < 2.5) {
+            shouldStartLeave = true
+        }
+
         if (shouldStartLeave) {
             state = State.LEAVE
             return
@@ -110,6 +116,7 @@ class AudienceSideAuto : BaseOpMode() {
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
         telemetry.addData("Flywheel Speed", bot.flywheel?.velocity)
+        telemetry.addData("Target Velocity", bot.flywheel?.targetVelocity)
         telemetry.addData("Next Artifact", motifOrder.currentArtifact)
         telemetry.addData("Detected Motif", motifOrder.toString())
         telemetry.addData("Artifacts", bot.spindexer?.artifacts.contentDeepToString())
@@ -128,6 +135,7 @@ class AudienceSideAuto : BaseOpMode() {
         }
         if (lookForTag) {
             bot.turret?.autoTrack(bot.pinpoint!!.pose, Pose(0.0, 200.0))
+
             bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
                 Obelisk.detectMotif(detections, bot.allianceColor)?.let { detectedMotif ->
                     motifOrder = detectedMotif
@@ -161,7 +169,7 @@ class AudienceSideAuto : BaseOpMode() {
         val fw = bot.flywheel ?: return false
         val target = fw.targetVelocity
         val actual = fw.velocity
-        return actual in (target - 20) .. (target + 20)
+        return actual in (target - 10) .. (target + 10)
     }
 
     private fun stateShoot() {
@@ -173,6 +181,7 @@ class AudienceSideAuto : BaseOpMode() {
         }
         // Check if the spindexer is empty and the last shot has cleared
         if (bot.spindexer?.isEmpty == true && bot.spindexer?.reachedTarget == true) {
+            collectionTimer.reset()
             state = State.COLLECT
         }
     }
@@ -181,7 +190,7 @@ class AudienceSideAuto : BaseOpMode() {
         if (!bot.follower.isFollowing) { // Starting path
             bot.spindexer?.moveToNextOpenIntake()
             bot.intake?.forward()
-            collectionTimer.reset()
+            bot.intake?.forward()
             when (collectState) {
                 CollectState.HUMAN_PLAYER ->
                     bot.follower.followPath(P.PATH_HUMAN_PLAYER(bot.pinpoint!!.pose))
@@ -196,10 +205,9 @@ class AudienceSideAuto : BaseOpMode() {
             }
         }
 
-        // If collecting from the human player, add a timeout
+        // If collecting from the human player, make sure we return in time to shoot
         if (collectState == CollectState.HUMAN_PLAYER && collectionTimer.seconds() > 7.5) {
             bot.follower.reset()
-            collectState = collectState.next()
             state = State.GOTO_SHOOT
         }
 

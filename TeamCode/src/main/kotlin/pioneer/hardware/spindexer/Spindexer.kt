@@ -22,6 +22,7 @@ class Spindexer(
     private val intakeDir = if (Constants.Spindexer.OUTTAKE_IS_POSITIVE) -1 else 1
     private val outtakeDir = -intakeDir
     private val detectionTimer = ElapsedTime()
+    private var isIntake = true
 
     // --- Public State --- //
     val artifacts: Array<Artifact?> get() = _artifacts
@@ -31,6 +32,7 @@ class Spindexer(
         get() = artifacts.all { it == null }
     val count: Int
         get() = artifacts.count { it != null }
+
 
     // --- Motor Getters --- //
     val currentMotorTicks: Int get() = motion.currentTicks
@@ -52,6 +54,7 @@ class Spindexer(
 
     override fun update() {
         motion.update()
+        if (!isIntake) return
         // Update artifact states based on the detector
         val detected = detector.detect()
         if (detected == null || !motion.reachedTarget || artifacts[motion.positionIndex] != null) {
@@ -93,6 +96,7 @@ class Spindexer(
     }
 
     fun shootNext() {
+        isIntake = false
         // Remove artifact
         _artifacts[Math.floorMod(motion.positionIndex + intakeDir, 3)] = null
         // Command the motion controller to shoot by moving in the outtake direction
@@ -101,6 +105,7 @@ class Spindexer(
     }
 
     fun moveToNextOpenIntake(): Boolean {
+        isIntake = true
         for (i in 0..2) {
             // Check current position first, then in the direction of intake
             val checkPosition = Math.floorMod(motion.positionIndex + i * intakeDir, 3)
@@ -116,6 +121,7 @@ class Spindexer(
     fun readyOuttake(motif: Motif?) {
         // Move to the position of the next artifact to shoot, if not already there
         // TODO: Doing this explicitly for now; there be a better way
+        isIntake = false
         var targetIndex = 0
         if (isEmpty) return // No artifacts, so no need to move
         if (motif == null) {

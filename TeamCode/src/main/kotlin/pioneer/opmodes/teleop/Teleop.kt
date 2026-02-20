@@ -7,6 +7,7 @@ import pioneer.BotType
 import pioneer.Constants
 import pioneer.general.AllianceColor
 import org.firstinspires.ftc.teamcode.prism.Color
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import pioneer.decode.Artifact
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
@@ -67,16 +68,18 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.INFO)
         addTelemetryData("Pose", bot.pinpoint!!.pose, Verbose.DEBUG)
         addTelemetryData("Artifacts", bot.spindexer?.artifacts.contentDeepToString(), Verbose.INFO)
-
+        addTelemetryData("See Tag", bot.camera?.getProcessor<AprilTagProcessor>()?.detections != null, Verbose.INFO)
+        addTelemetryData("Shot Counter", driver2.shotCounter, Verbose.INFO)
         addTelemetryData("Turret Mode", bot.turret?.mode, Verbose.INFO)
         addTelemetryData("Flywheel Operating", bot.flywheel?.operatingMode, Verbose.INFO)
         addTelemetryData("Use Auto Track Offset", driver2.useAutoTrackOffset, Verbose.DEBUG)
         addTelemetryData("Flywheel Speed Offset", driver2.flywheelSpeedOffset, Verbose.DEBUG)
-        addTelemetryData("Flywheel Target Speed", driver2.estimatedFlywheelSpeed, Verbose.DEBUG)
+        addTelemetryData("Flywheel Target Speed", driver2.finalFlywheelSpeed, Verbose.DEBUG)
         addTelemetryData("Flywheel TPS", bot.flywheel?.velocity, Verbose.DEBUG)
+        addTelemetryData("Flywheel At Speed", driver2.flywheelAtSpeed(), Verbose.DEBUG)
         addTelemetryData("Turret Angle", driver2.turretAngle, Verbose.DEBUG)
-//        addTelemetryData("Turret Target Ticks", bot.turret?.targetTicks, Verbose.DEBUG)
-//        addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
+        addTelemetryData("Turret Target Ticks", bot.turret?.targetTicks, Verbose.DEBUG)
+        addTelemetryData("Turret Real Ticks", bot.turret?.currentTicks, Verbose.DEBUG)
 
         addTelemetryData("Drive Power", driver1.drivePower, Verbose.DEBUG)
 
@@ -98,8 +101,6 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Flywheel Motor Current", bot.flywheel?.motor?.getCurrent(CurrentUnit.MILLIAMPS), Verbose.DEBUG)
         telemetryPacket.put("Flywheel TPS", (bot.flywheel?.velocity ?: 0.0))
         telemetryPacket.put("Target Flywheel TPS", (driver2.finalFlywheelSpeed))
-        telemetryPacket.addLine("Flywheel TPS" + (bot.flywheel?.velocity ?: 0.0))
-
 
         telemetryPacket.put("Turret Target Ticks", bot.turret?.targetTicks)
         telemetryPacket.put("Turret Current Ticks", bot.turret?.currentTicks)

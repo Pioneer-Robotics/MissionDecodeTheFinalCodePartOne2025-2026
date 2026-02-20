@@ -198,7 +198,12 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun state_shoot() {
-        handle_shoot_all()
+//        handle_shoot_all()
+
+        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
+            bot.spindexer?.shootNext()
+            shootTimer.reset()
+        }
         // Check if the spindexer is empty and the last shot has cleared
         if (bot.spindexer?.isEmpty == true && bot.spindexer?.reachedTarget == true) {
             state = State.GOTO_COLLECT
@@ -231,13 +236,14 @@ class GoalSideAuto : BaseOpMode() {
         }
     }
 
-    private fun handle_shoot_all() {
-        // Add a minimum delay and check that flywheel is at speed
-        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
-            bot.spindexer?.shootNext()
-            shootTimer.reset()
-        }
-    }
+//    private fun handle_shoot_all() {
+//        // Shoot all stored balls
+//        // Add a minimum delay and check that flywheel is at speed
+//        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
+//            bot.spindexer?.shootNext()
+//            shootTimer.reset()
+//        }
+//    }
 
     private fun state_goto_collect() {
         if (!bot.follower.isFollowing) { // Starting path

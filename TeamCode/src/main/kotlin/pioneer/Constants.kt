@@ -105,10 +105,10 @@ object Constants {
     @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 1.75
+        const val POSITION_THRESHOLD = 3.0
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.06
+        const val ROTATION_THRESHOLD = 0.075
 
         /** The maximum drive velocity in cm per second. */
         const val MAX_DRIVE_VELOCITY = 150.0
@@ -127,17 +127,17 @@ object Constants {
 
         // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 3.0 // was 7.0
+        @JvmField var X_KP = 4.0 // was 7.0
         @JvmField var X_KI = 0.0
         @JvmField var X_KD = 0.1
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 3.0 // was 7.0
+        @JvmField var Y_KP = 4.0 // was 7.0
         @JvmField var Y_KI = 0.0
         @JvmField var Y_KD = 0.1
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 3.0 // was 5.0
+        @JvmField var THETA_KP = 4.0 // was 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 
@@ -191,12 +191,12 @@ object Constants {
         const val TICKS_PER_REV = 537.7
 
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 25.0
+        const val CONFIRM_INTAKE_MS = 100.0
 
         // Max time the artifact can disappear without resetting confirmation (ms)
         const val CONFIRM_LOSS_MS = 0.0
     }
-
+    @Config
     object Turret {
         const val TICKS_PER_REV = 537.7 * 3 // 384.5 * 3
         const val HEIGHT = 30.48
@@ -205,10 +205,15 @@ object Constants {
         const val LAUNCH_TIME = 0.125
         const val OFFSET = -10.5
 
-        @JvmField var KP = 0.0065
-        @JvmField var KI = 0.00015
-        @JvmField var KD = 1.1
-        @JvmField var KS = 0.175
+//        @JvmField var KP = 0.0065
+//        @JvmField var KI = 0.00015
+//        @JvmField var KD = 1.1
+//        @JvmField var KS = 0.175
+
+        @JvmField var KP = 0.0022
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.0
+        @JvmField var KS = 0.0
 
         @JvmField var KP_ODO = 0.0
         @JvmField var KI_ODO = 0.0
