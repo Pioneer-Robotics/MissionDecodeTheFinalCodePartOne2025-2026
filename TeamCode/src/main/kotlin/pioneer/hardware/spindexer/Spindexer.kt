@@ -50,6 +50,7 @@ class Spindexer(
             gain = 20.0f
         }
         detector = ArtifactDetector(sensor)
+        moveToNextOpenIntake()
     }
 
     override fun update() {
