@@ -270,7 +270,8 @@ class TeleopDriver2(
 
     private fun updateIndicatorLED() {
         // Display current target motif on bot LED:
-        bot.led?.displayArtifacts(motif.artifacts)
+//        bot.led?.displaySpindexerArtifacts(bot.spindexer?.artifacts!!.toList())
+        bot.led?.displayMotifArtifacts(motif.artifacts)
 
         // Display flywheel status on LED:
         // GREEN --> at speed
@@ -279,20 +280,16 @@ class TeleopDriver2(
         if (flywheelToggle.state){
             bot.flywheel?.velocity?.let {
                 if (abs(estimatedFlywheelSpeed - it) < 40.0) {
-                    bot.led?.setColor(Color.GREEN)
                     gamepad.setLedColor(0.0, 1.0, 0.0, -1)
                 } else if (it < estimatedFlywheelSpeed - 40.0){
-                    bot.led?.setColor(Color.YELLOW)
                     gamepad.setLedColor(255.0,165.0,0.0, -1)
                 }
                 else {
-                    bot.led?.setColor(Color.RED)
                     gamepad.setLedColor(1.0, 0.0, 0.0, -1)
                 }
             }
         } else {
             gamepad.setLedColor(255.0,255.0,255.0, -1)
-            bot.led?.setColor(Color.WHITE)
         }
     }
 }

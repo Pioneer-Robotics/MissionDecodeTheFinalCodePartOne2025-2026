@@ -176,15 +176,15 @@ object Constants {
 
     @Config
     object Spindexer {
-        @JvmField var KP = 0.0025
+        @JvmField var KP = 0.003
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.003
+        @JvmField var KD = 0.0067
         @JvmField var KS = 0.01
 
-        @JvmField var SHOOT_KP = 0.0025
+        @JvmField var SHOOT_KP = 0.0067
         @JvmField var SHOOT_KI = 0.0
-        @JvmField var SHOOT_KD = 0.003
-        @JvmField var SHOOT_KS = 0.01
+        @JvmField var SHOOT_KD = 0.0
+        @JvmField var SHOOT_KS = 0.03
 
         @JvmField var OUTTAKE_IS_POSITIVE = true
 
