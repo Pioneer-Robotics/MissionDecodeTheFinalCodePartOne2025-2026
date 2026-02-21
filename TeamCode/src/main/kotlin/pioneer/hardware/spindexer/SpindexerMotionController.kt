@@ -44,6 +44,16 @@ class SpindexerMotionController(
         Constants.Spindexer.KI,
         Constants.Spindexer.KD,
     )
+
+    private val shootPID = PIDController(
+        Constants.Spindexer.SHOOT_KP,
+        Constants.Spindexer.SHOOT_KI,
+        Constants.Spindexer.SHOOT_KD,
+    )
+
+    private val intakeDir = if (Constants.Spindexer.OUTTAKE_IS_POSITIVE) -1 else 1
+    private val outtakeDir = -intakeDir
+
     val chrono = Chrono()
 
     init {
@@ -61,20 +71,26 @@ class SpindexerMotionController(
         FileLogger.debug("Spindexer Motor Controller", "Position index: $positionIndex")
         if (manualOverride) return
 
-        // Run PID
-        var power = pid.update(errorTicks.toDouble(), chrono.dt)
+        // Run PID based on direction
+        var power: Double
+        if (direction == intakeDir) {
+            power = pid.update(errorTicks.toDouble(), chrono.dt)
 
-        // Apply feedforward to help get past static friction
-        val ks = Constants.Spindexer.KS_START
-        if (abs(power) > 0.01) {
-            power += ks * sign(power)
+            // Apply feedforward to help get past static friction
+            val ks = Constants.Spindexer.KS
+            if (abs(power) > 0.01) {
+                power += ks * sign(power)
+            }
+        } else {
+            // Moving in outtake direction, so use different PID constants tuned for shooting
+            power = shootPID.update(errorTicks.toDouble(), chrono.dt)
+
+            // Apply feedforward to help get past static friction
+            val ks = Constants.Spindexer.SHOOT_KS
+            if (abs(power) > 0.01) {
+                power += ks * sign(power)
+            }
         }
-
-//        // Don't try to correct if we're close enough to the target
-//        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
-//            power = 0.0
-//        }
-
         motor.power = power.coerceIn(-1.0, 1.0)
     }
 

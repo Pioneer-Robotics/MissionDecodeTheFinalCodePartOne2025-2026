@@ -179,8 +179,12 @@ object Constants {
         @JvmField var KP = 0.0025
         @JvmField var KI = 0.0
         @JvmField var KD = 0.003
+        @JvmField var KS = 0.01
 
-        @JvmField var KS_START = 0.01
+        @JvmField var SHOOT_KP = 0.0025
+        @JvmField var SHOOT_KI = 0.0
+        @JvmField var SHOOT_KD = 0.003
+        @JvmField var SHOOT_KS = 0.01
 
         @JvmField var OUTTAKE_IS_POSITIVE = true
 
