@@ -68,7 +68,7 @@ class SpindexerMotionController(
             abs(errorTicks) < Constants.Spindexer.DETECTION_TOLERANCE_TICKS
 
     fun update() {
-        FileLogger.debug("Spindexer Motor Controller", "Position index: $positionIndex")
+//        FileLogger.debug("Spindexer Motor Controller", "Position index: $positionIndex")
         if (manualOverride) return
 
         // Run PID based on direction
@@ -90,6 +90,9 @@ class SpindexerMotionController(
             if (abs(power) > 0.01) {
                 power += ks * sign(power)
             }
+        }
+        if (abs(errorTicks) < Constants.Spindexer.MOTOR_TOLERANCE_TICKS) {
+            power = 0.0
         }
         motor.power = power.coerceIn(-1.0, 1.0)
     }

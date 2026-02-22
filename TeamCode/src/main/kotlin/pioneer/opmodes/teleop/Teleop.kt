@@ -50,6 +50,7 @@ class Teleop : BaseOpMode() {
 
     override fun onStart() {
         if (!changedAllianceColor) bot.allianceColor = Constants.TransferData.allianceColor
+        bot.intake?.reverseDisabled = true
         driver2.onStart()
     }
 
@@ -57,6 +58,11 @@ class Teleop : BaseOpMode() {
         // Update gamepad inputs
         driver1.update()
         driver2.update()
+
+        // Test intake off
+        if (bot.spindexer?.reachedTarget == false) {
+            bot.intake?.stop()
+        }
 
         // Add telemetry data
         addTelemetryData()
@@ -90,6 +96,7 @@ class Teleop : BaseOpMode() {
         addTelemetryData("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks, Verbose.DEBUG)
         addTelemetryData("Spindexer Ticks", bot.spindexer?.currentMotorTicks, Verbose.DEBUG)
 
+        telemetryPacket.put("Spindexer Error", bot.spindexer?.errorTicks)
         telemetryPacket.put("Spindexer Target Ticks", bot.spindexer?.targetMotorTicks)
         telemetryPacket.put("Spindexer Ticks", bot.spindexer?.currentMotorTicks)
 //        telemetryPacket.put("Spindexer Velocity", bot.spindexer?.currentMotorVelocity)

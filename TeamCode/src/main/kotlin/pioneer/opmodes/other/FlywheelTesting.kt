@@ -7,6 +7,7 @@ import pioneer.Bot
 import pioneer.hardware.Flywheel
 import pioneer.hardware.Launcher
 import pioneer.hardware.MecanumBase
+import pioneer.hardware.spindexer.Spindexer
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
@@ -19,6 +20,7 @@ class FlywheelTesting : BaseOpMode() {
 
     var incFlywheelSpeed = Toggle(false)
     var decFlywheelSpeed = Toggle(false)
+    var estimate = Toggle(false)
     var flywheelSpeed = 0.0
     var scale = 1.0
 
@@ -30,6 +32,7 @@ class FlywheelTesting : BaseOpMode() {
                 .Builder()
                 .add(Flywheel(hardwareMap))
                 .add(Launcher(hardwareMap))
+                .add(Spindexer(hardwareMap))
                 .build()
     }
 
@@ -41,6 +44,8 @@ class FlywheelTesting : BaseOpMode() {
         if (gamepad1.crossWasPressed()) {
             scale -= 1.0
         }
+
+        estimate.toggle(gamepad1.touchpad)
 
         incFlywheelSpeed.toggle(gamepad1.right_bumper)
         decFlywheelSpeed.toggle(gamepad1.left_bumper)
@@ -54,7 +59,11 @@ class FlywheelTesting : BaseOpMode() {
         }
 
         if (flywheelToggle.state){
-            bot.flywheel?.velocity = flywheelSpeed
+            if (estimate.state){
+                bot.flywheel?.velocity = bot.flywheel!!.estimateVelocity(Pose(0.0,0.0),Pose(0.0,350.0), 200.0)
+            } else {
+                bot.flywheel?.velocity = flywheelSpeed
+            }
         } else {
             bot.flywheel?.velocity = 0.0
         }
@@ -63,9 +72,11 @@ class FlywheelTesting : BaseOpMode() {
             bot.spindexer?.shootNext()
         }
 
+
         telemetry.addData("Actual Flywheel Velocity", bot.flywheel?.velocity)
         telemetry.addData("Target Velocity", flywheelSpeed)
         telemetry.addData("Scale Factor", scale)
+        telemetry.addData("Estimate", estimate.state)
 
         telemetryPacket.put("Scale Factor", scale)
         telemetryPacket.put("Flywheel Velocity", bot.flywheel?.velocity)

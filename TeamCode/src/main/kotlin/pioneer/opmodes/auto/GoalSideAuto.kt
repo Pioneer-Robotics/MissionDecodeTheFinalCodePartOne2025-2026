@@ -13,12 +13,14 @@ import pioneer.decode.Obelisk
 import pioneer.decode.Points
 import pioneer.general.AllianceColor
 import org.firstinspires.ftc.teamcode.prism.Color
+import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
 import pioneer.pathing.paths.HermitePath
 import pioneer.pathing.paths.LinearPath
+import kotlin.math.hypot
 
 @Autonomous(name = "Goal Side Auto", group = "Autonomous")
 class GoalSideAuto : BaseOpMode() {
@@ -57,7 +59,7 @@ class GoalSideAuto : BaseOpMode() {
     private val allianceToggle = Toggle(false)
     private lateinit var P: Points
     private lateinit var targetGoal: GoalTag
-    private var autoType = AutoOptions.ALL
+    private var autoType = AutoOptions.SECOND_ROW
     private var state = State.GOTO_SHOOT
     private var collectState = CollectState.GOAL
     private var launchState = LaunchState.READY
@@ -68,7 +70,7 @@ class GoalSideAuto : BaseOpMode() {
     private var startLeave = true
     private var firstShoot = true
     private val tagTimer = ElapsedTime()
-    private val tagTimeout = 3.0
+    private val tagTimeout = 2.0
     private val shootTimer = ElapsedTime()
     private val minShotTime = 1.25
 
@@ -131,12 +133,12 @@ class GoalSideAuto : BaseOpMode() {
             State.STOP -> state_stop()
         }
 
-//        checkForTimeUp()
+        checkForTimeUp()
 
-        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
+//        targetVelocity = bot.flywheel!!.estimateVelocity(bot.pinpoint!!.pose, targetGoal.shootingPose, targetGoal.shootingHeight)
+//        targetVelocity = 1350.0 dnb
 
-        handleTurret()
-//        handleFlywheel()
+        handleTurretAndFlywheel()
 
         telemetry.addData("Pose", bot.pinpoint!!.pose.toString())
         telemetry.addData("Follower Done", bot.follower.done)
@@ -152,7 +154,7 @@ class GoalSideAuto : BaseOpMode() {
         telemetryPacket.put("Actual Flywheel Speed", bot.flywheel?.velocity)
     }
 
-    private fun handleTurret() {
+    private fun handleTurretAndFlywheel() {
         if (lookForTag && tagTimer.seconds() < tagTimeout && tagTimer.seconds() > 1.0) {
             bot.turret?.autoTrack(bot.pinpoint!!.pose, Pose(0.0, 200.0))
             bot.camera?.getProcessor<AprilTagProcessor>()?.detections?.let { detections ->
@@ -163,21 +165,46 @@ class GoalSideAuto : BaseOpMode() {
                 }
             }
         } else {
-            bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
+            val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
+
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${tagDetections?.map { it.id }?.joinToString { ", " }}")
+
+            // Only look at goal tag for the current alliance
+            val filteredDetections = tagDetections?.filter{
+                it.id == when (bot.allianceColor) {
+                    AllianceColor.RED -> GoalTag.RED.id
+                    AllianceColor.BLUE -> GoalTag.BLUE.id
+                    AllianceColor.NEUTRAL -> GoalTag.RED.id
+                }
+            }
+
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${filteredDetections?.map { it.id }?.joinToString { ", " }}")
+
+            val distance = hypot(filteredDetections?.firstOrNull()?.ftcPose?.x ?: 0.0, filteredDetections?.firstOrNull()?.ftcPose?.y ?: 0.0)
+            targetVelocity = bot.flywheel!!.estimateVelocity(
+                distance,
+                targetGoal.shootingHeight
+            )
+            bot.flywheel?.velocity = targetVelocity
+
+            val errorDegrees = filteredDetections?.firstOrNull()?.ftcPose?.bearing
+            if (errorDegrees != null) {
+                bot.turret?.tagTrack(
+                    -errorDegrees,
+                )
+            } else {
+                // No tag detected, use last known target
+                // TODO: fix tag loss logic
+                bot.turret?.autoTrack(
+                    bot.pinpoint?.pose ?: Pose(),
+                    targetGoal.shootingPose
+                )
+            }
         }
     }
 
-    private fun handleFlywheel() {
-        val distance = bot.pinpoint?.pose?.distanceTo(targetGoal.pose)
-        targetVelocity = bot.flywheel!!.estimateVelocity(
-            distance!!,
-            targetGoal.shootingHeight
-        )
-        bot.flywheel?.velocity = targetVelocity
-    }
-
     private fun checkForTimeUp() {
-        if ((30.0 - elapsedTime) < 1.5) {
+        if ((30.0 - elapsedTime) < 1.5 && bot.follower.isFollowing) {
             state = State.LEAVE
         }
     }
@@ -227,7 +254,7 @@ class GoalSideAuto : BaseOpMode() {
                 AutoOptions.SECOND_ROW -> {
                     if (collectState == CollectState.AUDIENCE) {
                         bot.follower.reset()
-                        bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.LEAVE_POSITION))
+                        bot.follower.followPath(LinearPath(bot.pinpoint!!.pose, P.SHOOT_CLOSE_LEAVE))
                         state = State.STOP
                     }
                 }
@@ -272,8 +299,8 @@ class GoalSideAuto : BaseOpMode() {
     }
 
     private fun flywheelAtSpeed(): Boolean {
-        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 50) &&
-                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 50)
+        return (bot.flywheel?.velocity ?: 0.0) > (targetVelocity - 20) &&
+                (bot.flywheel?.velocity ?: 0.0) < (targetVelocity + 10)
     }
 
     private fun state_collect() {

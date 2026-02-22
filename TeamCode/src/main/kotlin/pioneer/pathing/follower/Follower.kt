@@ -52,9 +52,13 @@ class Follower(
             val path = path ?: return true
             val profile = profile ?: return true
             val t = timer.seconds()
-            if (t > profile.duration()) {
+
+//            if (t > profile.duration()) {
+            if (true) {
                 // path time complete
                 // check if within tolerances
+                FileLogger.debug("Follower", "Position distance: ${localizer.pose.distanceTo(path.endPose)}")
+                FileLogger.debug("Follower", "Rotation distance: ${abs(MathUtils.normalizeRadians(localizer.pose.theta - path.endPose.theta))}")
                 val withinPositionTolerance = localizer.pose.distanceTo(path.endPose) < Constants.Follower.POSITION_THRESHOLD
                 val withinHeadingTolerance = abs(MathUtils.normalizeRadians(localizer.pose.theta - path.endPose.theta)) < Constants.Follower.ROTATION_THRESHOLD
                 if (withinPositionTolerance && withinHeadingTolerance) {

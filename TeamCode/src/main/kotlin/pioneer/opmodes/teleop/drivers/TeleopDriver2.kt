@@ -97,10 +97,10 @@ class TeleopDriver2(
             }
             estimatedFlywheelSpeed = manualFlywheelSpeed
         } else {
-            if (gamepad.dpad_up){
+            if (gamepad.dpadUpWasPressed()){
                 flywheelSpeedOffset += 10.0
             }
-            if (gamepad.dpad_down){
+            if (gamepad.dpadDownWasPressed()){
                 flywheelSpeedOffset -= 10.0
             }
             if (gamepad.left_stick_button) {
@@ -190,7 +190,7 @@ class TeleopDriver2(
     private fun handleShootInput() {
         if (shootingArtifact) return
         when {
-            gamepad.square -> {
+            gamepad.squareWasPressed() -> {
                 if (shootTimer.seconds() > minShotTime) {
                     shootTimer.reset()
                     bot.spindexer?.shootNext()
@@ -219,7 +219,7 @@ class TeleopDriver2(
     fun flywheelAtSpeed(): Boolean {
         val fw = bot.flywheel ?: return false
         return (bot.flywheel?.velocity ?: 0.0) > (fw.targetVelocity - 20) &&
-                (bot.flywheel?.velocity ?: 0.0) < (fw.targetVelocity + 20)
+                (bot.flywheel?.velocity ?: 0.0) < (fw.targetVelocity + 10)
     }
 
     private fun handleManualTrack() {

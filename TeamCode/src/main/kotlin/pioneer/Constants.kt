@@ -181,7 +181,7 @@ object Constants {
         @JvmField var KD = 0.0067
         @JvmField var KS = 0.01
 
-        @JvmField var SHOOT_KP = 0.0067
+        @JvmField var SHOOT_KP = 0.0055
         @JvmField var SHOOT_KI = 0.0
         @JvmField var SHOOT_KD = 0.0
         @JvmField var SHOOT_KS = 0.03
@@ -214,7 +214,7 @@ object Constants {
 //        @JvmField var KD = 1.1
 //        @JvmField var KS = 0.175
 
-        @JvmField var KP = 0.0022
+        @JvmField var KP = 0.0075
         @JvmField var KI = 0.0
         @JvmField var KD = 0.0
         @JvmField var KS = 0.0
@@ -233,6 +233,14 @@ object Constants {
         const val LAUNCHER_REST = 0.52
         //Was 0.3
         const val LAUNCHER_TRIGGERED = 0.26
+
+        const val L_PTO_DROP = 0.65
+
+        const val R_PTO_DROP = 0.3
+
+        const val L_PTO_UP = 0.4
+
+        const val R_PTO_UP = 0.43
     }
 
     object TransferData {

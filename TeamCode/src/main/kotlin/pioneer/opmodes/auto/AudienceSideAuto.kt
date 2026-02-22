@@ -13,6 +13,7 @@ import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
 import org.firstinspires.ftc.teamcode.prism.Color
 import pioneer.decode.Points
+import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
 import pioneer.helpers.next
 import pioneer.opmodes.BaseOpMode
@@ -47,6 +48,7 @@ class AudienceSideAuto : BaseOpMode() {
     // Motif logic variables
     private var motifOrder: Motif = Motif(21)
     private var lookForTag = true
+    private var errorDegrees: Double? = 0.0
     private val tagTimer = ElapsedTime()
     private val tagTimeout = 2.0
     private val shootTimer = ElapsedTime()
@@ -86,7 +88,7 @@ class AudienceSideAuto : BaseOpMode() {
         shootTimer.reset()
 
 //        bot.flywheel?.velocity = bot.flywheel?.estimateVelocity(bot.pinpoint!!.pose, targetGoal.pose, targetGoal.height) ?: 1700.0
-        bot.flywheel?.velocity = 1700.0
+        bot.flywheel?.velocity = 1650.0
 
         // Constantly run intake to keep balls in spindexer
         bot.intake?.power = -1.0
@@ -100,7 +102,7 @@ class AudienceSideAuto : BaseOpMode() {
             State.LEAVE -> stateLeave()
         }
 
-        if (30.0 - elapsedTime < 2.5) {
+        if (30.0 - elapsedTime < 1.5) {
             shouldStartLeave = true
         }
 
@@ -142,7 +144,35 @@ class AudienceSideAuto : BaseOpMode() {
                 }
             }
         } else {
-            bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
+//            bot.turret?.autoTrack(bot.pinpoint!!.pose, targetGoal.shootingPose)
+            val tagDetections = bot.camera?.getProcessor<AprilTagProcessor>()?.detections
+
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${tagDetections?.map { it.id }?.joinToString { ", " }}")
+
+            // Only look at goal tag for the current alliance
+            val filteredDetections = tagDetections?.filter{
+                it.id == when (bot.allianceColor) {
+                    AllianceColor.RED -> GoalTag.RED.id
+                    AllianceColor.BLUE -> GoalTag.BLUE.id
+                    AllianceColor.NEUTRAL -> GoalTag.RED.id
+                }
+            }
+
+            FileLogger.debug("TeleopDriver2", "Tag Detections: ${filteredDetections?.map { it.id }?.joinToString { ", " }}")
+
+            errorDegrees = filteredDetections?.firstOrNull()?.ftcPose?.bearing
+            if (errorDegrees != null) {
+                bot.turret?.tagTrack(
+                    errorDegrees?.times(-1),
+                )
+            } else {
+                // No tag detected, use last known target
+                // TODO: fix tag loss logic
+                bot.turret?.autoTrack(
+                    bot.pinpoint?.pose ?: Pose(),
+                    targetGoal.shootingPose
+                )
+            }
         }
     }
 
@@ -174,7 +204,8 @@ class AudienceSideAuto : BaseOpMode() {
     private fun stateShoot() {
         // Shoot all stored balls
         // Add a minimum delay and check that flywheel is at speed
-        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed()) {
+        val lookingAtTag = if (errorDegrees != null) errorDegrees!! < 2.5 else bot.turret?.reachedTarget
+        if (shootTimer.seconds() > minShotTime && flywheelAtSpeed() && lookingAtTag == true) {
             bot.spindexer?.shootNext()
             shootTimer.reset()
         }

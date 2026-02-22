@@ -32,6 +32,8 @@ class Spindexer(
         get() = artifacts.all { it == null }
     val count: Int
         get() = artifacts.count { it != null }
+    val errorTicks: Int
+        get() = motion.errorTicks
 
 
     // --- Motor Getters --- //

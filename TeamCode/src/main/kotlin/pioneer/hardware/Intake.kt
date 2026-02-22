@@ -24,10 +24,11 @@ class Intake(
 
     val current get() = intake.getCurrent(CurrentUnit.MILLIAMPS)
     val currentTimer = ElapsedTime()
+    var reverseDisabled = false
 
     var defaultPower: Double = 0.9
     private val pauseTimer = ElapsedTime()
-    private val reverseTime = 0.5
+    private val reverseTime = 1.0
     private val pauseTime = 0.0
     private var continuePower = -defaultPower
     private var paused = false
@@ -42,6 +43,7 @@ class Intake(
     }
 
     override fun update() {
+        if (reverseDisabled) currentTimer.reset()
         if (current < 6000) currentTimer.reset()
         if (currentTimer.seconds() > 0.5) pause()
 

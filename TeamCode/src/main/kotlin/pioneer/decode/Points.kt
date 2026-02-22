@@ -45,8 +45,8 @@ class Points(
     val START_GOAL = Pose(135.0, 128.0, theta = 0.67 + PI).T(color)
     val START_FAR = Pose(43.0, -157.0, theta = 0.0).T(color)
 
-    val SHOOT_CLOSE = Pose(55.0, 25.0, theta = -PI/2).T(color)
-    val SHOOT_CLOSE_LEAVE = Pose(19.0, 60.0, theta = -PI/2).T(color)
+    val SHOOT_CLOSE = Pose(50.0, 25.0, theta = -PI/2).T(color)
+    val SHOOT_CLOSE_LEAVE = Pose(20.0, 75.0, theta = -PI/2).T(color)
     val SHOOT_FAR = Pose(43.0, -140.0, theta = -PI/2).T(color)
 
     // Leave position
