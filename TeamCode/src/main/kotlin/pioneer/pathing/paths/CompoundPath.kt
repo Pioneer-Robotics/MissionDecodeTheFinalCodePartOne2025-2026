@@ -1,6 +1,7 @@
 package pioneer.pathing.paths
 
 import pioneer.helpers.Pose
+import pioneer.pathing.motionprofile.constraints.VelocityConstraint
 
 /**
  * Represents a compound path made up of multiple paths.
@@ -12,6 +13,9 @@ class CompoundPath(
     private val paths: List<Path>,
     override var headingInterpolationMode: Path.HeadingInterpolationMode = Path.HeadingInterpolationMode.LINEAR
 ) : Path {
+
+    override var velocityConstraint: VelocityConstraint = VelocityConstraint { Double.MAX_VALUE }
+
     override var startPose: Pose = paths.first().startPose
     override var endPose: Pose = paths.last().endPose
 

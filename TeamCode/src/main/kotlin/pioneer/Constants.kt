@@ -102,18 +102,19 @@ object Constants {
     }
 
     // -------- Follower (path following) --------
+    @Config
     object Follower {
         /** The threshold in cm to consider the target reached. */
-        const val POSITION_THRESHOLD = 1.25
+        const val POSITION_THRESHOLD = 4.0
 
         /** The threshold in radians to consider the target heading reached. */
-        const val ROTATION_THRESHOLD = 0.06
+        const val ROTATION_THRESHOLD = 0.1
 
         /** The maximum drive velocity in cm per second. */
-        const val MAX_DRIVE_VELOCITY = 110.0
+        const val MAX_DRIVE_VELOCITY = 150.0
 
         /** The maximum drive acceleration in cm per second squared. */
-        const val MAX_DRIVE_ACCELERATION = 50.0
+        const val MAX_DRIVE_ACCELERATION = 120.0
 
         /** The maximum centripetal acceleration that the robot can handle in cm/s^2. */
         const val MAX_CENTRIPETAL_ACCELERATION = (70.0 * 70.0) / 25.0
@@ -126,17 +127,17 @@ object Constants {
 
         // --- Standard Follower PID Tuned to Stay on the Path ---
         // X-axis PID coefficients for the trajectory follower
-        @JvmField var X_KP = 5.0 // was 7.0
+        @JvmField var X_KP = 2.67 // was 7.0
         @JvmField var X_KI = 0.0
-        @JvmField var X_KD = 0.0
+        @JvmField var X_KD = 0.1
 
         // Y-axis PID coefficients for the trajectory follower
-        @JvmField var Y_KP = 5.0 // was 7.0
+        @JvmField var Y_KP = 2.67 // was 7.0
         @JvmField var Y_KI = 0.0
-        @JvmField var Y_KD = 0.0
+        @JvmField var Y_KD = 0.1
 
         // Theta PID coefficients for heading interpolation
-        @JvmField var THETA_KP = 3.0 // was 5.0
+        @JvmField var THETA_KP = 3.067 // was 5.0
         @JvmField var THETA_KI = 0.0
         @JvmField var THETA_KD = 0.0
 
@@ -173,33 +174,33 @@ object Constants {
         // val distortionCoefficients = floatArrayOf(0.0573F, 2.0205F, -0.0331F, 0.0021F, -14.6155F, 0F, 0F, 0F)
     }
 
+    @Config
     object Spindexer {
-        // External Encoder
-        @JvmField var KP = 0.00475
-        @JvmField var KI = 0.00005
-        @JvmField var KD = 0.0125
-//        @JvmField var KP = 0.00001 // 000175
-//        @JvmField var KI = 0.0 // 0.00001
-//        @JvmField var KD = 0.0002 // 0.00045
+        @JvmField var KP = 0.003
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.0067
+        @JvmField var KS = 0.01
 
-        @JvmField var KS_START = 0.04
+        @JvmField var SHOOT_KP = 0.0055
+        @JvmField var SHOOT_KI = 0.0
+        @JvmField var SHOOT_KD = 0.0
+        @JvmField var SHOOT_KS = 0.03
 
-        @JvmField var MAX_POWER_RATE = 100.0
+        @JvmField var OUTTAKE_IS_POSITIVE = true
 
-        @JvmField var MOTOR_TOLERANCE_TICKS = 10 // CHANGED: was 0 (allows "close enough" - magnets do final alignment)
+        @JvmField var MOTOR_TOLERANCE_TICKS = 0 // was 75 // stops moving within tolerance (in outtake for magnets)
 
-        const val SHOOTING_TOLERANCE_TICKS = 4
-        const val DETECTION_TOLERANCE_TICKS = 18
-        const val VELOCITY_TOLERANCE_TPS = 50
+        const val DETECTION_TOLERANCE_TICKS = 25
+        const val ALLOWED_REVERSE_TICKS = 125 // How far spindexer can reverse without doing a 360
         const val TICKS_PER_REV = 537.7
 
         // Time required to confirm an artifact has been intaken (ms)
-        const val CONFIRM_INTAKE_MS = 67.0
+        const val CONFIRM_INTAKE_MS = 100.0
 
         // Max time the artifact can disappear without resetting confirmation (ms)
-        const val CONFIRM_LOSS_MS = 10
+        const val CONFIRM_LOSS_MS = 0.0
     }
-
+    @Config
     object Turret {
         const val TICKS_PER_REV = 537.7 * 3 // 384.5 * 3
         const val HEIGHT = 30.48
@@ -208,10 +209,15 @@ object Constants {
         const val LAUNCH_TIME = 0.125
         const val OFFSET = -10.5
 
-        @JvmField var KP = 0.0065
-        @JvmField var KI = 0.00015
-        @JvmField var KD = 1.1
-        @JvmField var KS = 0.175
+//        @JvmField var KP = 0.0065
+//        @JvmField var KI = 0.00015
+//        @JvmField var KD = 1.1
+//        @JvmField var KS = 0.175
+
+        @JvmField var KP = 0.0075
+        @JvmField var KI = 0.0
+        @JvmField var KD = 0.0
+        @JvmField var KS = 0.0
 
         @JvmField var KP_ODO = 0.0
         @JvmField var KI_ODO = 0.0
@@ -223,9 +229,18 @@ object Constants {
 //        Was 0.3
 //        const val LAUNCHER_TRIGGERED = 0.75
 
+        // PTO L values (0.50, 0.75)
         const val LAUNCHER_REST = 0.52
         //Was 0.3
         const val LAUNCHER_TRIGGERED = 0.26
+
+        const val L_PTO_DROP = 0.65
+
+        const val R_PTO_DROP = 0.3
+
+        const val L_PTO_UP = 0.4
+
+        const val R_PTO_UP = 0.43
     }
 
     object TransferData {
@@ -242,11 +257,17 @@ object Constants {
         var spindexerMotorTicks = 0
     }
 
+    @Config
     object Flywheel {
-        @JvmField var KP = 0.0075
+//        @JvmField var KP = 0.0001
+//        @JvmField var KI = 0.0
+//        @JvmField var KD = 0.001
+//        @JvmField var KF = 0.000415
+
+        @JvmField var KP = 0.00225
         @JvmField var KI = 0.0
-        @JvmField var KD = 0.0
-        @JvmField var KF = 0.000415
+        @JvmField var KD = 0.0001
+        @JvmField var KF = 0.00041
 
         val idleVelocity = 300.0
 

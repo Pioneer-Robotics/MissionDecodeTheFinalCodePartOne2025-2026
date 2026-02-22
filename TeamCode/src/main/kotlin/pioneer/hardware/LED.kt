@@ -65,7 +65,7 @@ class LED(
         )
     }
 
-    fun displayArtifacts(
+    fun displaySpindexerArtifacts(
         artifacts: List<Artifact?>,
         brightness: Int = 100
     ) {
@@ -75,6 +75,55 @@ class LED(
             Artifact.PURPLE to Color.PURPLE,
             Artifact.GREEN to Color.GREEN,
             null to Color(0,0,0)
+        )
+
+        val colors = artifacts.map{artifactColors.getValue(it)}.toMutableList()
+        colors.add(0,Color.RED)
+        colors.add(Color.RED)
+
+        val layers = listOf(
+            GoBildaPrismDriver.LayerHeight.LAYER_4,
+            GoBildaPrismDriver.LayerHeight.LAYER_5,
+            GoBildaPrismDriver.LayerHeight.LAYER_6,
+            GoBildaPrismDriver.LayerHeight.LAYER_7,
+            GoBildaPrismDriver.LayerHeight.LAYER_8
+        )
+
+        val segments = listOf(
+            0..0,
+            1..3,
+            4..7,
+            8..10,
+            11..11
+        )
+
+        colors
+            .zip(layers)
+            .zip(segments)
+            .forEach { (colorAndLayer, segment) ->
+                val (color, layer) = colorAndLayer
+
+                setSolidIfChanged(
+                    layer,
+                    color,
+                    segment.first,
+                    segment.last,
+                    brightness
+                )
+            }
+
+    }
+
+    fun displayMotifArtifacts(
+        artifacts: List<Artifact?>,
+        brightness: Int = 100
+    ) {
+        require(artifacts.size == 3)
+
+        val artifactColors = mapOf(
+            Artifact.PURPLE to Color.PURPLE,
+            Artifact.GREEN to Color.GREEN,
+            null to Color.WHITE
         )
 
         val layers = listOf(
