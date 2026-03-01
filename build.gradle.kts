@@ -5,7 +5,7 @@
  */
 
 buildscript {
-    val kotlin_version = "2.2.21"
+    val kotlin_version = "2.3.10"
     repositories {
         mavenCentral()
         google()
