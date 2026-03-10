@@ -11,6 +11,7 @@ import pioneer.helpers.FileLogger
 import pioneer.helpers.PIDController
 import pioneer.helpers.Pose
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
@@ -88,10 +89,10 @@ class Flywheel(
 
         //TODO Double check AprilTag height
         val groundDistance = shootPose distanceTo target
-        return estimateVelocity(groundDistance, targetHeight)
+        return estimateVelocity(groundDistance, targetHeight, pose)
     }
 
-    fun estimateVelocity(targetDistance: Double, targetHeight: Double) : Double {
+    fun estimateVelocity(targetDistance: Double, targetHeight: Double, pose: Pose = Pose()) : Double {
         val heightDiff = targetHeight - Constants.Turret.HEIGHT
         //Real world v0 of the ball
         val v0 =
@@ -99,7 +100,7 @@ class Flywheel(
                     cos(
                         Constants.Turret.THETA,
                     ) * sqrt((2.0 * (heightDiff - tan(Constants.Turret.THETA) * (targetDistance))) / (-980))
-                )
+                    )
         //Regression to convert real world velocity to flywheel speed
 //        val flywheelVelocity = 1.583 * v0 - 9.86811 // From 12/22 testing
 //        val flywheelVelocity = 1.64545 * v0 - 51.56276 // From 2/4 testing
@@ -110,12 +111,12 @@ class Flywheel(
         val flywheelVelocity = 2.13 * v0 + 275.0
         //https://www.desmos.com/calculator/rcter5pcia
         //Adjust for velocity of the bot when moving
-//        val thetaToTarget = -(shootPose angleTo target)
-//        val newTargetVelocityX = sin(thetaToTarget) * flywheelVelocity - pose.vx
-//        val newTargetVelocityY = cos(thetaToTarget) * flywheelVelocity - pose.vy
-//        val newTargetVelocity = sqrt(newTargetVelocityX.pow(2) + newTargetVelocityY.pow(2))
+        val shootPose = pose + Pose(x = Constants.Turret.OFFSET * sin(-pose.theta), y = Constants.Turret.OFFSET * cos(-pose.theta)) + Pose(pose.vx * Constants.Turret.LAUNCH_TIME, pose.vy * Constants.Turret.LAUNCH_TIME)
+        val thetaToTarget = -(shootPose angleTo Pose(0.0, 0.0))
+        val newTargetVelocityX = sin(thetaToTarget) * flywheelVelocity - pose.vx * Constants.Flywheel.VELOCITY_COMPENSATION_FACTOR
+        val newTargetVelocityY = cos(thetaToTarget) * flywheelVelocity - pose.vy * Constants.Flywheel.VELOCITY_COMPENSATION_FACTOR
+        val newTargetVelocity = sqrt(newTargetVelocityX.pow(2) + newTargetVelocityY.pow(2))
 
-        val newTargetVelocity = flywheelVelocity
         return newTargetVelocity
     }
 }
