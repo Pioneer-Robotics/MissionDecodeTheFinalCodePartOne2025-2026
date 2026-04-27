@@ -1,6 +1,7 @@
 package pioneer.opmodes.teleop.drivers
 
 import com.qualcomm.robotcore.hardware.Gamepad
+import com.qualcomm.robotcore.util.ElapsedTime
 import pioneer.Bot
 import pioneer.Constants
 import pioneer.general.AllianceColor
@@ -25,6 +26,13 @@ class TeleopDriver1(
     private var fieldCentricToggle: Toggle = Toggle(false)
     private var intakeToggle: Toggle = Toggle(false)
 
+    var tiltServoToggle = Toggle(false)
+    var driveDisabled = false
+    var ptoTimer = ElapsedTime()
+
+    var tiltDrive = Toggle(startState = false)
+    var tiltTargetDistance = 0
+
     fun update() {
         drive()
         updateDrivePower()
@@ -33,6 +41,7 @@ class TeleopDriver1(
         moveSpindexerManual()
         handleSpindexerReset()
         handleResetPose()
+//        handleTilt()
     }
 
     private fun drive() {
@@ -76,6 +85,7 @@ class TeleopDriver1(
 
     private fun updateIntake() {
         intakeToggle.toggle(gamepad.circle)
+
         if (gamepad.dpad_down) {
             bot.intake?.reverse()
         } else {
@@ -96,7 +106,7 @@ class TeleopDriver1(
         }
         if (gamepad.left_trigger > 0.1) {
             bot.spindexer?.moveManual(-gamepad.left_trigger.toDouble())
-        } else if (bot.spindexer?.manualOverride == true) {
+        } else if (bot.spindexer?.isManualOverride == true) {
             bot.spindexer?.moveManual(0.0)
         }
     }
@@ -115,5 +125,42 @@ class TeleopDriver1(
                 bot.pinpoint?.reset(Pose(86.7, -99.0, theta = 0.0))
             }
         }
+    }
+
+    private fun handleTilt(){
+        tiltServoToggle.toggle(gamepad.dpad_up && gamepad.cross)
+        tiltDrive.toggle(button = gamepad.dpad_down && gamepad.cross)
+
+        if (tiltServoToggle.justChanged) {
+            if (tiltServoToggle.state) {
+                bot.servosPTO?.dropServos()
+
+            } else {
+                bot.servosPTO?.raiseServos()
+            }
+        }
+
+        if (tiltDrive.justChanged) {
+            ptoTimer.reset()
+            if (tiltDrive.state) {
+                driveDisabled = true
+                bot.mecanumBase?.stop()
+                tiltTargetDistance = (bot.mecanumBase?.getMotorPositions()[0] ?: 0) + 500
+                bot.mecanumBase?.setMotorPowers(listOf(0.0, 0.0, 0.0, 0.2))
+
+            }
+            else  {
+                driveDisabled = false
+            }
+        }
+
+//        if (tiltDrive.state && ptoTimer.milliseconds() > 250) {
+//            bot.mecanumBase?.setMotorPowers(listOf(0.0, 0.2, 0.0, -0.2))
+//        }
+
+        if (!tiltDrive.state){
+            bot.mecanumBase?.setMotorPowers(listOf(0.0,0.0,0.0,0.0))
+        }
+
     }
 }

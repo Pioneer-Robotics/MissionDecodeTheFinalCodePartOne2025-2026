@@ -2,6 +2,7 @@ package pioneer.pathing.paths
 
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
+import pioneer.pathing.motionprofile.constraints.VelocityConstraint
 
 /**
  * Path interface representing a path in 2D space
@@ -25,6 +26,11 @@ interface Path {
      * Interpolation mode between start and end heading
      */
     var headingInterpolationMode: HeadingInterpolationMode
+
+    /**
+     * The velocity constraint for the path, which can be used to limit the maximum velocity at different points along the path
+     */
+    var velocityConstraint: VelocityConstraint
 
     /**
      * Gets the arc length of the path

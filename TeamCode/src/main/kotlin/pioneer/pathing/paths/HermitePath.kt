@@ -2,6 +2,7 @@ package pioneer.pathing.paths
 
 import pioneer.helpers.Polynomial
 import pioneer.helpers.Pose
+import pioneer.pathing.motionprofile.constraints.VelocityConstraint
 import kotlin.math.pow
 
 /**
@@ -18,6 +19,8 @@ class HermitePath(
     endVelocity: Pose = Pose(),
     override var headingInterpolationMode: Path.HeadingInterpolationMode = Path.HeadingInterpolationMode.LINEAR
 ) : Path {
+    override var velocityConstraint: VelocityConstraint = VelocityConstraint { Double.MAX_VALUE }
+
     // Hermite basis functions
     private val basis00 = Polynomial(arrayOf(1.0, 0.0, -3.0, 2.0))
     private val basis01 = Polynomial(arrayOf(0.0, 1.0, -2.0, 1.0))
