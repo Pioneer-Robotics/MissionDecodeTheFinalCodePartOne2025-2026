@@ -1,7 +1,7 @@
 [versions]
 ftc = "11.1.0"
 androidx-appcompat = "1.2.0"
-dashboard = "0.5.1"
+dashboard = "0.6.0"
 junit = "4.13.2"
 dokka = "2.1.0"
 
