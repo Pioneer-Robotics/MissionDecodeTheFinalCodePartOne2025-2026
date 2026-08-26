@@ -1,5 +1,5 @@
 [versions]
-ftc = "11.1.0"
+ftc = "11.2.1"
 androidx-appcompat = "1.2.0"
 dashboard = "0.6.0"
 junit = "4.13.2"
